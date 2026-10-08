@@ -8,6 +8,7 @@
   --grid:#c9dbe8; --plumb:#1d5fa8; --accent:#1d5fa8; --accent-ink:#ffffff; --figure:#c7d0d5; --bone:#33444d;
   --ok:#2c8a57; --train:#c98410; --treat:#c3352b; --ok-bg:#e3f2e9; --train-bg:#fbf0d9; --treat-bg:#f9e1de;
   --paper:#ffffff; --paper-ink:#14232b;
+  --r-paper:#ffffff; --r-ink:#15222c; --r-muted:#5d6b74; --r-line:#dfe5e9; --r-wash:#f3f6f8; --r-navy:#0f2438; --r-blue:#1d5fa8; --r-teal:#2a9d8f; --r-mist:#a9bccb;
   --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
   --f-body:"Source Sans 3","Segoe UI",Roboto,Arial,sans-serif;
   --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
@@ -94,30 +95,67 @@ details summary{cursor:pointer;font-weight:600}
 .toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-weight:600;z-index:20;max-width:calc(100% - 32px)}
 .legend{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .patterns .chip{white-space:normal;text-align:left;border-radius:12px}
-/* Report: a paper document, always light */
-.scaler{max-width:796px;width:100%;overflow:hidden;border-radius:6px;border:1px solid var(--line)}
-.report{width:794px;background:var(--paper);color:var(--paper-ink);font-family:var(--f-body);padding:34px 38px;display:grid;gap:14px;transform-origin:0 0}
-.report *{color:var(--paper-ink)}
-.report h1{font-size:30px;font-weight:700}
-.report .rhead{display:flex;justify-content:space-between;gap:16px;align-items:center;border-bottom:3px solid #1d5fa8;padding-bottom:10px}
-.report .rhead img{max-height:56px;max-width:180px}
-.report .meta{display:grid;grid-template-columns:repeat(4,1fr);gap:4px 14px;font-size:12px}
-.report .meta b{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#56666e}
-.report .rgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.report .rbox{border:1px solid #d3dce0;border-radius:8px;padding:10px;display:grid;gap:6px;align-content:start}
-.report .rbox h3{font-size:15px;letter-spacing:.05em;text-transform:uppercase;color:#1d5fa8}
-.report .rbox h3 *{color:#1d5fa8}
-.report img.g{width:100%;display:block}
-.report .rfind{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.report .rf{border-left:5px solid #ccc;padding:6px 10px;background:#f6f8f9;font-size:12px;display:grid;gap:3px}
-.report .rf b{font-size:13px}
-.report .rf ol{margin:0;padding-left:16px}
-.report .tag{font:700 10px var(--f-body);letter-spacing:.08em;text-transform:uppercase;padding:1px 7px;border-radius:999px;color:#fff !important;justify-self:start}
-.report .summary{font-size:13px;line-height:1.5;padding:8px 10px;border:1px dashed #b9c6cc;border-radius:6px}
-.report table{font-size:11px}
-.report th,.report td{padding:3px 5px;border-bottom:1px solid #e1e7ea}
-.report .foot{display:flex;justify-content:space-between;font-size:11px;color:#56666e;border-top:1px solid #d3dce0;padding-top:8px;gap:12px}
-.report .foot *{color:#56666e}
+/* Report: A4 paper pages (794 × 1123 px), always light, built from the --r-* tokens */
+.scaler{max-width:796px;width:100%;overflow:hidden}
+.report{width:794px;display:grid;gap:18px;transform-origin:0 0;font-family:var(--f-body)}
+.rpage{width:794px;height:1123px;background:var(--r-paper);color:var(--r-ink);position:relative;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 2px 14px rgba(10,30,50,.18)}
+.rpage *{color:var(--r-ink)}
+.rpage .band{background:var(--r-navy);padding:26px 36px 22px;display:flex;justify-content:space-between;align-items:flex-end;gap:20px;position:relative}
+.rpage .band::after{content:"";position:absolute;left:0;right:0;bottom:-4px;height:4px;background:linear-gradient(90deg,var(--r-blue),var(--r-teal))}
+.rpage .band *{color:#fff}
+.rpage .brandrow{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.rpage .brandrow img{height:38px;max-width:120px;object-fit:contain;background:#fff;border-radius:6px;padding:3px 6px}
+.rpage .clinic{font:600 13px var(--f-body);letter-spacing:.14em;text-transform:uppercase;color:var(--r-mist) !important}
+.rpage .title{font:700 36px/1 var(--f-display);letter-spacing:.01em}
+.rpage .subtitle{font-size:12.5px;color:var(--r-mist) !important;margin-top:6px}
+.rpage .refbox{text-align:right;font-size:11px;line-height:1.6}
+.rpage .refbox b{display:block;font:600 9.5px var(--f-body);letter-spacing:.14em;text-transform:uppercase;color:var(--r-mist) !important}
+.rpage .band.slim{padding:16px 36px 14px;align-items:center}
+.rpage .band.slim .title{font-size:22px}
+.rpage .pstrip{display:grid;grid-template-columns:1.4fr .9fr .9fr .8fr 1.6fr 1fr;background:var(--r-wash);padding:14px 36px 12px;margin-top:4px;gap:10px;border-bottom:1px solid var(--r-line)}
+.rpage .pstrip div{font-size:12.5px;font-weight:600;min-width:0;overflow-wrap:anywhere}
+.rpage .lbl{display:block;font:600 9px var(--f-body);letter-spacing:.14em;text-transform:uppercase;color:var(--r-muted) !important;margin-bottom:2px}
+.rpage .body{padding:22px 36px 0;display:grid;gap:18px;align-content:start;flex:1}
+.rpage .sec{display:grid;gap:10px;align-content:start}
+.rpage .sec>h3{font:600 12px var(--f-body);letter-spacing:.16em;text-transform:uppercase;color:var(--r-blue) !important;display:flex;align-items:center;gap:10px}
+.rpage .sec>h3::after{content:"";flex:1;height:1px;background:var(--r-line)}
+.rpage .cols{display:grid;gap:22px}
+.rpage .card{background:var(--r-wash);border-radius:10px;padding:14px}
+.rpage .grade{font:700 22px/1.1 var(--f-display)}
+.rpage .small{font-size:11px;color:var(--r-muted) !important}
+.rpage .kf{margin:0;padding:0;list-style:none;display:grid;gap:6px;font-size:12px;line-height:1.35}
+.rpage .kf li{display:grid;grid-template-columns:10px 1fr;gap:8px;align-items:start}
+.rpage .dot{width:9px;height:9px;border-radius:50%;margin-top:4px}
+.rpage .summary{font-size:12.5px;line-height:1.55;border-left:3px solid var(--r-blue);padding:2px 0 2px 12px;outline:none}
+.rpage img.g{width:100%;display:block}
+.rpage .rtable{display:grid;gap:9px}
+.rpage .rrow{display:grid;grid-template-columns:150px 1fr 34px 64px;align-items:center;gap:10px;font-size:12.5px}
+.rpage .rrow b{font-weight:600}
+.rpage .bar{height:8px;border-radius:999px;background:var(--r-line);overflow:hidden}
+.rpage .bar i{display:block;height:100%;border-radius:999px}
+.rpage .num{font:600 13px var(--f-mono);text-align:right}
+.rpage .pill{font:700 9.5px var(--f-body);letter-spacing:.1em;text-transform:uppercase;padding:3px 0;border-radius:999px;color:#fff !important;text-align:center}
+.rpage .figs4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;text-align:center}
+.rpage .figs4 img{height:250px;object-fit:contain}
+.rpage .figs4 span{font:600 10px var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--r-muted) !important}
+.rpage .rx{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.rpage .rxc{border:1px solid var(--r-line);border-radius:10px;padding:12px 14px;display:grid;gap:6px;align-content:start;border-top:4px solid var(--r-line)}
+.rpage .rxc header{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.rpage .rxc header b{font:700 15px var(--f-display);letter-spacing:.02em}
+.rpage .rxc header .pill{padding:3px 9px}
+.rpage .rxc p{margin:0;font-size:11.5px;line-height:1.4;color:var(--r-muted) !important}
+.rpage .rxc ol{margin:0;padding-left:18px;font-size:11.5px;line-height:1.45;display:grid;gap:2px}
+.rpage .sign{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:22px;align-items:end;font-size:12px}
+.rpage .sign .line{border-bottom:1px solid var(--r-ink);height:28px}
+.rpage .foot{margin-top:auto;padding:12px 36px 16px;display:flex;justify-content:space-between;gap:16px;font-size:9.5px;border-top:1px solid var(--r-line)}
+.rpage .foot *{color:var(--r-muted) !important}
+.rpage .foot span:first-child{flex:1.2}
+.rpage .foot span:nth-child(2){flex:1.6;text-align:center}
+.rpage .foot span:last-child{white-space:nowrap}
+.rpage table{border-collapse:collapse;width:100%;font-size:12px}
+.rpage th{font:600 9.5px var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--r-muted) !important;text-align:left;padding:8px;border-bottom:2px solid var(--r-ink)}
+.rpage td{padding:7px 8px;border-bottom:1px solid var(--r-line)}
+.rpage tr:nth-child(even) td{background:var(--r-wash)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -913,41 +951,73 @@ function autoSummary(){
   if (tn.length) s += `Focus for training: ${tn.join(', ')}. `;
   return s + 'Reassess in 4 to 6 weeks to track change.';
 }
+function gradeOf(sc){ return sc==null?'Awaiting photos':sc>=85?'Excellent alignment':sc>=70?'Good alignment':sc>=55?'Fair alignment':'Needs attention'; }
+function addWeeks(d,w){ const t=new Date((d||today())+'T00:00:00'); if(isNaN(t)) return ''; t.setDate(t.getDate()+7*w); return t.toISOString().slice(0,10); }
 function renderReport(){
   if (!A) return;
   const p=S.patient, c=S.clinic;
   if (S.summary==null) S.summary = autoSummary();
-  const flagged = A.regions.filter(r=>r.status==='treat'||r.status==='train');
-  const statusHex = s => s==='treat'?PAPER.treat:s==='train'?PAPER.train:PAPER.ok;
-  const showFig = $('#optFigures').checked;
-  const findings = A.regions.filter(r=>r.ms.length).map(r=>{
-    const lines = r.ms.filter(k=>A.M[k].sev!=='ok').map(k=>plainText(k,A.M[k]));
-    const ex = (r.status==='train'||r.status==='treat')? exercisesFor(r,A.M).filter(Boolean) : [];
-    return `<div class="rf" style="border-left-color:${statusHex(r.status)}"><div style="display:flex;justify-content:space-between;align-items:center;gap:6px"><b>${r.label}</b><span class="tag" style="background:${statusHex(r.status)}">${label(r.status)} · ${Math.round(r.score)}</span></div>
-      <span>${esc(lines.join(' ')||'Within normal range.')}</span>${ex.length?`<ol>${ex.map(e=>`<li>${esc(e)}</li>`).join('')}</ol>`:''}</div>`; }).join('');
+  const hex = s => s==='treat'?PAPER.treat:s==='train'?PAPER.train:s==='ok'?PAPER.ok:'#9aa7af';
+  const showFig = $('#optFigures').checked, showClin = $('#optClinical').checked;
+  const scored = A.regions.filter(r=>r.ms.length);
+  const okCount = scored.filter(r=>r.status==='ok').length;
+  const flagged = scored.filter(r=>r.status==='train'||r.status==='treat').sort((a,b)=>(b.status==='treat')-(a.status==='treat'));
+  const date = p.date||today();
+  const nPages = 2 + (showClin?1:0);
+  const ref = `MP-${date.replace(/-/g,'')}-${(p.id||'').replace(/[^\w]/g,'').slice(0,8)||'NA'}`;
+  const foot = n => `<div class="foot"><span>${esc(c.name||'MotionPlus')} · Posture Assessment · ${esc(p.name||'Patient')} ${p.id?'· '+esc(p.id):''}</span><span>Screening from 2D photographs. Supports, does not replace, clinical examination.</span><span>Page ${n} of ${nPages}</span></div>`;
+  const slim = sub => `<div class="band slim"><div><div class="title">Posture Assessment Report</div></div><div class="refbox" style="text-align:right"><b>${sub}</b>${esc(p.name||'Patient')} · ${esc(date)}</div></div>`;
   const prevScores = S.previous? REGIONS.map(r=>S.previous.regionScores?.[r.k] ?? null) : null;
-  const clinical = $('#optClinical').checked ? `<div class="rbox" id="clinicalBox"><h3>Clinical values</h3><table><thead><tr><th>Measure</th><th>Value</th><th>Normal</th><th>Status</th></tr></thead><tbody>${
-    Object.keys(METRICS).filter(k=>A.M[k]).map(k=>{const m=A.M[k],n=S.norms[METRICS[k].norm]; return `<tr><td>${esc(METRICS[k].label||n.label)}</td><td>${fmt(m.v)}${n.unit}</td><td>≤${n.n}${n.unit} (mild ≤${n.m})</td><td style="color:${statusHex(m.sev)} !important;font-weight:700">${label(m.sev)}</td></tr>`;}).join('')
-  }</tbody></table><span style="font-size:10px;color:#56666e">Plumb-line values are % of ear-to-ankle height. Angles from 2D photographs; screening measures, confirm clinically.</span></div>` : '';
-  $('#report').innerHTML = `
-    <div class="rhead"><div><h1>Posture Assessment Report</h1><div style="font-size:12px;color:#56666e">${esc(c.name||'MotionPlus')} · Static posture, plumb-line analysis</div></div>${c.logo?`<img src="${c.logo}" alt="">`:''}</div>
-    <div class="meta"><div><b>Patient</b>${esc(p.name||'–')}</div><div><b>ID</b>${esc(p.id||'–')}</div><div><b>Age / sex</b>${esc(p.age||'–')} ${esc(p.sex||'')}</div><div><b>Date</b>${esc(p.date||today())}</div>
-      <div style="grid-column:span 2"><b>Sport or condition</b>${esc(p.cond||'–')}</div><div><b>Height</b>${p.height?esc(p.height)+' cm':'–'}</div><div><b>Assessor</b>${esc(p.assessor||'–')}</div></div>
-    <div class="rgrid">
-      <div class="rbox"><h3>Summary</h3><div style="display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:center">${svgImg(dialSVG(A.overall,PAPER))}
-        <div style="display:flex;flex-wrap:wrap;gap:4px">${A.patterns.map(([s,t])=>`<span class="tag" style="background:${statusHex(s)}">${esc(t)}</span>`).join('')}</div></div>
-        <div class="summary" contenteditable="true" id="sumEdit">${esc(S.summary)}</div></div>
-      <div class="rbox"><h3>Body map</h3>${svgImg(bodyMapSVG(A,PAPER))}<div style="display:flex;gap:10px;font-size:11px;justify-content:center"><span style="color:${PAPER.ok} !important">● Normal</span><span style="color:${PAPER.train} !important">● Train</span><span style="color:${PAPER.treat} !important">● Treat</span></div></div>
-    </div>
-    ${showFig?`<div class="rbox"><h3>Alignment figures <span style="font-size:11px;text-transform:none;letter-spacing:0;color:#56666e">dashed blue = plumb line</span></h3><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center;font-size:11px">${VIEWS.map(v=>`<div>${svgImg(figureSVG(v.k,A,PAPER)).replace('class="g"','class="g" style="max-height:230px;object-fit:contain"')}<div>${v.label}</div></div>`).join('')}</div></div>`:''}
-    <div class="rgrid">
-      <div class="rbox"><h3>Region scores</h3>${svgImg(radarSVG(A.regions,PAPER,prevScores))}${S.previous?`<span style="font-size:10px;color:#56666e">Dashed: previous session ${esc(S.previous.patient?.date||'')}</span>`:''}</div>
-      <div class="rbox"><h3>Left vs right</h3>${svgImg(asymSVG(asymRows(A),PAPER))}</div>
-    </div>
-    <div class="rbox"><h3>Findings and focus areas</h3><div class="rfind">${findings||'<span>No findings yet.</span>'}</div></div>
-    <div class="rbox"><h3>Clinician notes</h3><div class="summary" contenteditable="true" id="notesEdit">${esc(S.notes||'Add treatment plan, precautions or follow-up date.')}</div></div>
-    <div class="foot"><span>Photo-based screening from 2D images; findings support, not replace, clinical examination.</span><span>Signature ____________________</span></div>
-    ${clinical}`;
+  const keyFindings = A.patterns.length ? A.patterns.map(([s,t])=>`<li><span class="dot" style="background:${hex(s)}"></span><span>${esc(t)}</span></li>`).join('')
+    : '<li><span class="dot" style="background:#9aa7af"></span><span>Add photos to see findings.</span></li>';
+  const regionRows = A.regions.map(r=>`<div class="rrow"><b>${r.label}</b><div class="bar"><i style="width:${r.score==null?0:Math.round(r.score)}%;background:${hex(r.status)}"></i></div><span class="num">${r.score==null?'–':Math.round(r.score)}</span><span class="pill" style="background:${hex(r.status)}">${label(r.status)}</span></div>`).join('');
+  const rx = flagged.map(r=>{
+    const lines = r.ms.filter(k=>A.M[k].sev!=='ok').map(k=>plainText(k,A.M[k])).join(' ');
+    const ex = exercisesFor(r,A.M).filter(Boolean);
+    return `<div class="rxc" style="border-top-color:${hex(r.status)}"><header><b>${r.label}</b><span class="pill" style="background:${hex(r.status)}">${label(r.status)} · ${Math.round(r.score)}</span></header><p>${esc(lines)}</p>${ex.length?`<ol>${ex.map(e=>`<li>${esc(e)}</li>`).join('')}</ol>`:''}</div>`; }).join('');
+
+  const page1 = `<section class="rpage">
+    <div class="band"><div>
+        <div class="brandrow">${c.logo?`<img src="${c.logo}" alt="">`:''}<span class="clinic">${esc(c.name||'MotionPlus')}</span></div>
+        <div class="title">Posture Assessment Report</div>
+        <div class="subtitle">Static posture · Kendall plumb-line and photogrammetry analysis</div></div>
+      <div class="refbox"><b>Report</b>${esc(ref)}<b style="margin-top:6px">Assessed</b>${esc(date)}</div></div>
+    <div class="pstrip">
+      <div><span class="lbl">Patient</span>${esc(p.name||'–')}</div><div><span class="lbl">ID</span>${esc(p.id||'–')}</div>
+      <div><span class="lbl">Age / sex</span>${esc(p.age||'–')} ${esc(p.sex||'')}</div><div><span class="lbl">Height</span>${p.height?esc(p.height)+' cm':'–'}</div>
+      <div><span class="lbl">Sport or condition</span>${esc(p.cond||'–')}</div><div><span class="lbl">Assessor</span>${esc(p.assessor||'–')}</div></div>
+    <div class="body">
+      <div class="cols" style="grid-template-columns:210px 1fr">
+        <div class="card" style="display:grid;justify-items:center;gap:4px;text-align:center">${svgImg(dialSVG(A.overall,PAPER))}<div class="grade">${gradeOf(A.overall)}</div><div class="small">${scored.length?`${okCount} of ${scored.length} regions in normal range`:''}</div></div>
+        <div class="sec"><h3>Clinical summary</h3><ul class="kf">${keyFindings}</ul><div class="summary" contenteditable="true" id="sumEdit">${esc(S.summary)}</div></div>
+      </div>
+      <div class="cols" style="grid-template-columns:250px 1fr;align-items:start">
+        <div class="sec"><h3>Body map</h3>${svgImg(bodyMapSVG(A,PAPER))}</div>
+        <div class="sec"><h3>Regional overview</h3><div class="rtable">${regionRows}</div>
+          <div class="small" style="margin-top:4px"><b style="color:${PAPER.train} !important">Train</b>: mild deviation, strengthening and motor control. <b style="color:${PAPER.treat} !important">Treat</b>: marked deviation, hands-on care and mobility first, then load.</div></div>
+      </div>
+      ${showFig?`<div class="sec"><h3>Alignment figures · dashed line = plumb line</h3><div class="figs4">${VIEWS.map(v=>`<div>${svgImg(figureSVG(v.k,A,PAPER))}<span>${v.label}</span></div>`).join('')}</div></div>`:''}
+    </div>${foot(1)}</section>`;
+
+  const page2 = `<section class="rpage">${slim('Continued')}
+    <div class="body">
+      <div class="cols" style="grid-template-columns:1fr 1fr">
+        <div class="sec"><h3>Region scores</h3>${svgImg(radarSVG(A.regions,PAPER,prevScores))}${S.previous?`<div class="small">Dashed outline: previous session ${esc(S.previous.patient?.date||'')}</div>`:''}</div>
+        <div class="sec"><h3>Left vs right</h3>${svgImg(asymSVG(asymRows(A),PAPER))}</div>
+      </div>
+      <div class="sec"><h3>Treatment focus and exercise prescription</h3>${rx?`<div class="rx">${rx}</div>`:'<div class="small">All assessed regions are within normal range. Continue general strength and mobility work.</div>'}</div>
+      <div class="sec"><h3>Clinician notes</h3><div class="summary" contenteditable="true" id="notesEdit">${esc(S.notes||'Add treatment plan, precautions or follow-up instructions.')}</div></div>
+      <div class="sign"><div><span class="lbl">Assessor</span><div class="line" style="display:flex;align-items:flex-end;font-weight:600">${esc(p.assessor||'')}</div></div>
+        <div><span class="lbl">Signature</span><div class="line"></div></div>
+        <div><span class="lbl">Next review</span><div class="line" style="display:flex;align-items:flex-end;font-weight:600">${esc(addWeeks(date,6))}</div></div></div>
+    </div>${foot(2)}</section>`;
+
+  const page3 = showClin ? `<section class="rpage">${slim('Clinical values')}
+    <div class="body"><div class="sec"><h3>Measurements</h3><table><thead><tr><th>Measure</th><th>Value</th><th>Normal</th><th>Mild</th><th>Status</th></tr></thead><tbody>${
+      Object.keys(METRICS).filter(k=>A.M[k]).map(k=>{const m=A.M[k],n=S.norms[METRICS[k].norm]; return `<tr><td>${esc(METRICS[k].label||n.label)}</td><td><b>${fmt(m.v)}${n.unit}</b></td><td>≤ ${n.n}${n.unit}</td><td>≤ ${n.m}${n.unit}</td><td><span class="pill" style="background:${hex(m.sev)};padding:3px 9px">${label(m.sev)}</span></td></tr>`;}).join('')
+    }</tbody></table><div class="small">Plumb-line values are % of ear-to-ankle height. Angles measured from 2D photographs with on-device landmark detection; screening values to be confirmed clinically. Norms follow Kendall plumb-line alignment and published photogrammetry ranges, adjustable by the clinic.</div></div></div>${foot(3)}</section>` : '';
+
+  $('#report').innerHTML = page1 + page2 + page3;
   $('#sumEdit').oninput = e => { S.summary = e.target.innerText; };
   $('#notesEdit').oninput = e => { S.notes = e.target.innerText; };
   fitReport();
@@ -969,28 +1039,16 @@ const fileBase = () => `MotionPlus_${(S.patient.name||'patient').replace(/[^\w-]
 async function makePDF(){
   const btn=$('#pdfBtn'); btn.disabled=true; $('#pdfStatus').textContent='Building PDF…';
   const r=$('#report'); const prev=r.style.transform; r.style.transform='none';
-  const clin=$('#clinicalBox');
   try{
     await document.fonts?.ready;
     const unraster = await rasterizeSVGs(r);
-    const shot = el => html2canvas(el,{scale:2,backgroundColor:'#ffffff',logging:false});
-    let pages=[];
-    try{
-      if (clin) clin.hidden=true;
-      pages.push(await shot(r));
-      if (clin){ clin.hidden=false; pages.push(await shot(clin)); }
-    } finally { unraster(); if (clin) clin.hidden=false; }
+    const pages=[];
+    try{ for (const pg of r.querySelectorAll('.rpage')) pages.push(await html2canvas(pg,{scale:2,backgroundColor:'#ffffff',logging:false})); }
+    finally { unraster(); }
     r.style.transform=prev;
-    // Each capture becomes one A4 page, scaled down to fit and centred, with a 8 mm margin for the clinical page.
-    const pdf = new window.jspdf.jsPDF({unit:'mm',format:'a4'});
-    const pw=210, ph=297;
-    pages.forEach((c,i)=>{
-      if (i) pdf.addPage();
-      const m = i? 8 : 0, aw=pw-2*m, ah=ph-2*m;
-      const k = Math.min(aw/c.width, ah/c.height);
-      const w=c.width*k, h=c.height*k;
-      pdf.addImage(c.toDataURL('image/jpeg',0.92),'JPEG',(pw-w)/2, i? m : 0, w, h);
-    });
+    // Each page is drawn at A4 proportions (794 × 1123 px), so it maps 1:1 onto a 210 × 297 mm page.
+    const pdf = new window.jspdf.jsPDF({unit:'mm',format:'a4',compress:true});
+    pages.forEach((c,i)=>{ if (i) pdf.addPage(); pdf.addImage(c.toDataURL('image/jpeg',0.93),'JPEG',0,0,210,297); });
     await saveFile(fileBase()+'.pdf', pdf.output('blob'));
     $('#pdfStatus').textContent='';
   }catch(e){ r.style.transform=prev; $('#pdfStatus').textContent='Could not build the PDF: '+(e?.message||e); }
