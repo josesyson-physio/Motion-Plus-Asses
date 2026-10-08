@@ -828,7 +828,27 @@ function figureSVG(k,A,pal){
   if (vw.plane==='frontal'){ for (const [a,b] of [['lSh','rSh'],['lHip','rHip']]){ const y=(P[a].y+P[b].y)/2; g+=`<line x1="${vx+pad*0.3}" y1="${y}" x2="${vx+w-pad*0.3}" y2="${y}" style="stroke:${pal.muted};stroke-width:${sw};stroke-dasharray:${sw*2} ${sw*3}"/>`; } }
   return `<svg viewBox="${vx} ${y0} ${w} ${y1-y0}" xmlns="http://www.w3.org/2000/svg"><rect x="${vx}" y="${y0}" width="${w}" height="${y1-y0}" style="fill:${pal.bg}"/>${g}</svg>`;
 }
-const svgImg = (svg,cls='g') => `<img class="${cls}" alt="" src="data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}">`;
+// SVG images get an explicit pixel size: phone browsers mis-scale size-less SVGs when they are drawn to a canvas.
+function svgImg(svg,cls='g'){
+  const m = svg.match(/viewBox="([-\d.e]+) ([-\d.e]+) ([-\d.e]+) ([-\d.e]+)"/);
+  if (m){ const w=+m[3], h=+m[4], W=800, H=Math.max(1,Math.round(W*h/w)); svg = svg.replace('<svg', `<svg width="${W}" height="${H}" preserveAspectRatio="xMidYMid meet"`); }
+  return `<img class="${cls}" alt="" src="data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}">`;
+}
+// Swap each SVG image in the report for a PNG drawn here, so the PDF capture only sees plain bitmaps.
+async function rasterizeSVGs(root){
+  const restore=[];
+  for (const im of root.querySelectorAll('img')){
+    if (!im.src.startsWith('data:image/svg')) continue;
+    const src=im.src, tmp=new Image(); tmp.src=src;
+    try{ await tmp.decode(); }catch{ continue; }
+    const W=tmp.naturalWidth||800, H=tmp.naturalHeight||600;
+    const c=document.createElement('canvas'); c.width=W*2; c.height=H*2;
+    const x=c.getContext('2d'); x.fillStyle='#ffffff'; x.fillRect(0,0,c.width,c.height); x.drawImage(tmp,0,0,c.width,c.height);
+    im.src=c.toDataURL('image/png'); try{ await im.decode(); }catch{}
+    restore.push([im,src]);
+  }
+  return () => restore.forEach(([im,s])=>{ im.src=s; });
+}
 
 /* ---------------- analysis UI ---------------- */
 let A=null;
@@ -902,7 +922,7 @@ function renderReport(){
     return `<div class="rf" style="border-left-color:${statusHex(r.status)}"><div style="display:flex;justify-content:space-between;align-items:center;gap:6px"><b>${r.label}</b><span class="tag" style="background:${statusHex(r.status)}">${label(r.status)} · ${Math.round(r.score)}</span></div>
       <span>${esc(lines.join(' ')||'Within normal range.')}</span>${ex.length?`<ol>${ex.map(e=>`<li>${esc(e)}</li>`).join('')}</ol>`:''}</div>`; }).join('');
   const prevScores = S.previous? REGIONS.map(r=>S.previous.regionScores?.[r.k] ?? null) : null;
-  const clinical = $('#optClinical').checked ? `<div class="rbox" style="break-before:page"><h3>Clinical values</h3><table><thead><tr><th>Measure</th><th>Value</th><th>Normal</th><th>Status</th></tr></thead><tbody>${
+  const clinical = $('#optClinical').checked ? `<div class="rbox" id="clinicalBox"><h3>Clinical values</h3><table><thead><tr><th>Measure</th><th>Value</th><th>Normal</th><th>Status</th></tr></thead><tbody>${
     Object.keys(METRICS).filter(k=>A.M[k]).map(k=>{const m=A.M[k],n=S.norms[METRICS[k].norm]; return `<tr><td>${esc(METRICS[k].label||n.label)}</td><td>${fmt(m.v)}${n.unit}</td><td>≤${n.n}${n.unit} (mild ≤${n.m})</td><td style="color:${statusHex(m.sev)} !important;font-weight:700">${label(m.sev)}</td></tr>`;}).join('')
   }</tbody></table><span style="font-size:10px;color:#56666e">Plumb-line values are % of ear-to-ankle height. Angles from 2D photographs; screening measures, confirm clinically.</span></div>` : '';
   $('#report').innerHTML = `
@@ -945,19 +965,28 @@ const fileBase = () => `MotionPlus_${(S.patient.name||'patient').replace(/[^\w-]
 async function makePDF(){
   const btn=$('#pdfBtn'); btn.disabled=true; $('#pdfStatus').textContent='Building PDF…';
   const r=$('#report'); const prev=r.style.transform; r.style.transform='none';
+  const clin=$('#clinicalBox');
   try{
     await document.fonts?.ready;
-    const canvas = await html2canvas(r,{scale:2,backgroundColor:'#ffffff',logging:false});
+    const unraster = await rasterizeSVGs(r);
+    const shot = el => html2canvas(el,{scale:2,backgroundColor:'#ffffff',logging:false});
+    let pages=[];
+    try{
+      if (clin) clin.hidden=true;
+      pages.push(await shot(r));
+      if (clin){ clin.hidden=false; pages.push(await shot(clin)); }
+    } finally { unraster(); if (clin) clin.hidden=false; }
     r.style.transform=prev;
+    // Each capture becomes one A4 page, scaled down to fit and centred, with a 8 mm margin for the clinical page.
     const pdf = new window.jspdf.jsPDF({unit:'mm',format:'a4'});
-    const pw=210, ph=297, pagePx = canvas.width*ph/pw;
-    for (let y=0, i=0; y<canvas.height; y+=pagePx, i++){
-      const h=Math.min(pagePx, canvas.height-y); if (h<20) break;
-      const part=document.createElement('canvas'); part.width=canvas.width; part.height=h;
-      part.getContext('2d').drawImage(canvas,0,y,canvas.width,h,0,0,canvas.width,h);
+    const pw=210, ph=297;
+    pages.forEach((c,i)=>{
       if (i) pdf.addPage();
-      pdf.addImage(part.toDataURL('image/jpeg',0.92),'JPEG',0,0,pw,h*pw/canvas.width);
-    }
+      const m = i? 8 : 0, aw=pw-2*m, ah=ph-2*m;
+      const k = Math.min(aw/c.width, ah/c.height);
+      const w=c.width*k, h=c.height*k;
+      pdf.addImage(c.toDataURL('image/jpeg',0.92),'JPEG',(pw-w)/2, i? m : 0, w, h);
+    });
     await saveFile(fileBase()+'.pdf', pdf.output('blob'));
     $('#pdfStatus').textContent='';
   }catch(e){ r.style.transform=prev; $('#pdfStatus').textContent='Could not build the PDF: '+(e?.message||e); }
