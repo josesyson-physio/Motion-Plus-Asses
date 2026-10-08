@@ -790,8 +790,8 @@ async function makePdf({ pid, aids, report, title }) {
   }
   // Footer
   const n = doc.getNumberOfPages();
-  for (let i = 1; i <= n; i++) { doc.setPage(i); doc.setDrawColor(217, 226, 223); doc.line(M, 287, W - M - 24, 287); try { doc.addImage(JC_SIG, "PNG", W - M - 18, 281.5, 18, 11.9); } catch (e) {} doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); doc.setTextColor(...MUTED);
-    doc.text(pdfSafe(`MotionPlus Physio  ·  ${p.code}  ·  Confidential clinical record`), M, 291); doc.text(`Page ${i} of ${n}`, W - M - 24, 291, { align: "right" }); }
+  for (let i = 1; i <= n; i++) { doc.setPage(i); doc.setDrawColor(217, 226, 223); doc.line(M, 287, W - M, 287); try { doc.addImage(JC_SIG, "PNG", W - 13, 289.5, 9, 5.96); } catch (e) {} doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); doc.setTextColor(...MUTED);
+    doc.text(pdfSafe(`MotionPlus Physio  ·  ${p.code}  ·  Confidential clinical record`), M, 291); doc.text(`Page ${i} of ${n}`, W - M, 291, { align: "right" }); }
   await saveFile(`${p.code}-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${today()}.pdf`, doc.output("blob"));
 }
 function pdfChart(doc, x, y, w, h, s, t, C) {
