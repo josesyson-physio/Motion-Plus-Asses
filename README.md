@@ -16,6 +16,12 @@ Licensed instruments (FIM, MoCA, Oswestry, NDI, QuickDASH, Fugl-Meyer) are score
 
 The live app is published as a Claude artifact. AI features and file saving need the Claude viewer. `index.html` opens in any browser for everything else.
 
+## MotionPlus Posture
+
+`posture/` is a separate static posture assessment app: front, back and side photos, on-device body landmark detection (MediaPipe), Kendall plumb-line analysis, a colour-coded body map with treat and train regions, and a graphics-only PDF report. Photos never leave the device.
+
+It is a plain static site, so any web host serves it. With GitHub Pages turned on for this repository it opens at `https://josesyson-physio.github.io/motion-plus-asses/posture/`, where the phone camera, photo upload and PDF download work directly, and it can be added to the home screen.
+
 ## Project layout
 
 | Path | Contents |
@@ -25,6 +31,8 @@ The live app is published as a Claude artifact. AI features and file saving need
 | `src/templates.js` | The assessment library |
 | `src/app.js` | Screens, scoring, AI reports, PDF and backup |
 | `assets/motionplus-logo.jpg` | Brand logo |
-| `build.py` | Rebuilds `index.html` from `src/` |
+| `src/posture.html` | Posture app page (also published as a Claude artifact) |
+| `posture/` | Built posture app with its pose model and runtime files |
+| `build.py` | Rebuilds `index.html` and `posture/index.html` from `src/` |
 
 To rebuild after editing `src/`, run `python3 build.py`.

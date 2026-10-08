@@ -1,0 +1,1031 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1d5fa8"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="../assets/motionplus-logo.jpg"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>MotionPlus Posture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: clinic instrument. App bar + four step tabs; posture-grid motif behind every figure; findings as chips by severity. */
+:root{
+  --bg:#eef2f4; --surface:#ffffff; --surface-2:#f5f8f9; --ink:#14232b; --muted:#56666e; --line:#d3dce0;
+  --grid:#c9dbe8; --plumb:#1d5fa8; --accent:#1d5fa8; --accent-ink:#ffffff; --figure:#c7d0d5; --bone:#33444d;
+  --ok:#2c8a57; --train:#c98410; --treat:#c3352b; --ok-bg:#e3f2e9; --train-bg:#fbf0d9; --treat-bg:#f9e1de;
+  --paper:#ffffff; --paper-ink:#14232b;
+  --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:"Source Sans 3","Segoe UI",Roboto,Arial,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f171b; --surface:#16222a; --surface-2:#1c2a33; --ink:#e3ecf0; --muted:#97a9b2; --line:#2c3d47;
+  --grid:#24394a; --plumb:#6fa8e6; --accent:#6fa8e6; --accent-ink:#0b1620; --figure:#3a4c57; --bone:#c9d6dc;
+  --ok:#5cc28a; --train:#e8ab45; --treat:#ef6f63; --ok-bg:#183326; --train-bg:#3a2c12; --treat-bg:#3d1c19; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f171b; --surface:#16222a; --surface-2:#1c2a33; --ink:#e3ecf0; --muted:#97a9b2; --line:#2c3d47;
+  --grid:#24394a; --plumb:#6fa8e6; --accent:#6fa8e6; --accent-ink:#0b1620; --figure:#3a4c57; --bone:#c9d6dc;
+  --ok:#5cc28a; --train:#e8ab45; --treat:#ef6f63; --ok-bg:#183326; --train-bg:#3a2c12; --treat-bg:#3d1c19; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;letter-spacing:.01em;text-wrap:balance;margin:0}
+h2{font-size:1.6rem}
+h3{font-size:1.2rem}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.wrap{max-width:1100px;margin:0 auto;padding-inline:16px;padding-block:12px 64px;display:grid;gap:16px}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.bar-in{max-width:1100px;margin:0 auto;padding-inline:16px;padding-block:10px 0;display:grid;gap:8px}
+.brand{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.brand h1{font-size:1.7rem;font-weight:700}
+.brand h1 span{color:var(--accent)}
+.brand small{color:var(--muted)}
+.tabs{display:flex;gap:4px;overflow-x:auto}
+.tab{appearance:none;border:0;background:none;color:var(--muted);font:600 1rem var(--f-display);letter-spacing:.04em;text-transform:uppercase;padding:8px 12px 10px;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tab:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:12px;min-width:0}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))}
+.grid4{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr))}
+.btn{appearance:none;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font:600 .95rem var(--f-body);padding:9px 14px;border-radius:8px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.small{padding:5px 10px;font-size:.85rem}
+.btn[disabled]{opacity:.5;cursor:default}
+label.field{display:grid;gap:4px;font-size:.85rem;color:var(--muted);min-width:0}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:7px;padding:8px 10px;min-width:0;width:100%}
+.form{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))}
+.note{color:var(--muted);font-size:.88rem;margin:0}
+.banner{background:var(--train-bg);border:1px solid var(--train);border-radius:10px;padding:10px 14px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.banner p{margin:0}
+.chip{line-height:1.5;display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:2px 10px;font:600 .8rem var(--f-body);letter-spacing:.02em;border:1px solid transparent;white-space:nowrap}
+.chip::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:currentColor}
+.s-ok{color:var(--ok);background:var(--ok-bg)}
+.s-train{color:var(--train);background:var(--train-bg)}
+.s-treat{color:var(--treat);background:var(--treat-bg)}
+.s-na{color:var(--muted);background:var(--surface-2)}
+button.chip{cursor:pointer;border-color:currentColor}
+.checklist{margin:0;padding-left:1.1rem;display:grid;gap:3px;font-size:.9rem}
+.cap{display:grid;gap:8px;align-content:start;min-width:0}
+.cap-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.cap canvas{width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--line);background:var(--surface-2)}
+.cap canvas.editing{touch-action:none;outline:2px solid var(--accent)}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
+.cap{position:relative}
+.thumbs{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}
+.thumb{appearance:none;border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:4px;display:grid;gap:4px;cursor:pointer;color:var(--muted);min-height:96px;place-items:center}
+.thumb img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:5px}
+.thumb small{font-size:.7rem}
+label.empty{cursor:pointer}
+.empty{aspect-ratio:3/4;max-height:300px;width:100%;max-width:100%;border:2px dashed var(--line);border-radius:8px;display:grid;place-items:center;text-align:center;color:var(--muted);padding:12px;font-size:.9rem}
+.warn{font-size:.82rem;color:var(--train);margin:0}
+.ok-line{font-size:.82rem;color:var(--ok);margin:0}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 .78rem var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.region{display:grid;gap:8px;padding:12px;border:1px solid var(--line);border-radius:10px;border-left-width:5px}
+.region.st-ok{border-left-color:var(--ok)} .region.st-train{border-left-color:var(--train)} .region.st-treat{border-left-color:var(--treat)}
+.region ul{margin:0;padding-left:1.1rem;font-size:.9rem}
+.region input{font-size:.9rem;padding:6px 8px}
+.score-big{font:700 3rem var(--f-display);line-height:1}
+.svgbox svg{width:100%;height:auto;display:block}
+.figs{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(min(100%,120px),1fr))}
+.figs figure{margin:0;display:grid;gap:4px;justify-items:center}
+.figs figcaption{font:600 .8rem var(--f-body);color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+details summary{cursor:pointer;font-weight:600}
+.normgrid{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+.normrow{display:grid;grid-template-columns:1fr 64px 64px;gap:6px;align-items:center;font-size:.85rem}
+.normrow input{padding:5px 6px}
+.toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-weight:600;z-index:20;max-width:calc(100% - 32px)}
+.legend{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.patterns .chip{white-space:normal;text-align:left;border-radius:12px}
+/* Report: a paper document, always light */
+.scaler{max-width:796px;width:100%;overflow:hidden;border-radius:6px;border:1px solid var(--line)}
+.report{width:794px;background:var(--paper);color:var(--paper-ink);font-family:var(--f-body);padding:34px 38px;display:grid;gap:14px;transform-origin:0 0}
+.report *{color:var(--paper-ink)}
+.report h1{font-size:30px;font-weight:700}
+.report .rhead{display:flex;justify-content:space-between;gap:16px;align-items:center;border-bottom:3px solid #1d5fa8;padding-bottom:10px}
+.report .rhead img{max-height:56px;max-width:180px}
+.report .meta{display:grid;grid-template-columns:repeat(4,1fr);gap:4px 14px;font-size:12px}
+.report .meta b{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#56666e}
+.report .rgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.report .rbox{border:1px solid #d3dce0;border-radius:8px;padding:10px;display:grid;gap:6px;align-content:start}
+.report .rbox h3{font-size:15px;letter-spacing:.05em;text-transform:uppercase;color:#1d5fa8}
+.report .rbox h3 *{color:#1d5fa8}
+.report img.g{width:100%;display:block}
+.report .rfind{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.report .rf{border-left:5px solid #ccc;padding:6px 10px;background:#f6f8f9;font-size:12px;display:grid;gap:3px}
+.report .rf b{font-size:13px}
+.report .rf ol{margin:0;padding-left:16px}
+.report .tag{font:700 10px var(--f-body);letter-spacing:.08em;text-transform:uppercase;padding:1px 7px;border-radius:999px;color:#fff !important;justify-self:start}
+.report .summary{font-size:13px;line-height:1.5;padding:8px 10px;border:1px dashed #b9c6cc;border-radius:6px}
+.report table{font-size:11px}
+.report th,.report td{padding:3px 5px;border-bottom:1px solid #e1e7ea}
+.report .foot{display:flex;justify-content:space-between;font-size:11px;color:#56666e;border-top:1px solid #d3dce0;padding-top:8px;gap:12px}
+.report .foot *{color:#56666e}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<header class="bar">
+  <div class="bar-in">
+    <div class="brand"><h1>Motion<span>Plus</span></h1><small>Static posture assessment · plumb-line &amp; photogrammetry</small></div>
+    <nav class="tabs" role="tablist">
+      <button class="tab" role="tab" data-tab="patient" aria-selected="true" id="tab-patient">1 Patient</button>
+      <button class="tab" role="tab" data-tab="capture" aria-selected="false" id="tab-capture">2 Capture</button>
+      <button class="tab" role="tab" data-tab="analysis" aria-selected="false" id="tab-analysis">3 Analysis</button>
+      <button class="tab" role="tab" data-tab="report" aria-selected="false" id="tab-report">4 Report</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="banner" id="exampleBanner" hidden>
+    <p><b>Example patient (sample data).</b> Explore the analysis and report, then start a new assessment with your own photos.</p>
+    <button class="btn primary" id="newBtn">Start new assessment</button>
+  </div>
+
+  <!-- 1 PATIENT -->
+  <section data-pane="patient" class="grid2">
+    <div class="panel">
+      <h2>Patient</h2>
+      <div class="form">
+        <label class="field">Name or code<input id="p-name" autocomplete="off"></label>
+        <label class="field">Patient ID<input id="p-id" autocomplete="off"></label>
+        <label class="field">Age<input id="p-age" type="number" min="1" max="110" inputmode="numeric"></label>
+        <label class="field">Sex<select id="p-sex"><option value="">–</option><option>Female</option><option>Male</option><option>Other</option></select></label>
+        <label class="field">Height (cm)<input id="p-height" type="number" min="80" max="230" inputmode="decimal"></label>
+        <label class="field">Assessment date<input id="p-date" type="date"></label>
+        <label class="field">Sport or condition<input id="p-cond" autocomplete="off"></label>
+        <label class="field">Assessor<input id="p-assessor" autocomplete="off"></label>
+      </div>
+      <p class="note">Height is optional. With it, level differences are also shown in centimetres.</p>
+    </div>
+    <div class="panel">
+      <h2>Clinic</h2>
+      <div class="form">
+        <label class="field">Clinic name<input id="c-name" autocomplete="off"></label>
+        <label class="field">Clinic logo<input id="c-logo" type="file" accept="image/*"></label>
+      </div>
+      <div class="row"><img id="c-logo-prev" alt="Clinic logo" style="max-height:48px" hidden><button class="btn small" id="c-logo-clear" hidden>Remove logo</button></div>
+      <p class="note">Clinic details stay in this browser and appear on every report.</p>
+      <h3>Records</h3>
+      <div class="row">
+        <button class="btn" id="saveSession">Save session file</button>
+        <label class="btn" for="openSession">Open previous session</label>
+        <input id="openSession" type="file" accept=".json,application/json" hidden>
+      </div>
+      <label class="field">Compare with a saved session in this browser<select id="prevSelect"><option value="">None</option></select></label>
+      <p class="note">Session files keep landmarks and findings only. Photos are never saved.</p>
+    </div>
+  </section>
+
+  <!-- 2 CAPTURE -->
+  <section data-pane="capture" hidden class="grid2" style="grid-template-columns:1fr">
+    <div class="panel">
+      <h2>Capture setup</h2>
+      <div class="grid2">
+        <ul class="checklist">
+          <li>Plain, light wall with no clutter behind the patient.</li>
+          <li>Shorts and fitted top, barefoot, hair clear of ears and neck.</li>
+          <li>Phone or tablet upright at hip height, about 3 m away, whole body from head to feet in frame.</li>
+          <li>Stand relaxed, feet hip-width, arms by the side, eyes level.</li>
+        </ul>
+        <div>
+          <p class="note"><b>Optional white dots</b> make points easier to place accurately.</p>
+          <ul class="checklist">
+            <li>Front: ASIS, centre of patella, mid-ankle.</li>
+            <li>Back: C7, PSIS, mid-heel.</li>
+            <li>Side: ear tragus, acromion, greater trochanter, lateral knee joint line, lateral malleolus.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="note">Detection runs on this device. Faces are pixelated on screen and photos never leave the device or appear in reports.</p>
+      <div class="row"><label class="row" style="gap:6px"><input type="checkbox" id="showPhoto" checked style="width:auto"> Show photo behind points</label></div>
+    </div>
+    <div class="panel" id="projPicker" hidden>
+      <div class="row" style="justify-content:space-between"><h3>Photos from the project chat · <span id="projView"></span></h3>
+        <span class="row" style="gap:6px"><button class="btn small" id="projRefresh">Refresh</button><button class="btn small" id="projClose">Close</button></span></div>
+      <p class="note">Attach photos to a message in the MotionPlus project chat, then pick one here. Newest first.</p>
+      <div class="thumbs" id="projGrid"></div>
+    </div>
+    <div class="grid4" id="capGrid"></div>
+  </section>
+
+  <!-- 3 ANALYSIS -->
+  <section data-pane="analysis" hidden style="display:grid;gap:16px">
+    <div class="grid2">
+      <div class="panel">
+        <div class="row" style="justify-content:space-between;align-items:flex-start">
+          <div><h2>Posture score</h2><p class="note" id="viewsUsed"></p></div>
+          <div class="svgbox" id="dial" style="width:min(170px,100%)"></div>
+        </div>
+        <div id="patterns" class="patterns"></div>
+        <div class="legend"><span class="chip s-ok">Normal</span><span class="chip s-train">Train</span><span class="chip s-treat">Treat</span></div>
+        <p class="note"><b>Train</b>: mild deviation, strengthening and motor control. <b>Treat</b>: marked deviation, start with hands-on care and mobility, then load.</p>
+      </div>
+      <div class="panel">
+        <h3>Body map</h3>
+        <div class="svgbox" id="bodymap"></div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="panel"><h3>Region scores</h3><div class="svgbox" id="radar"></div><p class="note" id="radarNote"></p></div>
+      <div class="panel"><h3>Left vs right</h3><div class="svgbox" id="asym"></div></div>
+    </div>
+    <div class="panel"><h3>Alignment figures</h3><div class="figs" id="figs"></div></div>
+    <div class="panel" id="comparePanel" hidden><h3>Before and after</h3><div id="compare"></div></div>
+    <div class="panel">
+      <h3>Regions to treat or train</h3>
+      <p class="note">Tap a status to change it. Edit any exercise; your wording goes into the report.</p>
+      <div class="grid2" id="regions"></div>
+    </div>
+    <div class="panel">
+      <h3>Clinical measurements</h3>
+      <div class="tablewrap"><table id="mtable"></table></div>
+      <details>
+        <summary>Normal ranges (editable)</summary>
+        <p class="note">Defaults follow Kendall plumb-line alignment and common photogrammetry ranges. Values up to "Normal" score green; up to "Mild" amber; beyond that red.</p>
+        <div class="normgrid" id="norms"></div>
+        <button class="btn small" id="resetNorms">Reset to defaults</button>
+      </details>
+    </div>
+  </section>
+
+  <!-- 4 REPORT -->
+  <section data-pane="report" hidden style="display:grid;gap:16px">
+    <div class="panel">
+      <h2>Report</h2>
+      <div class="row">
+        <label class="row" style="gap:6px"><input type="checkbox" id="optClinical" style="width:auto"> Add clinical values page</label>
+        <label class="row" style="gap:6px"><input type="checkbox" id="optFigures" checked style="width:auto"> Include alignment figures</label>
+      </div>
+      <p class="note">Click the summary or notes in the preview to edit them. The PDF contains graphics only, no photos.</p>
+      <div class="row"><button class="btn primary" id="pdfBtn">Save PDF report</button><span class="note" id="pdfStatus"></span></div>
+    </div>
+    <div class="scaler" id="scaler"><div class="report" id="report"></div></div>
+  </section>
+</main>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script type="module">
+/* ---------------- constants ---------------- */
+const $ = s => document.querySelector(s);
+const PAPER = {ink:'#14232b',muted:'#56666e',line:'#d3dce0',grid:'#dbe7ef',plumb:'#1d5fa8',figure:'#c7d0d5',bone:'#33444d',ok:'#2c8a57',train:'#c98410',treat:'#c3352b',bg:'#ffffff',font:'Arial,Helvetica,sans-serif'};
+const SCREEN = {ink:'var(--ink)',muted:'var(--muted)',line:'var(--line)',grid:'var(--grid)',plumb:'var(--plumb)',figure:'var(--figure)',bone:'var(--bone)',ok:'var(--ok)',train:'var(--train)',treat:'var(--treat)',bg:'var(--surface)',font:'Source Sans 3,Arial,sans-serif'};
+
+const VIEWS = [
+  {k:'ant', label:'Front', plane:'frontal'},
+  {k:'post', label:'Back', plane:'frontal'},
+  {k:'latL', label:'Left side', plane:'sag', s:'l'},
+  {k:'latR', label:'Right side', plane:'sag', s:'r'},
+];
+const MP = {nose:0,lEye:2,rEye:5,lEar:7,rEar:8,lSh:11,rSh:12,lElb:13,rElb:14,lWri:15,rWri:16,lHip:23,rHip:24,lKnee:25,rKnee:26,lAnk:27,rAnk:28,lHeel:29,rHeel:30,lToe:31,rToe:32};
+const CHAIN = ['Ear','Sh','Elb','Wri','Hip','Knee','Ank','Heel','Toe'];
+const NAMES = {nose:'Nose',Eye:'eye',Ear:'ear',Sh:'shoulder',Elb:'elbow',Wri:'wrist',Hip:'hip',Knee:'knee',Ank:'ankle',Heel:'heel',Toe:'toe'};
+function keysFor(view){
+  const v = VIEWS.find(x=>x.k===view);
+  if (v.plane==='frontal') return Object.keys(MP);
+  return ['nose', v.s+'Eye', ...CHAIN.map(c=>v.s+c)];
+}
+function bonesFor(view){
+  const v = VIEWS.find(x=>x.k===view);
+  const side = s => [[s+'Sh',s+'Elb'],[s+'Elb',s+'Wri'],[s+'Sh',s+'Hip'],[s+'Hip',s+'Knee'],[s+'Knee',s+'Ank'],[s+'Ank',s+'Heel'],[s+'Heel',s+'Toe'],[s+'Ank',s+'Toe']];
+  if (v.plane==='frontal') return [['lEar','rEar'],['lSh','rSh'],['lHip','rHip'],...side('l'),...side('r')];
+  return [[v.s+'Ear',v.s+'Sh'],...side(v.s)];
+}
+
+const DEFAULT_NORMS = {
+  headTilt:{label:'Head tilt',unit:'°',n:2,m:4},
+  headShift:{label:'Head lateral shift',unit:'%',n:1.5,m:3},
+  shoulderLevel:{label:'Shoulder level',unit:'°',n:2,m:4},
+  trunkShift:{label:'Trunk lateral shift',unit:'%',n:1.5,m:3},
+  pelvicLevel:{label:'Pelvic level',unit:'°',n:2,m:4},
+  kneeFront:{label:'Knee frontal alignment',unit:'°',n:4,m:8},
+  fwdHead:{label:'Forward head angle',unit:'°',n:10,m:20},
+  earPlumb:{label:'Ear to plumb line',unit:'%',n:2.5,m:5},
+  shoulderPlumb:{label:'Shoulder to plumb line',unit:'%',n:2.5,m:5},
+  hipPlumb:{label:'Hip to plumb line',unit:'%',n:2,m:4},
+  kneePlumb:{label:'Knee to plumb line',unit:'%',n:2,m:4},
+  trunkIncl:{label:'Trunk inclination',unit:'°',n:4,m:8},
+  kneeSag:{label:'Knee sagittal angle',unit:'°',n:5,m:10},
+  shankIncl:{label:'Lower leg inclination',unit:'°',n:6,m:12},
+};
+const METRICS = {
+  headTilt:{norm:'headTilt',plane:'frontal'}, headShift:{norm:'headShift',plane:'frontal'},
+  shoulderLevel:{norm:'shoulderLevel',plane:'frontal'}, trunkShift:{norm:'trunkShift',plane:'frontal'},
+  pelvicLevel:{norm:'pelvicLevel',plane:'frontal'},
+  kneeFrontL:{norm:'kneeFront',plane:'frontal',label:'Left knee frontal alignment'},
+  kneeFrontR:{norm:'kneeFront',plane:'frontal',label:'Right knee frontal alignment'},
+  fwdHead:{norm:'fwdHead',plane:'sag'}, earPlumb:{norm:'earPlumb',plane:'sag'},
+  shoulderPlumb:{norm:'shoulderPlumb',plane:'sag'}, hipPlumb:{norm:'hipPlumb',plane:'sag'},
+  kneePlumb:{norm:'kneePlumb',plane:'sag'}, trunkIncl:{norm:'trunkIncl',plane:'sag'},
+  kneeSagL:{norm:'kneeSag',plane:'sag',label:'Left knee sagittal angle'},
+  kneeSagR:{norm:'kneeSag',plane:'sag',label:'Right knee sagittal angle'},
+  shankIncl:{norm:'shankIncl',plane:'sag'},
+};
+const REGIONS = [
+  {k:'head',short:'Head & neck',label:'Head & neck',metrics:['headTilt','headShift','fwdHead','earPlumb']},
+  {k:'shoulder',short:'Shoulders',label:'Shoulders & upper back',metrics:['shoulderLevel','shoulderPlumb']},
+  {k:'trunk',short:'Trunk',label:'Trunk & spine',metrics:['trunkShift','trunkIncl']},
+  {k:'pelvis',short:'Pelvis & hips',label:'Pelvis & hips',metrics:['pelvicLevel','hipPlumb']},
+  {k:'knee',short:'Knees',label:'Knees',metrics:['kneeFrontL','kneeFrontR','kneeSagL','kneeSagR','kneePlumb']},
+  {k:'ankle',short:'Ankles & feet',label:'Ankles & feet',metrics:['shankIncl']},
+];
+const EX = {
+  fwdHead:['Chin tuck for deep neck flexors, lying then sitting: 10 × 10 s hold','Thoracic extension over foam roller: 2 × 10 slow reps','Doorway pectoral stretch: 3 × 30 s each side'],
+  headTilt:['Upper trapezius stretch on the tilted side: 3 × 30 s','Chin tuck with mirror feedback, eyes level: 2 × 10','Isometric side-bend toward the high side: 5 × 10 s'],
+  shift:['Lateral shift correction in standing with mirror: 10 × 5 s','Side plank on the weaker side: 3 × 20–30 s','Single-leg stance with trunk upright: 3 × 30 s each leg'],
+  shoulderLevel:['Scapular setting with shrug control, low side: 3 × 12','Side-lying open book thoracic rotation: 2 × 10 each side','Upper trapezius stretch on the high side: 3 × 30 s'],
+  shoulderFwd:['Prone Y and T raises for lower and middle trapezius: 3 × 10','Band pull-apart: 3 × 15','Doorway pectoral stretch: 3 × 30 s'],
+  trunkFwd:['Wall angels with back flat on wall: 2 × 10','Hip hinge drill with dowel: 3 × 10','Prone press-up for thoracic extension: 2 × 10'],
+  trunkBack:['Dead bug for deep core control: 3 × 8 each side','Glute bridge: 3 × 12','Wall posture re-alignment drill: 5 × 30 s'],
+  pelvicLevel:['Side-lying hip abduction, low side: 3 × 15','Hip hitch on a step: 3 × 12 each side','Quadratus lumborum stretch, high side: 3 × 30 s'],
+  hipFwd:['Posterior pelvic tilt in crook lying: 3 × 10','Glute bridge with 3 s hold: 3 × 12','Half-kneeling hip flexor stretch: 3 × 30 s each side'],
+  hipBack:['Standing hip flexor march: 3 × 12 each side','Bird dog: 3 × 8 each side','Hamstring stretch in supine: 3 × 30 s'],
+  valgus:['Clamshell and banded side-steps: 3 × 15','Mini squat with band above knees, knee over 2nd toe: 3 × 12','Short-foot arch control: 3 × 10, 5 s hold'],
+  varus:['Adductor ball squeeze: 3 × 10, 5 s hold','Lateral step-down with knee alignment cue: 3 × 10','Lateral hip and ITB foam roll with stretch: 2 × 60 s'],
+  hyperext:['Soft-knee standing awareness drill: 5 × 30 s','Hamstring curl, bridge or band: 3 × 12','Calf raise with knees slightly bent: 3 × 15'],
+  flexed:['Terminal knee extension with band: 3 × 15','Hamstring and calf stretch: 3 × 30 s each','Prone hang for knee extension: 3 × 60 s'],
+  shankFwd:['Gastrocnemius and soleus stretch: 3 × 30 s each','Knee-to-wall ankle mobilisation: 2 × 15','Single-leg balance, firm then soft surface: 3 × 30 s'],
+  shankBack:['Knee-to-wall ankle mobilisation: 2 × 15','Tibialis anterior raises: 3 × 15','Single-leg balance with forward reach: 3 × 8'],
+};
+
+/* ---------------- state ---------------- */
+const S = {
+  patient:{}, clinic:{name:'',logo:''}, views:{}, overrides:{}, exercises:{},
+  summary:null, notes:'', norms:structuredClone(DEFAULT_NORMS), example:false, previous:null,
+};
+const store = {
+  get(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch{ return d; } },
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); return true; }catch{ return false; } },
+};
+const toast = msg => { const t=$('#toast'); t.textContent=msg; t.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(()=>t.hidden=true,3200); };
+const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = (v,d=1) => (v==null||!isFinite(v))?'–':(Math.round(v*10**d)/10**d).toFixed(d);
+const deg = r => r*180/Math.PI;
+const mid = (a,b) => ({x:(a.x+b.x)/2,y:(a.y+b.y)/2});
+const dist = (a,b) => Math.hypot(a.x-b.x,a.y-b.y);
+
+/* ---------------- geometry & metrics ---------------- */
+function frontalMetrics(P){
+  const out={};
+  const mAnk = mid(P.lAnk,P.rAnk), mEar = mid(P.lEar,P.rEar);
+  const H = mAnk.y - mEar.y; if (H<=10) return out;
+  const leftDir = Math.sign(P.lHip.x - P.rHip.x) || 1; // image direction toward patient's left
+  const level = (l,r) => { // angle of the line, side that is lower
+    const ang = deg(Math.atan2(Math.abs(l.y-r.y), Math.abs(l.x-r.x)));
+    return {v:ang, side: l.y>r.y?'left':'right', cm: Math.abs(l.y-r.y)/H};
+  };
+  out.headTilt = level(P.lEar,P.rEar);
+  out.shoulderLevel = level(P.lSh,P.rSh);
+  out.pelvicLevel = level(P.lHip,P.rHip);
+  const shift = p => { const d=(p.x-mAnk.x)/H*100; return {v:Math.abs(d), side: d*leftDir>0?'left':'right'}; };
+  out.headShift = shift(mEar);
+  out.trunkShift = shift(mid(P.lSh,P.rSh));
+  const midHip = mid(P.lHip,P.rHip);
+  for (const s of ['l','r']){
+    const hip=P[s+'Hip'], knee=P[s+'Knee'], ank=P[s+'Ank'];
+    const a1 = Math.atan2(knee.x-hip.x, knee.y-hip.y), a2 = Math.atan2(ank.x-knee.x, ank.y-knee.y);
+    const dev = Math.abs(deg(a1-a2));
+    const lineX = hip.x + (ank.x-hip.x)*(knee.y-hip.y)/((ank.y-hip.y)||1);
+    const medial = Math.sign(midHip.x-hip.x) || 1;
+    const valgus = (knee.x-lineX)*medial > 0;
+    out[s==='l'?'kneeFrontL':'kneeFrontR'] = {v:dev, dir: valgus?'valgus':'varus', interior:180-dev};
+  }
+  out._H = H;
+  return out;
+}
+function sagittalMetrics(P,s){
+  const g = k => P[s+k];
+  const ear=g('Ear'), sh=g('Sh'), hip=g('Hip'), knee=g('Knee'), ank=g('Ank'), heel=g('Heel'), toe=g('Toe');
+  const H = ank.y - ear.y; if (H<=10) return {};
+  const f = Math.sign(toe.x-heel.x) || Math.sign(P.nose.x-ear.x) || 1;
+  const plumbX = ank.x + f*0.015*H;
+  const dev = p => { const d=(p.x-plumbX)*f/H*100; return {v:Math.abs(d), signed:d, dir:d>=0?'forward of':'behind'}; };
+  const incl = (top,bot) => deg(Math.atan2((top.x-bot.x)*f, bot.y-top.y));
+  const fh = incl(ear,sh), ti = incl(sh,hip), si = incl(knee,ank);
+  const lineX = hip.x + (ank.x-hip.x)*(knee.y-hip.y)/((ank.y-hip.y)||1);
+  const a1 = Math.atan2(knee.x-hip.x, knee.y-hip.y), a2 = Math.atan2(ank.x-knee.x, ank.y-knee.y);
+  const kd = Math.abs(deg(a1-a2)); const flexed = (knee.x-lineX)*f > 0;
+  return {
+    fwdHead:{v:Math.abs(fh), signed:fh, dir: fh>=0?'forward':'back'},
+    earPlumb:dev(ear), shoulderPlumb:dev(sh), hipPlumb:dev(hip), kneePlumb:dev(knee),
+    trunkIncl:{v:Math.abs(ti), signed:ti, dir: ti>=0?'forward':'backward'},
+    kneeSag:{v:kd, signed: flexed?kd:-kd, dir: flexed?'flexed':'hyperextended', interior:180-kd},
+    shankIncl:{v:Math.abs(si), signed:si, dir: si>=0?'forward':'backward'},
+    _H:H, _f:f, _plumbX:plumbX,
+  };
+}
+function severity(normKey, v){
+  const n=S.norms[normKey]; if (v==null||!isFinite(v)) return 'na';
+  return v<=n.n?'ok':v<=n.m?'train':'treat';
+}
+function scoreOf(normKey, v){
+  const n=S.norms[normKey]; const a=Math.abs(v);
+  if (a<=n.n) return 100-15*a/n.n;
+  if (a<=n.m) return 85-30*(a-n.n)/(n.m-n.n);
+  return Math.max(20, 55-35*Math.min(1,(a-n.m)/n.m));
+}
+const avgObj = (a,b) => { if(!a) return b; if(!b) return a; const o={...a, v:(a.v+b.v)/2}; if(a.signed!=null&&b.signed!=null){ o.signed=(a.signed+b.signed)/2; } return o; };
+
+function analyse(){
+  const fr = ['ant','post'].map(k=>S.views[k]?.pts?frontalMetrics(S.views[k].pts):null).filter(Boolean);
+  const sg = {l:S.views.latL?.pts?sagittalMetrics(S.views.latL.pts,'l'):null, r:S.views.latR?.pts?sagittalMetrics(S.views.latR.pts,'r'):null};
+  const M = {};
+  // frontal: average across front/back; keep the side reported by the view with larger value
+  for (const key of ['headTilt','headShift','shoulderLevel','trunkShift','pelvicLevel','kneeFrontL','kneeFrontR']){
+    const vals = fr.map(f=>f[key]).filter(Boolean); if(!vals.length) continue;
+    const big = vals.reduce((a,b)=>b.v>a.v?b:a);
+    M[key] = {...big, v: vals.reduce((s,x)=>s+x.v,0)/vals.length};
+  }
+  const frH = fr.length? fr.reduce((s,f)=>s+f._H,0)/fr.length : null;
+  for (const key of ['fwdHead','earPlumb','shoulderPlumb','hipPlumb','kneePlumb','trunkIncl','shankIncl']){
+    const a=sg.l?.[key], b=sg.r?.[key]; if(!a&&!b) continue;
+    const o = avgObj(a,b); if(o.signed!=null) o.dir = key==='fwdHead'?(o.signed>=0?'forward':'back'):key.endsWith('Plumb')?(o.signed>=0?'forward of':'behind'):(o.signed>=0?'forward':'backward');
+    o.v = Math.abs(o.signed ?? o.v); M[key]=o;
+  }
+  if (sg.l?.kneeSag) M.kneeSagL = sg.l.kneeSag;
+  if (sg.r?.kneeSag) M.kneeSagR = sg.r.kneeSag;
+  for (const k in M){ const nk=METRICS[k].norm; M[k].sev=severity(nk,M[k].v); M[k].score=scoreOf(nk,M[k].v); }
+
+  const regions = REGIONS.map(r=>{
+    const ms = r.metrics.filter(k=>M[k]);
+    const rank = {na:-1,ok:0,train:1,treat:2};
+    let sev='na', worst=null;
+    for (const k of ms){ if(rank[M[k].sev]>rank[sev]){sev=M[k].sev;} if(!worst||M[k].score<M[worst].score) worst=k; }
+    const score = ms.length? ms.reduce((s,k)=>s+M[k].score,0)/ms.length : null;
+    const status = S.overrides[r.k] || sev;
+    return {...r, ms, auto:sev, status, score, worst};
+  });
+  const scored = regions.filter(r=>r.score!=null);
+  const overall = scored.length? scored.reduce((s,r)=>s+r.score,0)/scored.length : null;
+  return {M, regions, overall, frH, sg, patterns:patternsOf(M)};
+}
+function patternsOf(M){
+  const out=[]; const N=S.norms;
+  if (!M.fwdHead && !M.shoulderLevel) return out;
+  const allOk = Object.values(M).every(m=>m.sev==='ok');
+  if (allOk) out.push(['ok','Close to ideal alignment']);
+  if (M.fwdHead && M.fwdHead.signed>N.fwdHead.n && M.shoulderPlumb && M.shoulderPlumb.signed>N.shoulderPlumb.n) out.push(['train','Forward head with rounded shoulders (upper-crossed pattern, Janda)']);
+  else if (M.fwdHead && M.fwdHead.signed>N.fwdHead.n) out.push([M.fwdHead.sev,'Forward head posture']);
+  if (M.hipPlumb && M.trunkIncl && M.hipPlumb.signed>N.hipPlumb.n && M.trunkIncl.signed< -N.trunkIncl.n/2) out.push(['train','Sway-back pattern (Kendall): pelvis forward, trunk leaning back']);
+  else if (M.hipPlumb && M.hipPlumb.signed>N.hipPlumb.n) out.push([M.hipPlumb.sev,'Pelvis shifted forward of the plumb line']);
+  const hyper = ['kneeSagL','kneeSagR'].filter(k=>M[k] && M[k].signed< -N.kneeSag.n);
+  if (hyper.length) out.push([hyper.some(k=>M[k].sev==='treat')?'treat':'train', `Knee hyperextension (${hyper.map(k=>k.endsWith('L')?'left':'right').join(' and ')})`]);
+  const valg = ['kneeFrontL','kneeFrontR'].filter(k=>M[k] && M[k].dir==='valgus' && M[k].v>N.kneeFront.n);
+  if (valg.length) out.push([valg.some(k=>M[k].sev==='treat')?'treat':'train', `Knee valgus (${valg.map(k=>k.endsWith('L')?'left':'right').join(' and ')})`]);
+  if (M.shoulderLevel && M.pelvicLevel && M.shoulderLevel.sev!=='ok' && M.pelvicLevel.sev!=='ok' && M.shoulderLevel.side!==M.pelvicLevel.side) out.push(['train','Opposite shoulder and pelvic drop (screen for scoliosis)']);
+  return out;
+}
+const cap = s => s.charAt(0).toUpperCase()+s.slice(1);
+function plainText(k, m, frH){
+  const v=fmt(m.v); const h=+S.patient.height;
+  const cm = (m.cm!=null && h) ? ` (about ${fmt(m.cm*h*0.89,1)} cm)` : '';
+  switch(k){
+    case 'headTilt': return `Head tilts toward the ${m.side} by ${v}°.`;
+    case 'headShift': return `Head sits ${v}% of body height to the ${m.side} of the centre line.`;
+    case 'shoulderLevel': return `${cap(m.side)} shoulder is lower by ${v}°${cm}.`;
+    case 'pelvicLevel': return `${cap(m.side)} side of the pelvis is lower by ${v}°${cm}.`;
+    case 'trunkShift': return `Upper body is shifted ${v}% toward the ${m.side}.`;
+    case 'kneeFrontL': case 'kneeFrontR': return `${k.endsWith('L')?'Left':'Right'} knee angles ${v}° ${m.dir==='valgus'?'inward (valgus)':'outward (varus)'}.`;
+    case 'fwdHead': return `Head sits ${v}° ${m.dir} of the shoulders.`;
+    case 'earPlumb': return `Ear is ${v}% of height ${m.dir} the plumb line.`;
+    case 'shoulderPlumb': return `Shoulder is ${v}% ${m.dir} the plumb line.`;
+    case 'hipPlumb': return `Hip is ${v}% ${m.dir} the plumb line.`;
+    case 'kneePlumb': return `Knee is ${v}% ${m.dir} the plumb line.`;
+    case 'trunkIncl': return `Trunk leans ${v}° ${m.dir}.`;
+    case 'kneeSagL': case 'kneeSagR': return `${k.endsWith('L')?'Left':'Right'} knee is ${v}° ${m.dir==='flexed'?'bent':'hyperextended (locked back)'}.`;
+    case 'shankIncl': return `Lower leg leans ${v}° ${m.dir} over the foot.`;
+  }
+  return '';
+}
+function exercisesFor(region, M){
+  if (S.exercises[region.k]) return S.exercises[region.k];
+  const w = region.worst, m = w && M[w];
+  if (!m) return [];
+  const pick = {
+    headTilt:'headTilt', headShift:'shift', trunkShift:'shift', fwdHead:'fwdHead', earPlumb:'fwdHead',
+    shoulderLevel:'shoulderLevel', shoulderPlumb:'shoulderFwd', pelvicLevel:'pelvicLevel',
+    trunkIncl: m.signed>=0?'trunkFwd':'trunkBack', hipPlumb: m.signed>=0?'hipFwd':'hipBack',
+    kneeFrontL: m.dir==='valgus'?'valgus':'varus', kneeFrontR: m.dir==='valgus'?'valgus':'varus',
+    kneeSagL: m.signed<0?'hyperext':'flexed', kneeSagR: m.signed<0?'hyperext':'flexed', kneePlumb: m.signed<0?'hyperext':'flexed',
+    shankIncl: m.signed>=0?'shankFwd':'shankBack',
+  }[w];
+  return EX[pick] || [];
+}
+
+/* ---------------- example patient ---------------- */
+function examplePts(){
+  const ant = {nose:[300,120],lEye:[312,107],rEye:[288,108],lEar:[323,116],rEar:[277,118],lSh:[364,200],rSh:[244,206],lElb:[376,326],rElb:[228,330],lWri:[380,436],rWri:[224,440],
+    lHip:[338,474],rHip:[262,470],lKnee:[325,692],rKnee:[266,690],lAnk:[336,902],rAnk:[264,900],lHeel:[334,917],rHeel:[266,915],lToe:[342,937],rToe:[258,935]};
+  const post = Object.fromEntries(Object.entries(ant).map(([k,[x,y]])=>[k,[600-x+2,y]]));
+  const latL = {nose:[290,122],lEye:[300,108],lEar:[306,118],lSh:[330,205],lElb:[322,330],lWri:[318,440],lHip:[292,470],lKnee:[316,690],lAnk:[320,900],lHeel:[338,915],lToe:[272,930]};
+  const latR = {nose:[310,122],rEye:[300,108],rEar:[296,118],rSh:[270,205],rElb:[278,330],rWri:[282,440],rHip:[306,470],rKnee:[288,690],rAnk:[280,900],rHeel:[262,915],rToe:[328,930]};
+  const conv = o => Object.fromEntries(Object.entries(o).map(([k,[x,y]])=>[k,{x,y}]));
+  return {ant:conv(ant),post:conv(post),latL:conv(latL),latR:conv(latR)};
+}
+function loadExample(){
+  const P = examplePts();
+  S.example = true;
+  S.patient = {name:'Example patient',id:'DEMO-01',age:'34',sex:'Female',height:'165',date:today(),cond:'Recreational runner, neck and knee pain',assessor:''};
+  S.views = {};
+  for (const v of VIEWS) S.views[v.k] = {w:600,h:1000,pts:P[v.k],src:null,manual:false,checks:[]};
+  S.overrides={}; S.exercises={}; S.summary=null; S.notes=''; S.previous=null;
+}
+function today(){ const d=new Date(); return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10); }
+
+/* ---------------- pose detection ---------------- */
+let landmarkerP = null;
+function getLandmarker(){
+  if (!landmarkerP) landmarkerP = (async()=>{
+    const m = await import('./vision_bundle.mjs');
+    const fs = await m.FilesetResolver.forVisionTasks(new URL('./wasm', location.href).href.replace(/\/$/,''));
+    return m.PoseLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:new URL('./models/pose_landmarker.wasm',location.href).href, delegate:'CPU'}, runningMode:'IMAGE', numPoses:1, minPoseDetectionConfidence:0.4});
+  })().catch(e=>{ landmarkerP=null; throw e; });
+  return landmarkerP;
+}
+function templatePts(view,w,h){
+  const ex = examplePts()[view];
+  const xs = Object.values(ex).map(p=>p.x), ys=Object.values(ex).map(p=>p.y);
+  const bx=Math.min(...xs), by=Math.min(...ys), bw=Math.max(...xs)-bx, bh=Math.max(...ys)-by;
+  const sc = Math.min(w*0.7/bw, h*0.8/bh);
+  const ox = (w-bw*sc)/2, oy=(h-bh*sc)/2;
+  return Object.fromEntries(Object.entries(ex).map(([k,p])=>[k,{x:ox+(p.x-bx)*sc,y:oy+(p.y-by)*sc}]));
+}
+async function decodePhoto(file){
+  // Try a blob URL first, then a data URL, then createImageBitmap: phone browsers and app views differ.
+  const viaImg = src => new Promise((res,rej)=>{ const im=new Image(); im.onload=()=>res(im); im.onerror=()=>rej(new Error('decode')); im.src=src; });
+  try{ const u=URL.createObjectURL(file); try{ return await viaImg(u); } finally{ setTimeout(()=>URL.revokeObjectURL(u),5000); } }catch{}
+  try{ const d=await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=()=>rej(r.error); r.readAsDataURL(file); }); return await viaImg(d); }catch{}
+  if (window.createImageBitmap) return await createImageBitmap(file);
+  throw new Error('decode');
+}
+let detectorBroken = false;
+const withTimeout = (p,ms) => Promise.race([p, new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))]);
+async function loadPhoto(view, file){
+  if (S.example){ exitExample(); }
+  S.views[view] = {w:300,h:500,src:null,pts:null,manual:false,checks:[],busy:true,loading:true};
+  renderCaptures();
+  let img;
+  try{ img = await decodePhoto(file); }
+  catch{
+    S.views[view] = null;
+    capError[view] = /heic|heif/i.test(file.type+file.name)
+      ? 'This photo is in HEIC format, which this view cannot open. On iPhone set Settings › Camera › Formats › Most Compatible, or share it as JPG.'
+      : 'This photo could not be opened. Try a JPG or PNG.';
+    renderCaptures(); return;
+  }
+  delete capError[view];
+  const iw=img.naturalWidth||img.width, ih=img.naturalHeight||img.height;
+  const sc = Math.min(1, 1400/Math.max(iw,ih));
+  const c = document.createElement('canvas'); c.width=Math.round(iw*sc); c.height=Math.round(ih*sc);
+  c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+  const v = {w:c.width,h:c.height,src:c,pts:null,manual:false,checks:[],busy:true};
+  S.views[view]=v; renderCaptures();
+  try{ v.checks = photoChecks(c); }catch{ v.checks=[]; }
+  try{
+    if (detectorBroken) throw new Error('unavailable');
+    const lm = await withTimeout(getLandmarker(), 30000);
+    const res = lm.detect(c);
+    const L = res.landmarks?.[0];
+    if (!L) throw new Error('none');
+    v.pts = {}; let low=[];
+    for (const k of keysFor(view)){ const p=L[MP[k]]; v.pts[k]={x:p.x*c.width,y:p.y*c.height}; if((p.visibility??1)<0.5 && !/Eye|nose/.test(k)) low.push(k); }
+    const ys = keysFor(view).map(k=>v.pts[k].y); const span=(Math.max(...ys)-Math.min(...ys))/c.height;
+    if (span<0.55) v.checks.push('Patient fills little of the frame. Move closer for better accuracy.');
+    if (low.length) v.checks.push(`Check these points by hand: ${low.map(nice).join(', ')}.`);
+  }catch(e){
+    if (e.message!=='none') detectorBroken = true;
+    v.pts = templatePts(view,c.width,c.height); v.manual=true;
+    v.checks.push(e.message==='none' ? 'No person found automatically. Tap Adjust points and drag each dot onto its landmark.' : 'Automatic detection is not available on this device. Tap Adjust points and drag each dot onto its landmark.');
+  }
+  v.busy=false; S.summary=null; renderCaptures(); refreshAll();
+}
+const capError = {};
+let activeView = 'ant';
+function nice(k){ if(k==='nose') return 'nose'; const s=k[0]==='l'?'left ':'right '; return s+NAMES[k.slice(1)]; }
+function photoChecks(c){
+  const t=document.createElement('canvas'); t.width=40; t.height=Math.max(1,Math.round(40*c.height/c.width));
+  const x=t.getContext('2d'); x.drawImage(c,0,0,t.width,t.height); const d=x.getImageData(0,0,t.width,t.height).data;
+  let sum=0; for(let i=0;i<d.length;i+=4) sum+=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];
+  const mean=sum/(d.length/4); const out=[];
+  if (mean<70) out.push('Photo looks dark. Add light for better detection.');
+  if (c.width>c.height) out.push('Photo is landscape. Portrait framing fits the whole body better.');
+  return out;
+}
+function exitExample(){ S.example=false; S.views={}; S.patient={date:today()}; S.overrides={}; S.exercises={}; S.summary=null; S.notes=''; fillPatientForm(); $('#exampleBanner').hidden=true; }
+
+/* ---------------- photos attached in the project chat ---------------- */
+let filesCap; const filesP = (async()=>{ try{ filesCap = await window.claude?.use?.('files'); }catch{ filesCap=null; } if(filesCap) setTimeout(()=>renderCaptures(),0); return filesCap; })();
+function sniff(b){
+  if (b[0]===0xFF&&b[1]===0xD8) return 'image/jpeg';
+  if (b[0]===0x89&&b[1]===0x50&&b[2]===0x4E&&b[3]===0x47) return 'image/png';
+  if (b[0]===0x52&&b[1]===0x49&&b[2]===0x46&&b[3]===0x46&&b[8]===0x57&&b[9]===0x45) return 'image/webp';
+  const ft=String.fromCharCode(...b.slice(4,12)); if (/^ftyp(heic|heix|mif1|hevc)/.test(ft)) return 'image/heic';
+  if (/^ftypavif/.test(ft)) return 'image/avif';
+  return null;
+}
+const projThumbs = [];
+async function openProjectPicker(view){
+  const box=$('#projPicker'); box.hidden=false; box.scrollIntoView({block:'start',behavior:'smooth'}); $('#projView').textContent = VIEWS.find(v=>v.k===view).label;
+  const grid=$('#projGrid'); grid.innerHTML='<p class="note">Looking for photos…</p>';
+  const fc = await filesP;
+  if (!fc){ grid.innerHTML='<p class="warn">Project files are not available in this view.</p>'; return; }
+  try{
+    let entries=[], cursor;
+    for (let i=0;i<5;i++){ const r=await fc.list({path:'uploads',recursive:true,cursor}); entries.push(...r.entries); cursor=r.cursor; if(!cursor) break; }
+    entries = entries.filter(e=>!e.isDirectory && e.size>8000 && e.size<30e6).sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')).slice(0,16);
+    const found=[];
+    for (const e of entries){ try{ const r=await fc.read(e.path); const t=sniff(r.bytes); if(t) found.push({e,bytes:r.bytes,type:t}); }catch{} }
+    projThumbs.forEach(u=>URL.revokeObjectURL(u)); projThumbs.length=0;
+    if (!found.length){ grid.innerHTML='<p class="warn">No photos found yet. Attach the patient photos to a message in this project chat, then tap Refresh.</p>'; return; }
+    grid.innerHTML='';
+    for (const f of found){
+      const blob=new Blob([f.bytes],{type:f.type}); const u=URL.createObjectURL(blob); projThumbs.push(u);
+      const btn=document.createElement('button'); btn.className='thumb';
+      btn.innerHTML = f.type==='image/heic' ? '<span class="note">HEIC photo</span>' : `<img alt="" src="${u}">`;
+      btn.insertAdjacentHTML('beforeend',`<small>${esc((f.e.createdAt||'').slice(0,16).replace('T',' '))}</small>`);
+      btn.onclick=()=>{ box.hidden=true; loadPhoto(view, new File([blob], 'photo.'+f.type.split('/')[1], {type:f.type})); };
+      grid.appendChild(btn);
+    }
+  }catch(err){
+    grid.innerHTML = err?.code==='not_found' ? '<p class="warn">No photos found yet. Attach the patient photos to a message in this project chat, then tap Refresh.</p>'
+      : err?.code==='not_granted' ? '<p class="warn">Access to project files was not allowed. You can change this in the artifact’s Permissions menu.</p>'
+      : `<p class="warn">Could not read project files (${esc(err?.code||err?.message||'error')}). Tap Refresh to try again.</p>`;
+  }
+  $('#projRefresh').onclick=()=>openProjectPicker(view);
+}
+
+/* ---------------- capture rendering & editing ---------------- */
+let editing = null, drag=null;
+function renderCaptures(){
+  const g=$('#capGrid'); g.innerHTML='';
+  for (const vw of VIEWS){
+    const v=S.views[vw.k];
+    const el=document.createElement('div'); el.className='panel cap';
+    el.innerHTML = `<div class="cap-head"><h3>${vw.label}</h3>${v?.pts?`<button class="btn small" data-edit="${vw.k}">${editing===vw.k?'Done':'Adjust points'}</button>`:''}</div>
+      <div class="row" style="gap:6px">
+        <label class="btn small ${v?'':'primary'}" for="cam-${vw.k}">Take photo</label>
+        <label class="btn small" for="gal-${vw.k}">${v?'Replace from gallery':'Choose from gallery'}</label>
+        ${filesCap?`<button class="btn small" data-proj="${vw.k}">From project chat</button>`:''}
+      </div>
+      <input class="vh" id="cam-${vw.k}" type="file" accept="image/*" capture="environment">
+      <input class="vh" id="gal-${vw.k}" type="file" accept="image/*">
+      ${v && !v.loading ? `<canvas id="cv-${vw.k}" class="${editing===vw.k?'editing':''}"></canvas>` : `<label class="empty" for="gal-${vw.k}">${v?.loading?'Opening photo…':(vw.plane==='frontal'?'Facing the camera':'Side on, '+(vw.s==='l'?'left':'right')+' side toward the camera')+'<br>Tap to choose a full-body photo, or drop or paste one here'}</label>`}
+      ${v?.busy && !v.loading?'<p class="note">Finding landmarks…</p>':''}
+      ${capError[vw.k]?`<p class="warn" style="color:var(--treat)">${esc(capError[vw.k])}</p>`:''}
+      ${(v?.checks||[]).map(c=>`<p class="warn">${esc(c)}</p>`).join('')}
+      ${v?.pts && !v.busy && !(v.checks||[]).length ? `<p class="ok-line">${v.src?'Landmarks found. Adjust any point that is off.':'Sample landmarks.'}</p>`:''}`;
+    g.appendChild(el);
+    for (const id of ['cam-','gal-']) el.querySelector('#'+id+vw.k).addEventListener('change',e=>{ const f=e.target.files?.[0]; e.target.value=''; if(f) loadPhoto(vw.k,f); });
+    el.addEventListener('pointerdown',()=>{ activeView=vw.k; });
+    const pj=el.querySelector('[data-proj]'); if(pj) pj.onclick=()=>openProjectPicker(vw.k);
+    el.addEventListener('dragover',e=>{ e.preventDefault(); });
+    el.addEventListener('drop',e=>{ e.preventDefault(); const f=[...(e.dataTransfer?.files||[])].find(f=>f.type.startsWith('image/')); if(f) loadPhoto(vw.k,f); });
+    const eb=el.querySelector('[data-edit]'); if(eb) eb.addEventListener('click',()=>{ editing = editing===vw.k?null:vw.k; renderCaptures(); if(!editing) refreshAll(); });
+    if (v) drawCapture(vw.k);
+  }
+}
+function drawCapture(k){
+  const v=S.views[k], cv=$('#cv-'+k); if(!cv) return;
+  cv.width=v.w; cv.height=v.h; const x=cv.getContext('2d');
+  const css = getComputedStyle(document.documentElement); const col = n=>css.getPropertyValue(n).trim();
+  if (v.src && $('#showPhoto').checked){ x.drawImage(v.src,0,0); pixelateFace(x,v,k); x.fillStyle='rgba(255,255,255,.15)'; x.fillRect(0,0,v.w,v.h); }
+  else { x.fillStyle=col('--surface'); x.fillRect(0,0,v.w,v.h); drawGrid(x,v.w,v.h,col('--grid')); }
+  if (!v.pts) return;
+  const P=v.pts, r=Math.max(v.w,v.h)/110;
+  // plumb line
+  const vw=VIEWS.find(q=>q.k===k);
+  let px; if (vw.plane==='frontal') px=(P.lAnk.x+P.rAnk.x)/2; else { const m=sagittalMetrics(P,vw.s); px=m._plumbX; }
+  x.strokeStyle=col('--plumb'); x.lineWidth=r*0.35; x.setLineDash([r*1.2,r*0.8]); x.beginPath(); x.moveTo(px,0); x.lineTo(px,v.h); x.stroke(); x.setLineDash([]);
+  x.strokeStyle='rgba(20,35,43,.85)'; x.lineWidth=r*0.7; x.lineCap='round';
+  for (const [a,b] of bonesFor(k)){ if(P[a]&&P[b]){ x.beginPath(); x.moveTo(P[a].x,P[a].y); x.lineTo(P[b].x,P[b].y); x.stroke(); } }
+  x.strokeStyle='#ffffff'; x.lineWidth=r*0.3;
+  for (const [a,b] of bonesFor(k)){ if(P[a]&&P[b]){ x.beginPath(); x.moveTo(P[a].x,P[a].y); x.lineTo(P[b].x,P[b].y); x.stroke(); } }
+  for (const key of keysFor(k)){ const p=P[key]; if(!p) continue;
+    x.beginPath(); x.arc(p.x,p.y,editing===k?r*1.15:r*0.8,0,Math.PI*2); x.fillStyle = key===drag?.key?col('--treat'):col('--accent'); x.fill(); x.lineWidth=r*0.3; x.strokeStyle='#fff'; x.stroke(); }
+  if (drag && drag.view===k){ const p=P[drag.key]; x.font=`600 ${r*2.2}px sans-serif`; x.fillStyle='#fff'; x.strokeStyle='rgba(0,0,0,.7)'; x.lineWidth=r*0.5; const t=nice(drag.key); x.strokeText(t,p.x+r*2,p.y-r*2); x.fillText(t,p.x+r*2,p.y-r*2); }
+  if (editing===k) bindDrag(cv,k);
+}
+function drawGrid(x,w,h,c){ const s=Math.max(w,h)/24; x.strokeStyle=c; x.lineWidth=1; x.beginPath(); for(let i=0;i<=w;i+=s){x.moveTo(i,0);x.lineTo(i,h);} for(let j=0;j<=h;j+=s){x.moveTo(0,j);x.lineTo(w,j);} x.stroke(); }
+function pixelateFace(x,v,k){
+  const P=v.pts; if(!P) return;
+  const pts=['nose','lEye','rEye','lEar','rEar'].map(n=>P[n]).filter(Boolean); if(!pts.length) return;
+  const cx=pts.reduce((s,p)=>s+p.x,0)/pts.length, cy=pts.reduce((s,p)=>s+p.y,0)/pts.length;
+  const ear = P.lEar&&P.rEar? dist(P.lEar,P.rEar) : 0; const ref=P.nose&&(P.lEar||P.rEar)? dist(P.nose,P.lEar||P.rEar)*2:0;
+  const R = Math.max(ear*0.95, ref*0.75, v.h*0.045);
+  const t=document.createElement('canvas'); t.width=10; t.height=10; t.getContext('2d').drawImage(v.src,cx-R,cy-R,R*2,R*2,0,0,10,10);
+  x.save(); x.beginPath(); x.ellipse(cx,cy,R,R*1.2,0,0,Math.PI*2); x.clip(); x.imageSmoothingEnabled=false; x.drawImage(t,cx-R,cy-R*1.2,R*2,R*2.4); x.restore();
+}
+function bindDrag(cv,k){
+  const v=S.views[k];
+  const toImg = e => { const b=cv.getBoundingClientRect(); return {x:(e.clientX-b.left)*v.w/b.width, y:(e.clientY-b.top)*v.h/b.height, s:v.w/b.width}; };
+  cv.onpointerdown = e => { const p=toImg(e); let best=null,bd=1e9; for(const key of keysFor(k)){ const q=v.pts[key]; const d=Math.hypot(q.x-p.x,q.y-p.y); if(d<bd){bd=d;best=key;} }
+    if (bd < 34*p.s){ drag={view:k,key:best}; cv.setPointerCapture(e.pointerId); drawCapture(k); e.preventDefault(); } };
+  cv.onpointermove = e => { if(!drag||drag.view!==k) return; const p=toImg(e); v.pts[drag.key]={x:Math.max(0,Math.min(v.w,p.x)),y:Math.max(0,Math.min(v.h,p.y))}; drawCapture(k); };
+  cv.onpointerup = cv.onpointercancel = () => { if(drag){ drag=null; v.manual=true; S.summary=null; drawCapture(k); } };
+}
+
+/* ---------------- SVG graphics ---------------- */
+const STC = (pal,st) => st==='treat'?pal.treat:st==='train'?pal.train:st==='ok'?pal.ok:pal.figure;
+function dialSVG(score,pal){
+  const s = score==null?0:score; const a = Math.PI*(1-s/100); const R=70, cx=90, cy=86;
+  const arc=(a0,a1,c,w)=>{ const x0=cx+R*Math.cos(a0),y0=cy-R*Math.sin(a0),x1=cx+R*Math.cos(a1),y1=cy-R*Math.sin(a1); return `<path d="M${x0} ${y0} A${R} ${R} 0 0 1 ${x1} ${y1}" style="fill:none;stroke:${c};stroke-width:${w};stroke-linecap:round"/>`; };
+  const c = s>=80?pal.ok:s>=60?pal.train:pal.treat;
+  return `<svg viewBox="0 0 180 110" xmlns="http://www.w3.org/2000/svg">${arc(Math.PI,0.0001,pal.line,12)}${score==null?'':arc(Math.PI,Math.max(a,0.0001),c,12)}
+  <text x="90" y="82" text-anchor="middle" style="fill:${pal.ink};font:700 34px ${pal.font}">${score==null?'–':Math.round(s)}</text>
+  <text x="90" y="102" text-anchor="middle" style="fill:${pal.muted};font:600 11px ${pal.font};letter-spacing:1px">SCORE / 100</text></svg>`;
+}
+function radarSVG(regions,pal,prev){
+  const W=400,H=270,cx=200,cy=136,R=88; const n=regions.length;
+  const pt=(i,v)=>{ const a=-Math.PI/2+i*2*Math.PI/n; return [cx+R*v/100*Math.cos(a), cy+R*v/100*Math.sin(a)]; };
+  let g='';
+  for (const ring of [25,50,75,100]) g+=`<polygon points="${regions.map((_,i)=>pt(i,ring).join(',')).join(' ')}" style="fill:none;stroke:${pal.line};stroke-width:1"/>`;
+  regions.forEach((r,i)=>{ const [x,y]=pt(i,100); g+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" style="stroke:${pal.line};stroke-width:1"/>`;
+    const [lx,ly]=pt(i,122); const anchor = Math.abs(lx-cx)<8?'middle':lx>cx?'start':'end';
+    g+=`<text x="${lx}" y="${ly+4}" text-anchor="${anchor}" style="fill:${pal.ink};font:600 11px ${pal.font}">${esc(r.short)}</text>
+       <text x="${lx}" y="${ly+17}" text-anchor="${anchor}" style="fill:${STC(pal,r.status)};font:700 11px ${pal.font}">${r.score==null?'–':Math.round(r.score)}</text>`; });
+  g+=`<text x="${cx+3}" y="${cy-R*0.5+3}" style="fill:${pal.muted};font:9px ${pal.font}">50</text><text x="${cx+3}" y="${cy-R+3}" style="fill:${pal.muted};font:9px ${pal.font}">100</text>`;
+  if (prev) g+=`<polygon points="${prev.map((v,i)=>pt(i,v??0).join(',')).join(' ')}" style="fill:none;stroke:${pal.muted};stroke-width:1.5;stroke-dasharray:4 3"/>`;
+  g+=`<polygon points="${regions.map((r,i)=>pt(i,r.score??0).join(',')).join(' ')}" style="fill:${pal.plumb};fill-opacity:.18;stroke:${pal.plumb};stroke-width:2"/>`;
+  regions.forEach((r,i)=>{ const [x,y]=pt(i,r.score??0); g+=`<circle cx="${x}" cy="${y}" r="4" style="fill:${STC(pal,r.status)};stroke:${pal.bg};stroke-width:1.5"/>`; });
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${g}</svg>`;
+}
+function asymRows(A){
+  const M=A.M, rows=[];
+  const add=(label,l,r,unit,lv,rv)=>{ if(l==null||r==null) return; const asym = (lv!=null&&rv!=null&&(lv+rv)>0)? Math.abs(lv-rv)/((lv+rv)/2)*100 : null; rows.push({label,l,r,unit,asym,diff:Math.abs(l-r)}); };
+  if (M.kneeFrontL&&M.kneeFrontR) add('Knee frontal (+valgus)', (M.kneeFrontL.dir==='valgus'?1:-1)*M.kneeFrontL.v, (M.kneeFrontR.dir==='valgus'?1:-1)*M.kneeFrontR.v,'°', M.kneeFrontL.interior, M.kneeFrontR.interior);
+  if (M.kneeSagL&&M.kneeSagR) add('Knee sagittal (+flexion)', M.kneeSagL.signed, M.kneeSagR.signed,'°', M.kneeSagL.interior, M.kneeSagR.interior);
+  const sl=A.sg.l, sr=A.sg.r;
+  if (sl?.fwdHead && sr?.fwdHead) add('Forward head angle', sl.fwdHead.signed, sr.fwdHead.signed,'°', 90-sl.fwdHead.signed, 90-sr.fwdHead.signed);
+  if (sl?.shoulderPlumb && sr?.shoulderPlumb) add('Shoulder to plumb (+fwd)', sl.shoulderPlumb.signed, sr.shoulderPlumb.signed,'%', null,null);
+  const f = S.views.ant?.pts || S.views.post?.pts;
+  if (f){ const H = mid(f.lAnk,f.rAnk).y - mid(f.lEar,f.rEar).y; const ht=p=>(mid(f.lAnk,f.rAnk).y-p.y)/H*100;
+    add('Shoulder height', ht(f.lSh), ht(f.rSh), '%', ht(f.lSh), ht(f.rSh));
+    add('Hip height', ht(f.lHip), ht(f.rHip), '%', ht(f.lHip), ht(f.rHip)); }
+  return rows;
+}
+function asymSVG(rows,pal){
+  if (!rows.length) return `<svg viewBox="0 0 320 40" xmlns="http://www.w3.org/2000/svg"><text x="0" y="24" style="fill:${pal.muted};font:12px ${pal.font}">Add front and side photos to compare sides.</text></svg>`;
+  const rowH=44, W=340, cx=170, H=rows.length*rowH+30; let g='';
+  g+=`<text x="${cx-8}" y="14" text-anchor="end" style="fill:${pal.muted};font:700 10px ${pal.font};letter-spacing:1px">LEFT</text><text x="${cx+8}" y="14" style="fill:${pal.muted};font:700 10px ${pal.font};letter-spacing:1px">RIGHT</text>`;
+  rows.forEach((r,i)=>{
+    const y=26+i*rowH; const isH = r.label.includes('height');
+    const span = isH? Math.max(1,...rows.filter(q=>q.label.includes('height')).map(q=>Math.max(q.l,q.r))) : Math.max(5,...rows.filter(q=>!q.label.includes('height')).map(q=>Math.max(Math.abs(q.l),Math.abs(q.r))));
+    const bl = Math.abs(r.l)/span*120, br=Math.abs(r.r)/span*120;
+    const flag = r.diff>(r.unit==='%'?1.5:3) ? pal.train : pal.plumb;
+    g+=`<text x="0" y="${y+10}" style="fill:${pal.ink};font:600 11px ${pal.font}">${esc(r.label)}</text>`;
+    g+=`<text x="${W}" y="${y+10}" text-anchor="end" style="fill:${flag};font:700 11px ${pal.font}">Δ ${fmt(r.diff)}${r.unit}${r.asym!=null?` · ${fmt(r.asym)}% asym`:''}</text>`;
+    g+=`<rect x="${cx-bl}" y="${y+16}" width="${bl}" height="12" rx="2" style="fill:${flag};fill-opacity:.75"/><rect x="${cx}" y="${y+16}" width="${br}" height="12" rx="2" style="fill:${flag};fill-opacity:.45"/>`;
+    g+=`<text x="${cx-bl-4}" y="${y+26}" text-anchor="end" style="fill:${pal.muted};font:10px ${pal.font}">${fmt(r.l)}</text><text x="${cx+br+4}" y="${y+26}" style="fill:${pal.muted};font:10px ${pal.font}">${fmt(r.r)}</text>`;
+  });
+  g+=`<line x1="${cx}" y1="20" x2="${cx}" y2="${H-4}" style="stroke:${pal.ink};stroke-width:1"/>`;
+  return `<svg viewBox="-4 0 ${W+8} ${H}" xmlns="http://www.w3.org/2000/svg">${g}</svg>`;
+}
+function bodyMapSVG(A,pal){
+  const st = k => A.regions.find(r=>r.k===k)?.status || 'na';
+  const kneeSt = side => { const ks=[side==='l'?'kneeFrontL':'kneeFrontR', side==='l'?'kneeSagL':'kneeSagR'].map(k=>A.M[k]).filter(Boolean); const rank={ok:0,train:1,treat:2};
+    if (A.regions.find(r=>r.k==='knee')?.status && S.overrides.knee) return S.overrides.knee; let s='na'; for(const m of ks){ if(s==='na'||rank[m.sev]>rank[s]) s=m.sev; } return s; };
+  const fig = (ox,back) => {
+    const F=pal.figure, c=k=>STC(pal,st(k));
+    const kl = STC(pal,kneeSt('l')), kr=STC(pal,kneeSt('r'));
+    // front view: patient's right on viewer's left. back view: patient's left on viewer's left
+    const leftX = back? ox+86 : ox+124, rightX = back? ox+124: ox+86;
+    return `
+    <g>
+      <rect x="${ox+52}" y="98" width="16" height="92" rx="8" style="fill:${F}"/><rect x="${ox+142}" y="98" width="16" height="92" rx="8" style="fill:${F}"/>
+      <rect x="${ox+80}" y="226" width="22" height="64" rx="9" style="fill:${F}"/><rect x="${ox+108}" y="226" width="22" height="64" rx="9" style="fill:${F}"/>
+      <rect x="${ox+82}" y="314" width="18" height="52" rx="8" style="fill:${F}"/><rect x="${ox+110}" y="314" width="18" height="52" rx="8" style="fill:${F}"/>
+      <circle cx="${ox+105}" cy="38" r="22" style="fill:${c('head')}"/><rect x="${ox+97}" y="58" width="16" height="18" rx="4" style="fill:${c('head')}"/>
+      <path d="M${ox+58} 98 Q${ox+60} 78 ${ox+82} 76 L${ox+128} 76 Q${ox+150} 78 ${ox+152} 98 L${ox+152} 110 L${ox+58} 110Z" style="fill:${c('shoulder')}"/>
+      <path d="M${ox+70} 112 L${ox+140} 112 L${ox+134} 178 L${ox+76} 178Z" style="fill:${c('trunk')}"/>
+      <path d="M${ox+75} 181 L${ox+135} 181 L${ox+140} 222 L${ox+70} 222Z" style="fill:${c('pelvis')}"/>
+      <circle cx="${rightX}" cy="302" r="13" style="fill:${kr}"/><circle cx="${leftX}" cy="302" r="13" style="fill:${kl}"/>
+      <ellipse cx="${ox+91}" cy="378" rx="15" ry="9" style="fill:${c('ankle')}"/><ellipse cx="${ox+119}" cy="378" rx="15" ry="9" style="fill:${c('ankle')}"/>
+      <text x="${ox+105}" y="408" text-anchor="middle" style="fill:${pal.muted};font:700 11px ${pal.font};letter-spacing:1px">${back?'BACK':'FRONT'}</text>
+      <text x="${ox+44}" y="240" text-anchor="middle" style="fill:${pal.muted};font:700 11px ${pal.font}">${back?'L':'R'}</text>
+      <text x="${ox+166}" y="240" text-anchor="middle" style="fill:${pal.muted};font:700 11px ${pal.font}">${back?'R':'L'}</text>
+    </g>`;
+  };
+  return `<svg viewBox="0 0 440 416" xmlns="http://www.w3.org/2000/svg">${fig(0,false)}${fig(220,true)}</svg>`;
+}
+function figureSVG(k,A,pal){
+  const v=S.views[k]; const vw=VIEWS.find(q=>q.k===k);
+  if (!v?.pts) return `<svg viewBox="0 0 100 160" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="98" height="158" rx="6" style="fill:none;stroke:${pal.line};stroke-dasharray:4 3"/><text x="50" y="84" text-anchor="middle" style="fill:${pal.muted};font:10px ${pal.font}">No photo</text></svg>`;
+  const P=v.pts, keys=keysFor(k).filter(q=>P[q]);
+  const xs=keys.map(q=>P[q].x), ys=keys.map(q=>P[q].y);
+  const H=Math.max(...ys)-Math.min(...ys); const pad=H*0.1; const headR=H*0.06;
+  const x0=Math.min(...xs)-pad*1.6, x1=Math.max(...xs)+pad*1.6, y0=Math.min(...ys)-pad-headR, y1=Math.max(...ys)+pad*0.6;
+  const w=Math.max(x1-x0,H*0.55), cxm=(x0+x1)/2; const vx=cxm-w/2;
+  const sw=H/160; let g='';
+  const step=H/16; for(let gx=Math.floor(vx/step)*step; gx<vx+w; gx+=step) g+=`<line x1="${gx}" y1="${y0}" x2="${gx}" y2="${y1}" style="stroke:${pal.grid};stroke-width:${sw*0.6}"/>`;
+  for(let gy=Math.floor(y0/step)*step; gy<y1; gy+=step) g+=`<line x1="${vx}" y1="${gy}" x2="${vx+w}" y2="${gy}" style="stroke:${pal.grid};stroke-width:${sw*0.6}"/>`;
+  let px; if(vw.plane==='frontal') px=(P.lAnk.x+P.rAnk.x)/2; else px=sagittalMetrics(P,vw.s)._plumbX;
+  g+=`<line x1="${px}" y1="${y0}" x2="${px}" y2="${y1}" style="stroke:${pal.plumb};stroke-width:${sw*1.6};stroke-dasharray:${sw*6} ${sw*4}"/>`;
+  const head = vw.plane==='frontal'? mid(P.lEar,P.rEar) : P[vw.s+'Ear'];
+  g+=`<circle cx="${head.x}" cy="${head.y-headR*0.15}" r="${headR}" style="fill:none;stroke:${pal.bone};stroke-width:${sw*2.2}"/>`;
+  for (const [a,b] of bonesFor(k)) if(P[a]&&P[b]) g+=`<line x1="${P[a].x}" y1="${P[a].y}" x2="${P[b].x}" y2="${P[b].y}" style="stroke:${pal.bone};stroke-width:${sw*3.2};stroke-linecap:round"/>`;
+  const regionOf = q => /Ear|nose|Eye/.test(q)?'head':/Sh/.test(q)?'shoulder':/Hip/.test(q)?'pelvis':/Knee/.test(q)?'knee':/Ank|Heel|Toe/.test(q)?'ankle':null;
+  for (const q of keys){ if(/Eye|nose/.test(q)) continue; const rg=regionOf(q); const st=rg? A.regions.find(r=>r.k===rg)?.status : null;
+    g+=`<circle cx="${P[q].x}" cy="${P[q].y}" r="${sw*4.5}" style="fill:${rg?STC(pal,st):pal.bone};stroke:${pal.bg};stroke-width:${sw*1.2}"/>`; }
+  if (vw.plane==='frontal'){ for (const [a,b] of [['lSh','rSh'],['lHip','rHip']]){ const y=(P[a].y+P[b].y)/2; g+=`<line x1="${vx+pad*0.3}" y1="${y}" x2="${vx+w-pad*0.3}" y2="${y}" style="stroke:${pal.muted};stroke-width:${sw};stroke-dasharray:${sw*2} ${sw*3}"/>`; } }
+  return `<svg viewBox="${vx} ${y0} ${w} ${y1-y0}" xmlns="http://www.w3.org/2000/svg"><rect x="${vx}" y="${y0}" width="${w}" height="${y1-y0}" style="fill:${pal.bg}"/>${g}</svg>`;
+}
+const svgImg = (svg,cls='g') => `<img class="${cls}" alt="" src="data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}">`;
+
+/* ---------------- analysis UI ---------------- */
+let A=null;
+function refreshAll(){ A = analyse(); renderAnalysis(); renderReport(); }
+function renderAnalysis(){
+  const used = VIEWS.filter(v=>S.views[v.k]?.pts).map(v=>v.label);
+  $('#viewsUsed').textContent = used.length? `Views used: ${used.join(', ')}` : 'Add photos in Capture to start.';
+  $('#dial').innerHTML = dialSVG(A.overall,SCREEN);
+  $('#patterns').innerHTML = A.patterns.length? `<div class="row" style="gap:6px">${A.patterns.map(([s,t])=>`<span class="chip s-${s}">${esc(t)}</span>`).join('')}</div>` : '';
+  $('#bodymap').innerHTML = bodyMapSVG(A,SCREEN);
+  const prevScores = S.previous? REGIONS.map(r=>S.previous.regionScores?.[r.k] ?? null) : null;
+  $('#radar').innerHTML = radarSVG(A.regions,SCREEN,prevScores);
+  $('#radarNote').textContent = S.previous? `Dashed line: previous session (${S.previous.patient?.date||'earlier'}).` : 'Scores fall from 100 as a region moves away from its normal range.';
+  $('#asym').innerHTML = asymSVG(asymRows(A),SCREEN);
+  $('#figs').innerHTML = VIEWS.map(v=>`<figure>${figureSVG(v.k,A,SCREEN).replace('<svg','<svg style="width:100%;max-height:300px"')}<figcaption>${v.label}</figcaption></figure>`).join('');
+  // regions
+  $('#regions').innerHTML = A.regions.map(r=>{
+    const st=r.status; const ex = exercisesFor(r,A.M);
+    const lines = r.ms.filter(k=>A.M[k].sev!=='ok').map(k=>`<li>${esc(plainText(k,A.M[k]))}</li>`).join('');
+    return `<div class="region st-${st}"><div class="row" style="justify-content:space-between"><b>${r.label}</b>
+      <span class="row" style="gap:6px"><span class="num note">${r.score==null?'':Math.round(r.score)}</span><button class="chip s-${st}" data-cycle="${r.k}" title="Change status">${label(st)}${S.overrides[r.k]?' · edited':''}</button></span></div>
+      ${r.ms.length? (lines?`<ul>${lines}</ul>`:'<p class="note">Within normal range.</p>') : '<p class="note">Needs a photo of this view.</p>'}
+      ${(st==='train'||st==='treat')? `<div style="display:grid;gap:6px">${[0,1,2].map(i=>`<input id="ex-${r.k}-${i}" data-ex="${r.k}" data-i="${i}" value="${esc(ex[i]||'')}" placeholder="Exercise ${i+1}">`).join('')}</div>`:''}
+    </div>`;}).join('');
+  $('#regions').querySelectorAll('[data-cycle]').forEach(b=>b.onclick=()=>{ const k=b.dataset.cycle; const r=A.regions.find(x=>x.k===k); const order=['ok','train','treat']; const next=order[(order.indexOf(r.status)+1)%3]; if(next===r.auto) delete S.overrides[k]; else S.overrides[k]=next; S.summary=null; refreshAll(); });
+  $('#regions').querySelectorAll('[data-ex]').forEach(inp=>inp.onchange=()=>{ const k=inp.dataset.ex; const r=A.regions.find(x=>x.k===k); const cur=[...exercisesFor(r,A.M)]; cur[+inp.dataset.i]=inp.value; S.exercises[k]=cur; renderReport(); });
+  // table
+  const rows = Object.keys(METRICS).filter(k=>A.M[k]).map(k=>{ const m=A.M[k], n=S.norms[METRICS[k].norm];
+    return `<tr><td>${esc(METRICS[k].label||n.label)}</td><td class="num">${fmt(m.v)}${n.unit}</td><td class="num">≤${n.n}${n.unit}</td><td><span class="chip s-${m.sev}">${label(m.sev)}</span></td><td>${esc(plainText(k,m))}</td></tr>`; }).join('');
+  $('#mtable').innerHTML = `<thead><tr><th>Measure</th><th>Value</th><th>Normal</th><th>Status</th><th>What it means</th></tr></thead><tbody>${rows||'<tr><td colspan="5">No measurements yet.</td></tr>'}</tbody>`;
+  // compare
+  if (S.previous){
+    $('#comparePanel').hidden=false;
+    const pr=S.previous; const rowsC = A.regions.map(r=>{ const b=pr.regionScores?.[r.k]; const d = (r.score!=null&&b!=null)? r.score-b : null;
+      return `<tr><td>${r.label}</td><td class="num">${b==null?'–':Math.round(b)}</td><td class="num">${r.score==null?'–':Math.round(r.score)}</td><td class="num" style="color:${d==null?'inherit':d>=0?'var(--ok)':'var(--treat)'}">${d==null?'–':(d>=0?'+':'')+Math.round(d)}</td></tr>`; }).join('');
+    const d0 = (A.overall!=null&&pr.overall!=null)? A.overall-pr.overall : null;
+    $('#compare').innerHTML = `<div class="tablewrap"><table><thead><tr><th>Region</th><th>Before (${esc(pr.patient?.date||'')})</th><th>Now</th><th>Change</th></tr></thead><tbody>${rowsC}
+      <tr><td><b>Overall</b></td><td class="num">${pr.overall==null?'–':Math.round(pr.overall)}</td><td class="num">${A.overall==null?'–':Math.round(A.overall)}</td><td class="num"><b>${d0==null?'–':(d0>=0?'+':'')+Math.round(d0)}</b></td></tr></tbody></table></div>`;
+  } else $('#comparePanel').hidden=true;
+}
+const label = s => ({ok:'Normal',train:'Train',treat:'Treat',na:'No data'})[s];
+function renderNorms(){
+  $('#norms').innerHTML = `<div class="normrow" style="font-weight:600"><span>Measure</span><span>Normal ≤</span><span>Mild ≤</span></div><span></span>` +
+    Object.entries(S.norms).map(([k,n])=>`<div class="normrow"><span>${n.label} (${n.unit})</span><input id="n-${k}-n" type="number" step="0.5" value="${n.n}" data-nk="${k}" data-f="n"><input id="n-${k}-m" type="number" step="0.5" value="${n.m}" data-nk="${k}" data-f="m"></div>`).join('');
+  $('#norms').querySelectorAll('input').forEach(i=>i.onchange=()=>{ const v=parseFloat(i.value); if(isFinite(v)&&v>0){ S.norms[i.dataset.nk][i.dataset.f]=v; store.set('mp.norms',S.norms); S.summary=null; refreshAll(); } });
+}
+
+/* ---------------- report ---------------- */
+function autoSummary(){
+  const flagged = A.regions.filter(r=>r.status==='treat'||r.status==='train');
+  if (!A.regions.some(r=>r.ms.length)) return 'Add photos to generate the summary.';
+  const pat = A.patterns.filter(p=>p[0]!=='ok').map(p=>p[1].replace(/\s*\(.*\)/,'').toLowerCase());
+  let s = `Overall posture score ${A.overall==null?'–':Math.round(A.overall)}/100. `;
+  if (!flagged.length) return s+'Alignment is within normal ranges in all assessed regions. Keep up general strength and mobility work.';
+  const tr = flagged.filter(r=>r.status==='treat').map(r=>r.label.toLowerCase()), tn=flagged.filter(r=>r.status==='train').map(r=>r.label.toLowerCase());
+  if (pat.length) s += `Main findings: ${pat.join(', ')}. `;
+  if (tr.length) s += `Priority for treatment: ${tr.join(', ')}. `;
+  if (tn.length) s += `Focus for training: ${tn.join(', ')}. `;
+  return s + 'Reassess in 4 to 6 weeks to track change.';
+}
+function renderReport(){
+  if (!A) return;
+  const p=S.patient, c=S.clinic;
+  if (S.summary==null) S.summary = autoSummary();
+  const flagged = A.regions.filter(r=>r.status==='treat'||r.status==='train');
+  const statusHex = s => s==='treat'?PAPER.treat:s==='train'?PAPER.train:PAPER.ok;
+  const showFig = $('#optFigures').checked;
+  const findings = A.regions.filter(r=>r.ms.length).map(r=>{
+    const lines = r.ms.filter(k=>A.M[k].sev!=='ok').map(k=>plainText(k,A.M[k]));
+    const ex = (r.status==='train'||r.status==='treat')? exercisesFor(r,A.M).filter(Boolean) : [];
+    return `<div class="rf" style="border-left-color:${statusHex(r.status)}"><div style="display:flex;justify-content:space-between;align-items:center;gap:6px"><b>${r.label}</b><span class="tag" style="background:${statusHex(r.status)}">${label(r.status)} · ${Math.round(r.score)}</span></div>
+      <span>${esc(lines.join(' ')||'Within normal range.')}</span>${ex.length?`<ol>${ex.map(e=>`<li>${esc(e)}</li>`).join('')}</ol>`:''}</div>`; }).join('');
+  const prevScores = S.previous? REGIONS.map(r=>S.previous.regionScores?.[r.k] ?? null) : null;
+  const clinical = $('#optClinical').checked ? `<div class="rbox" style="break-before:page"><h3>Clinical values</h3><table><thead><tr><th>Measure</th><th>Value</th><th>Normal</th><th>Status</th></tr></thead><tbody>${
+    Object.keys(METRICS).filter(k=>A.M[k]).map(k=>{const m=A.M[k],n=S.norms[METRICS[k].norm]; return `<tr><td>${esc(METRICS[k].label||n.label)}</td><td>${fmt(m.v)}${n.unit}</td><td>≤${n.n}${n.unit} (mild ≤${n.m})</td><td style="color:${statusHex(m.sev)} !important;font-weight:700">${label(m.sev)}</td></tr>`;}).join('')
+  }</tbody></table><span style="font-size:10px;color:#56666e">Plumb-line values are % of ear-to-ankle height. Angles from 2D photographs; screening measures, confirm clinically.</span></div>` : '';
+  $('#report').innerHTML = `
+    <div class="rhead"><div><h1>Posture Assessment Report</h1><div style="font-size:12px;color:#56666e">${esc(c.name||'MotionPlus')} · Static posture, plumb-line analysis</div></div>${c.logo?`<img src="${c.logo}" alt="">`:''}</div>
+    <div class="meta"><div><b>Patient</b>${esc(p.name||'–')}</div><div><b>ID</b>${esc(p.id||'–')}</div><div><b>Age / sex</b>${esc(p.age||'–')} ${esc(p.sex||'')}</div><div><b>Date</b>${esc(p.date||today())}</div>
+      <div style="grid-column:span 2"><b>Sport or condition</b>${esc(p.cond||'–')}</div><div><b>Height</b>${p.height?esc(p.height)+' cm':'–'}</div><div><b>Assessor</b>${esc(p.assessor||'–')}</div></div>
+    <div class="rgrid">
+      <div class="rbox"><h3>Summary</h3><div style="display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:center">${svgImg(dialSVG(A.overall,PAPER))}
+        <div style="display:flex;flex-wrap:wrap;gap:4px">${A.patterns.map(([s,t])=>`<span class="tag" style="background:${statusHex(s)}">${esc(t)}</span>`).join('')}</div></div>
+        <div class="summary" contenteditable="true" id="sumEdit">${esc(S.summary)}</div></div>
+      <div class="rbox"><h3>Body map</h3>${svgImg(bodyMapSVG(A,PAPER))}<div style="display:flex;gap:10px;font-size:11px;justify-content:center"><span style="color:${PAPER.ok} !important">● Normal</span><span style="color:${PAPER.train} !important">● Train</span><span style="color:${PAPER.treat} !important">● Treat</span></div></div>
+    </div>
+    ${showFig?`<div class="rbox"><h3>Alignment figures <span style="font-size:11px;text-transform:none;letter-spacing:0;color:#56666e">dashed blue = plumb line</span></h3><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center;font-size:11px">${VIEWS.map(v=>`<div>${svgImg(figureSVG(v.k,A,PAPER)).replace('class="g"','class="g" style="max-height:230px;object-fit:contain"')}<div>${v.label}</div></div>`).join('')}</div></div>`:''}
+    <div class="rgrid">
+      <div class="rbox"><h3>Region scores</h3>${svgImg(radarSVG(A.regions,PAPER,prevScores))}${S.previous?`<span style="font-size:10px;color:#56666e">Dashed: previous session ${esc(S.previous.patient?.date||'')}</span>`:''}</div>
+      <div class="rbox"><h3>Left vs right</h3>${svgImg(asymSVG(asymRows(A),PAPER))}</div>
+    </div>
+    <div class="rbox"><h3>Findings and focus areas</h3><div class="rfind">${findings||'<span>No findings yet.</span>'}</div></div>
+    <div class="rbox"><h3>Clinician notes</h3><div class="summary" contenteditable="true" id="notesEdit">${esc(S.notes||'Add treatment plan, precautions or follow-up date.')}</div></div>
+    <div class="foot"><span>Photo-based screening from 2D images; findings support, not replace, clinical examination.</span><span>Signature ____________________</span></div>
+    ${clinical}`;
+  $('#sumEdit').oninput = e => { S.summary = e.target.innerText; };
+  $('#notesEdit').oninput = e => { S.notes = e.target.innerText; };
+  fitReport();
+}
+function fitReport(){
+  const sc=$('#scaler'), r=$('#report'); const s=Math.min(1, sc.clientWidth/794 || 1);
+  r.style.transform=`scale(${s})`; sc.style.height = (r.offsetHeight*s)+'px';
+}
+window.addEventListener('resize',fitReport);
+
+/* ---------------- files ---------------- */
+let dl = null; (async()=>{ try{ dl = await window.claude?.use?.('downloads'); }catch{ dl=null; } })();
+async function saveFile(filename, data){
+  if (dl){ try{ await dl.save({filename,data}); toast('Saved '+filename); return; }catch(e){ if(e?.code==='declined') return; toast('Could not save the file here.'); return; } }
+  if (!window.claude){ const a=document.createElement('a'); a.href=URL.createObjectURL(data instanceof Blob?data:new Blob([data])); a.download=filename; a.click(); return; }
+  toast('Saving files is not available in this view.');
+}
+const fileBase = () => `MotionPlus_${(S.patient.name||'patient').replace(/[^\w-]+/g,'_')}_${S.patient.date||today()}`;
+async function makePDF(){
+  const btn=$('#pdfBtn'); btn.disabled=true; $('#pdfStatus').textContent='Building PDF…';
+  const r=$('#report'); const prev=r.style.transform; r.style.transform='none';
+  try{
+    await document.fonts?.ready;
+    const canvas = await html2canvas(r,{scale:2,backgroundColor:'#ffffff',logging:false});
+    r.style.transform=prev;
+    const pdf = new window.jspdf.jsPDF({unit:'mm',format:'a4'});
+    const pw=210, ph=297, pagePx = canvas.width*ph/pw;
+    for (let y=0, i=0; y<canvas.height; y+=pagePx, i++){
+      const h=Math.min(pagePx, canvas.height-y); if (h<20) break;
+      const part=document.createElement('canvas'); part.width=canvas.width; part.height=h;
+      part.getContext('2d').drawImage(canvas,0,y,canvas.width,h,0,0,canvas.width,h);
+      if (i) pdf.addPage();
+      pdf.addImage(part.toDataURL('image/jpeg',0.92),'JPEG',0,0,pw,h*pw/canvas.width);
+    }
+    await saveFile(fileBase()+'.pdf', pdf.output('blob'));
+    $('#pdfStatus').textContent='';
+  }catch(e){ r.style.transform=prev; $('#pdfStatus').textContent='Could not build the PDF: '+(e?.message||e); }
+  btn.disabled=false; fitReport();
+}
+function sessionData(){
+  return {app:'MotionPlus',kind:'static-posture',version:1,savedAt:new Date().toISOString(),patient:S.patient,
+    views:Object.fromEntries(Object.entries(S.views).filter(([,v])=>v?.pts).map(([k,v])=>[k,{w:v.w,h:v.h,pts:v.pts,manual:v.manual}])),
+    overrides:S.overrides,exercises:S.exercises,summary:S.summary,notes:S.notes,norms:S.norms,
+    regionScores:Object.fromEntries(A.regions.map(r=>[r.k,r.score])),overall:A.overall};
+}
+function rememberSession(d){
+  const list=store.get('mp.sessions',[]); list.unshift(d); store.set('mp.sessions',list.slice(0,30)); fillPrevSelect();
+}
+function fillPrevSelect(){
+  const list=store.get('mp.sessions',[]);
+  $('#prevSelect').innerHTML = '<option value="">None</option>'+list.map((s,i)=>`<option value="${i}">${esc(s.patient?.name||'Unnamed')} · ${esc(s.patient?.date||s.savedAt?.slice(0,10))} · score ${s.overall==null?'–':Math.round(s.overall)}</option>`).join('');
+}
+
+/* ---------------- patient form ---------------- */
+const PF = {name:'p-name',id:'p-id',age:'p-age',sex:'p-sex',height:'p-height',date:'p-date',cond:'p-cond',assessor:'p-assessor'};
+function fillPatientForm(){ for (const [k,id] of Object.entries(PF)) $('#'+id).value = S.patient[k]||''; if(!S.patient.date){ S.patient.date=today(); $('#p-date').value=S.patient.date; } }
+for (const [k,id] of Object.entries(PF)) $('#'+id).addEventListener('input',e=>{ S.patient[k]=e.target.value; if(k==='height') renderAnalysis(); renderReport(); });
+$('#c-name').addEventListener('input',e=>{ S.clinic.name=e.target.value; store.set('mp.clinic',S.clinic); renderReport(); });
+$('#c-logo').addEventListener('change',async e=>{ const f=e.target.files[0]; if(!f) return; const img=new Image(); img.src=URL.createObjectURL(f); await img.decode();
+  const sc=Math.min(1,320/img.naturalWidth); const c=document.createElement('canvas'); c.width=img.naturalWidth*sc; c.height=img.naturalHeight*sc; c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+  S.clinic.logo=c.toDataURL('image/png'); store.set('mp.clinic',S.clinic); showLogo(); renderReport(); });
+$('#c-logo-clear').onclick=()=>{ S.clinic.logo=''; store.set('mp.clinic',S.clinic); showLogo(); renderReport(); };
+function showLogo(){ $('#c-logo-prev').hidden=!S.clinic.logo; $('#c-logo-clear').hidden=!S.clinic.logo; if(S.clinic.logo) $('#c-logo-prev').src=S.clinic.logo; }
+$('#saveSession').onclick = async()=>{ const d=sessionData(); rememberSession(d); await saveFile(fileBase()+'.json', JSON.stringify(d,null,1)); };
+$('#openSession').onchange = async e=>{ const f=e.target.files[0]; if(!f) return; try{ const d=JSON.parse(await f.text()); if(d.app!=='MotionPlus') throw 0; askLoad(d); }catch{ toast('That file is not a MotionPlus session.'); } e.target.value=''; };
+$('#prevSelect').onchange = e=>{ const i=e.target.value; S.previous = i===''?null:store.get('mp.sessions',[])[+i]; refreshAll(); if(S.previous) toast('Comparison added to Analysis.'); };
+function askLoad(d){
+  // A loaded file becomes the comparison baseline; its landmarks can also be restored for editing.
+  S.previous = d; rememberSession(d);
+  const b=$('#exampleBanner'); b.hidden=false; b.querySelector('p').innerHTML=`<b>Loaded session from ${esc(d.patient?.date||'')}.</b> It is shown as the "before" in Analysis. You can also reopen it to edit.`;
+  const nb=$('#newBtn'); nb.textContent='Reopen this session'; nb.onclick=()=>{ restoreSession(d); };
+  refreshAll(); toast('Previous session loaded for comparison.');
+}
+function restoreSession(d){
+  S.example=false; S.patient={...d.patient}; S.views={}; for(const [k,v] of Object.entries(d.views||{})) S.views[k]={...v,src:null,checks:[]};
+  S.overrides=d.overrides||{}; S.exercises=d.exercises||{}; S.summary=d.summary??null; S.notes=d.notes||''; if(d.norms) S.norms=d.norms; S.previous=null;
+  $('#exampleBanner').hidden=true; fillPatientForm(); renderCaptures(); refreshAll(); toast('Session reopened.');
+}
+
+/* ---------------- tabs & boot ---------------- */
+function showTab(t){
+  document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected', b.dataset.tab===t));
+  document.querySelectorAll('[data-pane]').forEach(p=>p.hidden = p.dataset.pane!==t);
+  if (t==='analysis'||t==='report') refreshAll();
+  if (t==='capture') renderCaptures();
+  try{ sessionStorage.setItem('mp.tab',t); }catch{}
+}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+$('#showPhoto').onchange=()=>renderCaptures();
+$('#projClose').onclick=()=>{ $('#projPicker').hidden=true; };
+document.addEventListener('paste',e=>{ if($('[data-pane=capture]').hidden) return; const f=[...(e.clipboardData?.files||[])].find(f=>f.type.startsWith('image/')); if(!f) return; e.preventDefault();
+  const target = S.views[activeView] && !S.example ? (VIEWS.find(v=>!S.views[v.k])?.k || activeView) : activeView; loadPhoto(target,f); });
+$('#resetNorms').onclick=()=>{ S.norms=structuredClone(DEFAULT_NORMS); store.set('mp.norms',S.norms); renderNorms(); S.summary=null; refreshAll(); };
+$('#optClinical').onchange=renderReport; $('#optFigures').onchange=renderReport;
+$('#pdfBtn').onclick=makePDF;
+$('#newBtn').onclick=()=>{ exitExample(); renderCaptures(); refreshAll(); showTab('patient'); toast('New assessment started.'); };
+
+S.clinic = store.get('mp.clinic',{name:'',logo:''}); $('#c-name').value=S.clinic.name||''; showLogo();
+const savedNorms = store.get('mp.norms',null); if (savedNorms) S.norms = {...structuredClone(DEFAULT_NORMS), ...savedNorms};
+loadExample(); $('#exampleBanner').hidden=false;
+fillPatientForm(); renderNorms(); fillPrevSelect(); renderCaptures(); refreshAll();
+let startTab='analysis'; try{ startTab = sessionStorage.getItem('mp.tab') || 'analysis'; }catch{}
+showTab(startTab);
+</script>
+</body></html>

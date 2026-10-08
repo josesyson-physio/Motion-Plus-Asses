@@ -1,0 +1,9 @@
+{
+  "name": "MotionPlus Posture",
+  "short_name": "Posture",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#eef2f4",
+  "theme_color": "#1d5fa8",
+  "icons": [{"src": "../assets/motionplus-logo.jpg", "sizes": "512x512", "type": "image/jpeg"}]
+}
