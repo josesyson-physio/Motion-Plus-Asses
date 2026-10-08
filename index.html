@@ -186,6 +186,7 @@ td.muted{color:var(--muted)}
 .upstatus.warn{color:var(--warn);background:var(--warn-soft);border-color:#4a2f12}
 .upstatus.bad{color:var(--bad);background:var(--bad-soft);border-color:#5a1f1b}
 .filebtn svg{width:20px;height:20px;color:var(--accent)}
+.pdfpage{width:100%;height:auto;border-radius:10px;background:#fff;box-shadow:0 6px 24px rgba(0,0,0,.4)}
 .icard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px}
 .icard-top{display:flex;gap:8px;align-items:center}
 .icard-top select{flex:1;min-width:0}
@@ -680,16 +681,33 @@ function nextCode() { const s = db.settings; let c; do { c = `${s.prefix || "MP"
 /* ---------- Claude capabilities ---------- */
 let AI = null, DL = null, AI_IMG = null, aiState = window.claude?.use ? "pending" : "outside";
 const aiReady = window.claude?.use ? claude.use("sample").then(s => { AI = s; aiState = s ? "ready" : "blocked"; if (s) s.limits().then(l => { AI_IMG = l.images || null; if (view.name === "builder") render(); }).catch(() => {}); if (view.name) render(); return s; }).catch(() => { aiState = "blocked"; return null; }) : Promise.resolve(null);
-if (window.claude?.use) claude.use("downloads").then(d => { DL = d; }).catch(() => {});
+const dlReady = window.claude?.use ? claude.use("downloads").then(d => (DL = d)).catch(() => null) : Promise.resolve(null);
+async function getDL() { return DL || Promise.race([dlReady, new Promise(r => setTimeout(() => r(null), 12000))]); }
 // Waits for the viewer to answer (it can take a few seconds on phones) instead of failing on an early tap.
 async function getAI() { if (AI || aiState !== "pending") return AI; return Promise.race([aiReady, new Promise(r => setTimeout(() => r(null), 12000))]); }
 const aiWhy = () => aiState === "outside" ? "this copy of the app isn't running inside Claude" : "Claude didn't turn on AI for this page in this browser (privacy shields, such as Brave Shields, can block it)";
 const AI_ERR = { not_granted: "AI is turned off for this app on your account. You can still write the report yourself.", sampling_disabled: "AI isn't available for this account.", rate_limited: "Claude is busy or your usage limit is reached. Try again in a few minutes.", session_expired: "Sign in to Claude again, then try again.", refused: "Claude couldn't write this. Check the notes for unusual content and try again.", image_rejected: "That photo couldn't be read. Try a clearer JPG or PNG.", images_unavailable: "Photos can't be sent from this view. Paste the form's text instead.", invalid_json: "The template came back in the wrong shape. Try again." };
 const aiMsg = e => AI_ERR[e?.code] || "It stopped before finishing. Try again.";
 async function saveFile(filename, data) {
-  if (!DL) { toast("Saving files isn't available in this view. Open the app in Claude."); return false; }
-  try { await DL.save({ filename, data }); toast("Saved " + filename); return true; }
-  catch (e) { if (e.code !== "declined") toast(e.code === "rate_limited" ? "A save is already waiting for you." : "The file couldn't be saved here."); return false; }
+  toast("Preparing " + filename + "…");
+  const dl = await getDL();
+  if (dl) {
+    try { await dl.save({ filename, data }); toast("Saved " + filename); return true; }
+    catch (e) { if (e.code === "declined") return false; if (e.code === "rate_limited") { toast("A save is already waiting for you."); return false; } }
+  }
+  if (/\.pdf$/.test(filename)) return previewPdf(filename, data);
+  toast("This browser doesn't allow saving files from the app. Open the link in Chrome or the Claude app."); return false;
+}
+// When the browser blocks file saving, show the PDF pages as images that can be long-pressed and saved or shared.
+let pdfPreview = null;
+async function previewPdf(filename, blob) {
+  try {
+    await need("pdf");
+    const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(await blob.arrayBuffer()) }).promise, pages = [];
+    for (let i = 1; i <= pdf.numPages; i++) { const pg = await pdf.getPage(i), vp = pg.getViewport({ scale: 2 }), c = document.createElement("canvas"); c.width = vp.width; c.height = vp.height;
+      await pg.render({ canvasContext: c.getContext("2d"), viewport: vp }).promise; pages.push(c.toDataURL("image/jpeg", 0.9)); }
+    pdfPreview = { filename, pages, back: { ...view } }; go("pdfview"); return false;
+  } catch (e) { toast("This browser doesn't allow saving files from the app. Open the link in Chrome or the Claude app."); return false; }
 }
 
 /* ---------- Chrome ---------- */
@@ -1437,6 +1455,7 @@ const ACT = {
     if (tdraft.pid && P(tdraft.pid)) { toast("Template saved. Starting the assessment."); startForm(tdraft.pid, c.id); } else { toast("Template saved. Find it under Custom."); go("library", null); } },
   delTpl: (d, b) => { if (!armed("dt", b, "Tap again to delete template")) return; db.templates = db.templates.filter(t => t.id !== tdraft.id); save(); toast("Template deleted. Past assessments keep their copy."); go("library", tdraft.pid || null); },
   backToBuilder: () => go("builder"),
+  pdfBack: () => { const b = pdfPreview?.back; pdfPreview = null; b?.name ? go(b.name, ...(b.args || [])) : go("patients"); },
   rmLogo: () => { db.settings.logo = null; save(); render(); },
   backup: () => doBackup(),
   restore: () => doRestore(),
@@ -1445,6 +1464,12 @@ const ACT = {
   wipe: (d, b) => { if (!armed("wipe", b, "Tap again to erase everything on this device")) return; db = { ...seed(), patients: [], assessments: [] }; db.settings.next = 1; save(); toast("All data deleted"); go("patients"); },
 };
 let previewTpl = null;
+VIEWS.pdfview = () => {
+  const v = pdfPreview; chrome(null, `<button class="primary wide" data-act="pdfBack">Done</button>`);
+  $("#app").innerHTML = `<header>${back("pdfBack")}<h1>Report pages</h1></header>
+  <div class="stack"><p class="note lic">This browser blocked saving the PDF file. Press and hold a page to save or share it as an image, or open the link in Chrome or the Claude app to save the PDF.</p>
+  ${v.pages.map((src, i) => `<img class="pdfpage" src="${src}" alt="Page ${i + 1} of ${esc(v.filename)}">`).join("")}</div>`;
+};
 VIEWS.preview = () => {
   const t = previewTpl; chrome(null, `<button class="primary wide" data-act="backToBuilder">Back to editing</button>`);
   $("#app").innerHTML = `<header>${back("backToBuilder")}<h1>${esc(t.name)}</h1></header><p class="note">Preview only. Taps here aren't saved.</p><div class="form">${formFields(t, {})}</div>`;
