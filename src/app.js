@@ -88,11 +88,12 @@ function chip(b) { return `<span class="chip ${b[1]}">${esc(b[0])}</span>`; }
 function nextCode() { const s = db.settings; let c; do { c = `${s.prefix || "MP"}-${String(s.next++).padStart(4, "0")}`; } while (db.patients.some(p => p.code === c)); return c; }
 
 /* ---------- Claude capabilities ---------- */
-let AI = null, DL = null, AI_IMG = null;
-if (window.claude?.use) {
-  claude.use("sample").then(s => { AI = s; if (s) s.limits().then(l => { AI_IMG = l.images || null; if (view.name === "builder") render(); }).catch(() => {}); if (view.name) render(); });
-  claude.use("downloads").then(d => { DL = d; });
-}
+let AI = null, DL = null, AI_IMG = null, aiState = window.claude?.use ? "pending" : "outside";
+const aiReady = window.claude?.use ? claude.use("sample").then(s => { AI = s; aiState = s ? "ready" : "blocked"; if (s) s.limits().then(l => { AI_IMG = l.images || null; if (view.name === "builder") render(); }).catch(() => {}); if (view.name) render(); return s; }).catch(() => { aiState = "blocked"; return null; }) : Promise.resolve(null);
+if (window.claude?.use) claude.use("downloads").then(d => { DL = d; }).catch(() => {});
+// Waits for the viewer to answer (it can take a few seconds on phones) instead of failing on an early tap.
+async function getAI() { if (AI || aiState !== "pending") return AI; return Promise.race([aiReady, new Promise(r => setTimeout(() => r(null), 12000))]); }
+const aiWhy = () => aiState === "outside" ? "this copy of the app isn't running inside Claude" : "Claude didn't turn on AI for this page in this browser (privacy shields, such as Brave Shields, can block it)";
 const AI_ERR = { not_granted: "AI is turned off for this app on your account. You can still write the report yourself.", sampling_disabled: "AI isn't available for this account.", rate_limited: "Claude is busy or your usage limit is reached. Try again in a few minutes.", session_expired: "Sign in to Claude again, then try again.", refused: "Claude couldn't write this. Check the notes for unusual content and try again.", image_rejected: "That photo couldn't be read. Try a clearer JPG or PNG.", images_unavailable: "Photos can't be sent from this view. Paste the form's text instead.", invalid_json: "The template came back in the wrong shape. Try again." };
 const aiMsg = e => AI_ERR[e?.code] || "It stopped before finishing. Try again.";
 async function saveFile(filename, data) {
@@ -187,7 +188,7 @@ VIEWS.patient = id => {
     <h2 class="sec">Assessments</h2>
     <div>${as.map(a => { const t = getTpl(a), r = runScore(t, a.values, p); return `<button class="hist" data-act="result" data-id="${a.id}">
       <span class="grow"><b>${esc(t?.name || "Assessment")}</b><span class="psub">${fmt(a.date)} · ${esc(r.txt)}</span></span>${chip(r.band)}</button>`; }).join("") || `<div class="empty">No assessments yet. Tap New assessment to start one.</div>`}</div>
-    ${reps.length ? `<h2 class="sec">Reports</h2><div>${reps.map(r => `<button class="hist" data-act="report" data-id="${r.id}"><span class="grow"><b>${r.kind === "progress" ? "Progress report" : "Assessment report"}</b><span class="psub">${fmt(r.date)} · ${r.aids.length} assessment${r.aids.length > 1 ? "s" : ""}${r.edited ? " · edited" : ""}</span></span><span class="chip neutral">AI draft</span></button>`).join("")}</div>` : ""}
+    ${reps.length ? `<h2 class="sec">Reports</h2><div>${reps.map(r => `<button class="hist" data-act="report" data-id="${r.id}"><span class="grow"><b>${r.kind === "progress" ? "Progress report" : "Assessment report"}</b><span class="psub">${fmt(r.date)} · ${r.aids.length} assessment${r.aids.length > 1 ? "s" : ""}${r.edited ? " · edited" : ""}</span></span><span class="chip neutral">${r.basic ? "Standard" : "AI draft"}</span></button>`).join("")}</div>` : ""}
     <div class="danger"><button class="link-danger" data-act="delPatient" data-id="${id}">Delete patient and all records</button></div>
   </div>`;
 };
@@ -388,17 +389,54 @@ function startReport(pid, aids, kind) {
   db.reports.push(rep); save(); go("report", rep.id); generate(rep);
 }
 async function generate(rep) {
-  if (!AI) { toast("AI isn't available in this view. Open the app in Claude while signed in."); render(); return; }
   aiCtl?.abort(); aiCtl = new AbortController(); streaming = { id: rep.id, text: "" }; render();
+  const ai = await getAI();
+  if (!ai) { rep.text = basicReport(rep); rep.basic = true; rep.date = today(); rep.edited = false; save(); streaming = null;
+    toast("Written without AI because " + aiWhy() + "."); if (view.name === "report") render(); return; }
+  rep.basic = false;
   try {
-    const { text, truncated } = await AI(reportPrompt(rep), { signal: aiCtl.signal, cache: false, modelTier: "default",
+    const { text, truncated } = await ai(reportPrompt(rep), { signal: aiCtl.signal, cache: false, modelTier: "default",
       onText: ({ text }) => { streaming.text = text; const el = $("#repbody"); if (el && view.args?.[0] === rep.id) el.innerHTML = md(text); } });
     rep.text = text + (truncated ? "\n\n(The report was cut short. Regenerate or shorten the notes.)" : ""); rep.date = today(); rep.edited = false; save();
   } catch (e) {
-    if (e.code !== "cancelled") toast(aiMsg(e));
     if (e.text && e.code !== "refused") { rep.text = e.text; save(); }
+    else if (e.code !== "cancelled" && !rep.text) { rep.text = basicReport(rep); rep.basic = true; save(); }
+    if (e.code !== "cancelled") toast(aiMsg(e) + (rep.basic ? " A standard report was written instead." : ""));
   }
   streaming = null; if (view.name === "report") render();
+}
+// Standard report built from the scores alone, used when AI can't run.
+function basicReport(rep) {
+  const p = P(rep.pid), list = rep.aids.map(A).filter(Boolean).sort(byDate);
+  const rows = list.map(a => { const t = getTpl(a); return { a, t, r: runScore(t, a.values, p), c: compare(t, a, p) }; });
+  const latest = Object.values(rows.reduce((m, x) => (m[x.a.tid] = x, m), {}));
+  const flagged = latest.filter(x => x.r.band[1] === "bad" || x.r.band[1] === "warn");
+  const span = list.length ? (list[0].date === list.at(-1).date ? fmt(list[0].date) : `${fmt(list[0].date)} to ${fmt(list.at(-1).date)}`) : "";
+  const L = [];
+  L.push("## Summary", `${p.code} (${p.age} years, ${p.sex}; ${p.dx || "diagnosis not recorded"}) completed ${list.length} assessment${list.length === 1 ? "" : "s"} (${span}).` +
+    (flagged.length ? ` Areas needing attention: ${flagged.map(x => `${x.t.short || x.t.name} (${x.r.band[0].toLowerCase()})`).join(", ")}.` : " All results are within expected ranges."));
+  L.push("## Assessment findings");
+  for (const { a, t, r, c } of rows) {
+    L.push(`- **${t.name}** on ${fmt(a.date)}: **${r.txt}**, ${r.band[0].toLowerCase()}.${r.lines.length ? " " + r.lines.join(" ") : ""}${c && c.d != null ? ` Change since ${fmt(c.prev.date)}: ${c.d > 0 ? "+" : ""}${c.d}${t.unit ? " " + t.unit : ""}${c.meaningful == null || c.d === 0 ? "" : c.meaningful ? " (clinically meaningful)" : " (within measurement error)"}.` : ""}`);
+    if (a.notes) L.push(`- Clinician notes: ${a.notes}`);
+  }
+  L.push("## Clinical interpretation");
+  const trend = latest.filter(x => x.c && x.c.d != null && x.c.better != null && x.c.d !== 0);
+  for (const x of trend) L.push(`- ${x.t.short || x.t.name} has ${x.c.better ? "improved" : "worsened"} by ${Math.abs(x.c.d)}${x.t.unit ? " " + x.t.unit : ""}${x.c.meaningful ? ", a clinically meaningful change" : x.c.meaningful === false ? ", which is within measurement error" : ""}.`);
+  if (!trend.length) L.push("- This is a baseline assessment. Change can be judged at reassessment.");
+  L.push("## Functional impact and risks");
+  if (flagged.length) for (const x of flagged) L.push(`- ${x.t.name}: ${x.r.band[0]}.${x.r.alert ? " Urgent: " + x.r.lines[0] : ""}`);
+  else L.push("- No high-risk findings on the tests completed.");
+  L.push("## Goals");
+  const goalable = flagged.filter(x => x.r.val != null && x.t.hb !== undefined);
+  for (const x of goalable.slice(0, 3)) { const step = x.t.mcid || Math.max(1, Math.round((x.r.max || x.r.val || 10) * 0.1)), target = Math.round((x.t.hb ? x.r.val + step : Math.max(0, x.r.val - step)) * 100) / 100;
+    L.push(`- Short term (4 weeks): ${x.t.short || x.t.name} ${x.t.hb ? "improves" : "reduces"} from ${x.r.txt} to ${x.t.hb ? "at least" : "no more than"} ${target}${x.t.unit && x.t.unit !== "/10" ? " " + x.t.unit : ""}.`); }
+  if (!goalable.length) L.push("- Set goals with the patient based on their priorities.");
+  L.push("- Long term: to be agreed with the patient and family.");
+  L.push("## Recommendations and plan", `- Reassess ${latest.map(x => x.t.short || x.t.name).join(", ")} in 4 weeks to measure change.`, "- Treatment focus, frequency and home programme to be completed by the treating clinician.");
+  L.push("## Summary for the patient and family", flagged.length ? `The tests show some areas where ${p.code} needs support, mainly ${flagged.slice(0, 2).map(x => (x.t.cat || x.t.name).toLowerCase()).join(" and ")}. Your therapist will explain the plan and the exercises that will help.` : "The tests show results within the expected range. Your therapist will explain how to keep progressing.");
+  L.push("", "Standard report generated from scores without AI. Clinician review required before release.");
+  return L.join("\n");
 }
 function md(s) {
   return s.split("\n").map(l => {
@@ -419,7 +457,7 @@ VIEWS.report = rid => {
   <header>${back("patient", `data-id="${rep.pid}"`)}<h1>${rep.kind === "progress" ? "Progress report" : "Assessment report"}</h1></header>
   <div class="stack">
     <div class="rephead"><img src="${s.logo || MP_LOGO}" alt="${s.logo ? "Clinic logo" : "MotionPlus Physio"}"><div><b>${esc(s.clinic || "MotionPlus Physio")}</b><div class="psub">${esc(p.code)} · ${rep.aids.length} assessment${rep.aids.length > 1 ? "s" : ""} · ${fmt(rep.date)}</div></div></div>
-    <p class="note lic">AI-written draft. Check every statement against your findings and edit before sharing.</p>
+    <p class="note lic">${rep.basic ? `Standard report built from the scores, without AI. ${AI ? "Tap Regenerate for a full AI report." : "AI isn't on here because " + aiWhy() + "."} Edit before sharing.` : "AI-written draft. Check every statement against your findings and edit before sharing."}</p>
     ${editingReport ? `<textarea id="repedit" rows="24" aria-label="Report text">${esc(rep.text)}</textarea><p class="note">Use “## ” for headings and “- ” for bullet points.</p>`
       : `<article class="repbody" id="repbody">${live ? (streaming.text ? md(streaming.text) : `<p class="thinking">Thinking… a full report usually takes under a minute.</p>`) : rep.text ? md(rep.text) : `<p class="empty">No report yet.</p>`}</article>`}
     ${!live && !editingReport ? `<button class="ghost" data-act="regen" data-id="${rid}">↻ ${rep.text ? "Regenerate" : "Write report"} with AI</button>` : ""}
@@ -567,11 +605,12 @@ async function aiTemplate() {
   imgs = imgs.filter(Boolean);
   const allText = [text, ...texts].filter(Boolean).join("\n\n").slice(0, 100000);
   const note = skipped.length ? ` Skipped: ${skipped.join("; ")}.` : "";
-  if (AI && (allText || (imgs.length && AI_IMG))) {
+  const ai = await getAI();
+  if (ai && (allText || (imgs.length && AI_IMG))) {
     setStatus(`Claude is reading the form${imgs.length ? ` (${imgs.length} page${imgs.length > 1 ? "s" : ""})` : ""}. This can take up to a minute…`);
     try {
       const sendImgs = AI_IMG ? imgs.slice(0, AI_IMG.maxCount) : [];
-      const j = await AI.json(`${TPL_AI_PROMPT}\n\n${sendImgs.length ? `The form is shown in the ${sendImgs.length} attached image(s).` : ""}${allText ? `\nSource text or description:\n${allText}` : ""}`, { modelTier: "default", ...(sendImgs.length ? { images: sendImgs } : {}) });
+      const j = await ai.json(`${TPL_AI_PROMPT}\n\n${sendImgs.length ? `The form is shown in the ${sendImgs.length} attached image(s).` : ""}${allText ? `\nSource text or description:\n${allText}` : ""}`, { modelTier: "default", ...(sendImgs.length ? { images: sendImgs } : {}) });
       Object.assign(tdraft, fromAI(j)); upFiles = []; tplAiBusy = false;
       tplStatus = [`Converted ${tdraft.items.length} items. Check them below, then tap Save template.${note}`, "good"]; render(); return;
     } catch (e) { if (e.code === "cancelled") { tplAiBusy = false; setStatus(null); return; }
@@ -585,7 +624,7 @@ async function aiTemplate() {
     tplStatus = [`Converted ${r.items.length} items without AI. Check the item types and scores below, then tap Save template.${note}`, "warn"]; render(); return;
   }
   tplAiBusy = false;
-  setStatus(imgs.length ? "Reading photos needs AI, which isn't available in this view. Open the app from its claude.ai link while signed in, or upload a Word file or text PDF." + note : "Nothing could be read from those files." + note, "bad");
+  setStatus(imgs.length ? `Reading photos needs AI, but ${aiWhy()}. Upload a Word file or text PDF, or open the link in the Claude app or Chrome.` + note : "Nothing could be read from those files." + note, "bad");
 }
 function syncBuilder() {
   if (view.name !== "builder" || !tdraft) return;
