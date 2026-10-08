@@ -179,6 +179,13 @@ td.muted{color:var(--muted)}
 .aibox .label{color:var(--accent)}
 .filebtn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--raised);border-radius:12px;padding:10px 14px;cursor:pointer;font-weight:500;min-height:44px;position:relative;align-self:flex-start}
 .filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer;min-height:0;padding:0}
+.upchip{display:inline-flex;align-items:center;gap:2px;background:var(--raised);border:1px solid var(--line);border-radius:999px;padding:2px 2px 2px 12px;font-size:13px;max-width:100%;overflow-wrap:anywhere}
+.upchip .ghost{min-height:30px;padding:2px 8px;color:var(--muted)}
+.upstatus{font-size:13.5px;padding:10px 12px;border-radius:10px;background:var(--raised);border:1px solid var(--line)}
+.upstatus.good{color:var(--good);background:var(--good-soft);border-color:#1f4a2e}
+.upstatus.warn{color:var(--warn);background:var(--warn-soft);border-color:#4a2f12}
+.upstatus.bad{color:var(--bad);background:var(--bad-soft);border-color:#5a1f1b}
+.filebtn svg{width:20px;height:20px;color:var(--accent)}
 .icard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px}
 .icard-top{display:flex;gap:8px;align-items:center}
 .icard-top select{flex:1;min-width:0}
@@ -1014,6 +1021,7 @@ VIEWS.report = rid => {
 let tdraft = null, tplAiBusy = false;
 const ITEM_TYPES = [["score", "Scored item"], ["choice", "Single choice (not scored)"], ["checklist", "Checklist"], ["number", "Number"], ["lrnumber", "Left / right number"], ["lrchoice", "Left / right choice"], ["text", "Short text"], ["longtext", "Long text"], ["heading", "Section heading"]];
 function openBuilder(tid, pid) {
+  upFiles = []; tplStatus = null; tplAiBusy = false;
   const ex = tid && db.templates.find(t => t.id === tid);
   tdraft = ex ? JSON.parse(JSON.stringify({ ...ex, pid })) : { id: "c_" + uid(), custom: true, name: "", disc: ["General"], desc: "", hb: true, items: [{ type: "score", label: "", opts: "0 = Unable\n1 = With help\n2 = Independent", unit: "" }], bandsText: "", pid };
   go("builder");
@@ -1025,11 +1033,14 @@ VIEWS.builder = () => {
   <header>${back("library", `data-pid="${d.pid || ""}"`)}<h1>${exists ? "Edit template" : "New template"}</h1></header>
   <div class="stack">
     <section class="aibox">
-      <div class="label">✦ Build with AI</div>
-      <p class="note">Take a photo of a paper assessment form, or paste its text, or describe what you need. Claude drafts the template and you check it below.</p>
-      ${AI_IMG ? `<label class="filebtn"><input id="tplimg" type="file" accept="${AI_IMG.mediaTypes.join(",")}" multiple> <span>📷 Add photos of the form</span></label><div class="psub" id="imgnames"></div>` : AI ? `<p class="note">Photos can't be sent from this view, so paste the form's text instead.</p>` : `<p class="note">AI isn't available in this view. You can still build the template by hand.</p>`}
-      <textarea id="tplaitext" rows="3" placeholder="e.g. Paediatric handwriting assessment: pencil grasp, letter formation, spacing, speed, each rated 0–3">${esc(d.aiText || "")}</textarea>
-      <button data-act="aiTpl" ${AI && !tplAiBusy ? "" : "disabled"}>${tplAiBusy ? "Building template…" : "Create template with AI"}</button>
+      <div class="label">✦ Digitise a paper form</div>
+      <p class="note">Upload a photo, scan, PDF or Word file of your assessment form, or paste its text. It becomes a digital assessment you can check below and save.</p>
+      <label class="filebtn"><input id="tplfile" type="file" multiple accept="image/*,.heic,.heif,application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.txt,text/plain"><span>${IC.cam} Upload photo, PDF or Word</span></label>
+      ${upFiles.length ? `<div class="chips">${upFiles.map((f, i) => `<span class="upchip">${esc(f.name)}<button class="ghost" data-act="rmUp" data-i="${i}" aria-label="Remove ${esc(f.name)}">✕</button></span>`).join("")}</div>` : ""}
+      <textarea id="tplaitext" rows="3" placeholder="Or paste the form's text, or describe it, e.g. Handwriting assessment: pencil grasp, letter formation, spacing, speed, each rated 0–3">${esc(d.aiText || "")}</textarea>
+      <button class="primary" data-act="aiTpl" ${tplAiBusy ? "disabled" : ""}>${tplAiBusy ? "Converting…" : "Convert to digital assessment"}</button>
+      ${tplStatus ? `<div class="upstatus ${tplStatus[1]}" role="status">${esc(tplStatus[0])}</div>` : ""}
+      <p class="note">${AI ? "Claude reads the form and keeps its wording, scoring and sections." : "AI isn't available in this view, so photos can't be read. Word files, text PDFs and pasted text still convert. Open the app from its claude.ai link while signed in to read photos."}</p>
     </section>
     <div class="field"><label class="label" for="tname">Template name</label><input id="tname" data-t="name" value="${esc(d.name)}" placeholder="e.g. Shoulder assessment"></div>
     <div class="row2"><div class="field"><label class="label" for="tdisc">Discipline</label><select id="tdisc" data-t="disc">${DISCS.map(x => `<option value="${x}" ${d.disc[0] === x ? "selected" : ""}>${esc(DISC_NAME[x])}</option>`).join("")}</select></div>
@@ -1049,7 +1060,7 @@ function itemCard(it, i, n) {
     <div class="icard-top"><select data-ti="${i}" data-tk="type" aria-label="Item type">${ITEM_TYPES.map(([v, l]) => `<option value="${v}" ${it.type === v ? "selected" : ""}>${l}</option>`).join("")}</select>
       <span class="iorder"><button class="ghost" data-act="moveItem" data-i="${i}" data-d="-1" ${i ? "" : "disabled"} aria-label="Move up">↑</button><button class="ghost" data-act="moveItem" data-i="${i}" data-d="1" ${i < n - 1 ? "" : "disabled"} aria-label="Move down">↓</button><button class="ghost danger-txt" data-act="delItem" data-i="${i}" aria-label="Remove item">✕</button></span></div>
     <input data-ti="${i}" data-tk="label" value="${esc(it.label)}" placeholder="${it.type === "heading" ? "Section title" : "Question or item"}" aria-label="Item label">
-    ${needsOpts ? `<textarea data-ti="${i}" data-tk="opts" rows="3" aria-label="Options" placeholder="${it.type === "score" ? "0 = Unable&#10;1 = Partial&#10;2 = Full" : "One option per line"}">${esc(it.opts)}</textarea><span class="note">${it.type === "score" ? "One per line as value = description." : "One option per line."}</span>` : ""}
+    ${needsOpts ? `<textarea data-ti="${i}" data-tk="opts" rows="${Math.min(10, Math.max(3, (it.opts || "").split("\n").length))}" aria-label="Options" placeholder="${it.type === "score" ? "0 = Unable&#10;1 = Partial&#10;2 = Full" : "One option per line"}">${esc(it.opts)}</textarea><span class="note">${it.type === "score" ? "One per line as value = description." : "One option per line."}</span>` : ""}
     ${needsUnit ? `<input data-ti="${i}" data-tk="unit" value="${esc(it.unit)}" placeholder="Unit, e.g. cm, s, kg, °" aria-label="Unit">` : ""}
   </div>`;
 }
@@ -1085,20 +1096,92 @@ function fromAI(j) {
   return { name: String(j.name || ""), disc: [DISCS.includes(j.discipline) ? j.discipline : "General"], desc: String(j.description || ""), hb: j.higherIsBetter !== false, items: items.length ? items : tdraft.items,
     bandsText: (Array.isArray(j.bands) ? j.bands : []).filter(b => b && b.label != null).map(b => `${b.min}-${b.max} = ${b.label}`).join("\n") };
 }
+let upFiles = [], tplStatus = null;
+const LIBS = { pdf: ["https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js", "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"], docx: ["https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"] };
+function loadScript(src) { return new Promise((res, rej) => { const ex = document.querySelector(`script[src="${src}"]`); if (ex?.dataset.ok) return res(); const s = ex || document.createElement("script"); s.addEventListener("load", () => { s.dataset.ok = 1; res(); }); s.addEventListener("error", () => rej(new Error("load"))); if (!ex) { s.src = src; document.head.appendChild(s); } }); }
+async function need(k) { for (const src of LIBS[k]) await loadScript(src); }
+const kindOf = f => /^image\//.test(f.type) || /\.(jpe?g|png|webp|gif|heic|heif)$/i.test(f.name) ? "image" : /pdf$/.test(f.type) || /\.pdf$/i.test(f.name) ? "pdf" : /\.docx$/i.test(f.name) ? "docx" : /^text\//.test(f.type) || /\.txt$/i.test(f.name) ? "text" : /\.doc$/i.test(f.name) ? "doc" : "other";
+async function toJpeg(blob, max = 1800) {
+  let src, w, h, url;
+  try { src = await createImageBitmap(blob); w = src.width; h = src.height; }
+  catch (e) { url = URL.createObjectURL(blob); src = new Image(); src.src = url; await src.decode(); w = src.naturalWidth; h = src.naturalHeight; }
+  const k = Math.min(1, max / Math.max(w, h)), c = document.createElement("canvas"); c.width = Math.round(w * k); c.height = Math.round(h * k);
+  const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(src, 0, 0, c.width, c.height); if (url) URL.revokeObjectURL(url);
+  return new Promise((r, j) => c.toBlob(b => b ? r(b) : j(new Error("encode")), "image/jpeg", 0.86));
+}
+async function readPdf(file, maxImgs) {
+  await need("pdf");
+  const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise; let text = ""; const imgs = [];
+  for (let i = 1; i <= Math.min(pdf.numPages, 20); i++) {
+    const pg = await pdf.getPage(i), tc = await pg.getTextContent();
+    text += tc.items.map(t => t.str + (t.hasEOL ? "\n" : " ")).join("") + "\n";
+    if (imgs.length < maxImgs) { const vp = pg.getViewport({ scale: 1.7 }), c = document.createElement("canvas"); c.width = vp.width; c.height = vp.height;
+      const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); await pg.render({ canvasContext: g, viewport: vp }).promise; imgs.push(await new Promise(r => c.toBlob(r, "image/jpeg", 0.86))); }
+  }
+  return { text: text.trim(), imgs, pages: pdf.numPages };
+}
+async function readDocx(file) { await need("docx"); return (await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() })).value.trim(); }
+function setStatus(msg, kind = "") { tplStatus = msg ? [msg, kind] : null; const el = document.querySelector(".upstatus"); if (el && msg) { el.textContent = msg; el.className = "upstatus " + kind; } else if (view.name === "builder") render(); }
+// Offline conversion of form text into items: headings, numbered options under an item, everything else a question.
+function parseFormText(text) {
+  const lines = text.split(/\r?\n/).map(l => l.replace(/\s+/g, " ").trim()).filter(Boolean), items = []; let cur = null, name = "";
+  for (const l of lines) {
+    const m = l.match(/^\(?(\d{1,2})\)?\s*([=:.\-–)]|points?\b|pts?\b)?\s+(.{2,})$/i);
+    if (m && cur && cur.type !== "heading") { const v = +m[1], opts = cur._o, numbered = m[2] === "." || m[2] === ")";
+      if ((!opts.length && v <= 1) || (opts.length && !numbered && Math.abs(v - opts.at(-1)[0]) === 1)) { opts.push([v, m[3]]); continue; } }
+    const letters = l.replace(/[^A-Za-z]/g, "");
+    if ((letters.length >= 3 && letters === letters.toUpperCase() && l.length <= 60) || (/:$/.test(l) && l.length <= 60)) {
+      if (!name && !items.length) { name = l.replace(/:$/, ""); continue; }
+      cur = { type: "heading", label: l.replace(/:$/, ""), _o: [] }; items.push(cur); continue;
+    }
+    cur = { type: "text", label: l.replace(/^(\d{1,2}|[a-z])[.)]\s+/i, ""), _o: [] }; items.push(cur);
+  }
+  const out = items.map(it => it._o.length >= 2 ? { type: "score", label: it.label, opts: it._o.map(([v, t]) => `${v} = ${t}`).join("\n"), unit: "" } : { type: it.type, label: it.label, opts: "", unit: "" });
+  return { name: name || lines[0]?.slice(0, 60) || "", items: out };
+}
 async function aiTemplate() {
-  const files = $("#tplimg")?.files, text = $("#tplaitext").value.trim();
-  if (!text && !files?.length) { toast("Add a photo or type a description first."); return; }
-  tdraft.aiText = text; tplAiBusy = true; syncBuilder(); render();
+  syncBuilder(); const text = tdraft.aiText = ($("#tplaitext").value || "").trim();
+  if (!text && !upFiles.length) { setStatus("Upload a file or paste the form's text first.", "bad"); return; }
+  tplAiBusy = true; tplStatus = ["Reading your files…", ""]; render();
+  const maxImgs = AI_IMG?.maxCount || 0; let imgs = [], texts = [], raw = [], skipped = [];
   try {
-    const j = await AI.json(`${TPL_AI_PROMPT}\n\n${files?.length ? `The form is in the ${files.length} attached photo(s).` : ""}${text ? `\nSource text or description:\n${text}` : ""}`, { modelTier: "default", ...(files?.length ? { images: files } : {}) });
-    Object.assign(tdraft, fromAI(j)); toast("Template drafted. Check each item, then save.");
-  } catch (e) { if (e.code !== "cancelled") toast(aiMsg(e)); }
-  tplAiBusy = false; render();
+    for (const f of upFiles) {
+      const k = kindOf(f);
+      if (k === "image") { if (imgs.length < Math.max(maxImgs, 1)) imgs.push(await toJpeg(f).catch(() => { skipped.push(f.name + " (couldn't open this image)"); return null; })); else skipped.push(f.name + " (too many images)"); }
+      else if (k === "pdf") { setStatus(`Reading ${f.name}…`); const r = await readPdf(f, Math.max(0, maxImgs - imgs.length)); if (r.text) { texts.push(`From ${f.name}:\n${r.text}`); raw.push(r.text); } imgs.push(...r.imgs); }
+      else if (k === "docx") { setStatus(`Reading ${f.name}…`); const t = await readDocx(f); texts.push(`From ${f.name}:\n${t}`); raw.push(t); }
+      else if (k === "text") { const t = await f.text(); texts.push(`From ${f.name}:\n${t}`); raw.push(t); }
+      else skipped.push(f.name + (k === "doc" ? " (old .doc format: save it as .docx or PDF)" : " (file type not supported)"));
+    }
+  } catch (e) { tplAiBusy = false; setStatus("A file couldn't be read. Check your internet connection, or try a photo or PDF of the form instead.", "bad"); return; }
+  imgs = imgs.filter(Boolean);
+  const allText = [text, ...texts].filter(Boolean).join("\n\n").slice(0, 100000);
+  const note = skipped.length ? ` Skipped: ${skipped.join("; ")}.` : "";
+  if (AI && (allText || (imgs.length && AI_IMG))) {
+    setStatus(`Claude is reading the form${imgs.length ? ` (${imgs.length} page${imgs.length > 1 ? "s" : ""})` : ""}. This can take up to a minute…`);
+    try {
+      const sendImgs = AI_IMG ? imgs.slice(0, AI_IMG.maxCount) : [];
+      const j = await AI.json(`${TPL_AI_PROMPT}\n\n${sendImgs.length ? `The form is shown in the ${sendImgs.length} attached image(s).` : ""}${allText ? `\nSource text or description:\n${allText}` : ""}`, { modelTier: "default", ...(sendImgs.length ? { images: sendImgs } : {}) });
+      Object.assign(tdraft, fromAI(j)); upFiles = []; tplAiBusy = false;
+      tplStatus = [`Converted ${tdraft.items.length} items. Check them below, then tap Save template.${note}`, "good"]; render(); return;
+    } catch (e) { if (e.code === "cancelled") { tplAiBusy = false; setStatus(null); return; }
+      if (!allText) { tplAiBusy = false; setStatus(aiMsg(e) + note, "bad"); return; }
+      tplStatus = [aiMsg(e) + " Converting the text without AI instead.", "warn"]; }
+  }
+  if (allText) {
+    const r = parseFormText([text, ...raw].filter(Boolean).join("\n")); tplAiBusy = false;
+    if (!r.items.length) { setStatus("No form items were found in that text." + note, "bad"); return; }
+    if (!tdraft.name.trim()) tdraft.name = r.name; tdraft.items = r.items; upFiles = [];
+    tplStatus = [`Converted ${r.items.length} items without AI. Check the item types and scores below, then tap Save template.${note}`, "warn"]; render(); return;
+  }
+  tplAiBusy = false;
+  setStatus(imgs.length ? "Reading photos needs AI, which isn't available in this view. Open the app from its claude.ai link while signed in, or upload a Word file or text PDF." + note : "Nothing could be read from those files." + note, "bad");
 }
 function syncBuilder() {
   if (view.name !== "builder" || !tdraft) return;
   document.querySelectorAll("[data-t]").forEach(el => { const k = el.dataset.t; tdraft[k] = k === "disc" ? [el.value] : k === "hb" ? el.value === "1" : el.value; });
   document.querySelectorAll("[data-ti]").forEach(el => { tdraft.items[+el.dataset.ti][el.dataset.tk] = el.value; });
+  const at = $("#tplaitext"); if (at) tdraft.aiText = at.value;
 }
 
 /* ---------- Settings, backup ---------- */
@@ -1308,9 +1391,11 @@ const ACT = {
   delItem: d => { syncBuilder(); tdraft.items.splice(+d.i, 1); render(); },
   moveItem: d => { syncBuilder(); const i = +d.i, j = i + +d.d; [tdraft.items[i], tdraft.items[j]] = [tdraft.items[j], tdraft.items[i]]; render(); },
   aiTpl: () => aiTemplate(),
+  rmUp: d => { syncBuilder(); upFiles.splice(+d.i, 1); render(); },
   previewTpl: () => { syncBuilder(); const c = compileTpl(tdraft); if (!c.fields.length) { toast("Add at least one item with a label."); return; } previewTpl = hydrate({ ...c, id: "preview", v: Date.now() }); go("preview"); },
   saveTpl: () => { syncBuilder(); const c = compileTpl(tdraft); if (!tdraft.name.trim()) { toast("Give the template a name."); $("#tname").focus(); return; } if (!c.fields.length) { toast("Add at least one item with a label."); return; }
-    const i = db.templates.findIndex(t => t.id === c.id); if (i >= 0) db.templates[i] = c; else db.templates.push(c); if (!save()) return; toast("Template saved"); libDisc = "Custom"; go("library", tdraft.pid || null); },
+    const i = db.templates.findIndex(t => t.id === c.id); if (i >= 0) db.templates[i] = c; else db.templates.push(c); if (!save()) return; hydCache.clear(); libDisc = "Custom";
+    if (tdraft.pid && P(tdraft.pid)) { toast("Template saved. Starting the assessment."); startForm(tdraft.pid, c.id); } else { toast("Template saved. Find it under Custom."); go("library", null); } },
   delTpl: (d, b) => { if (!armed("dt", b, "Tap again to delete template")) return; db.templates = db.templates.filter(t => t.id !== tdraft.id); save(); toast("Template deleted. Past assessments keep their copy."); go("library", tdraft.pid || null); },
   backToBuilder: () => go("builder"),
   rmLogo: () => { db.settings.logo = null; save(); render(); },
@@ -1344,7 +1429,7 @@ document.addEventListener("change", e => {
   const el = e.target;
   if (el.dataset.f && draft && view.name === "form") setVal(el.dataset.f, el.dataset.k, el.value);
   if (el.id === "slogo" && el.files[0]) setLogo(el.files[0]);
-  if (el.id === "tplimg") $("#imgnames").textContent = [...el.files].map(f => f.name).join(", ");
+  if (el.id === "tplfile" && el.files.length) { syncBuilder(); upFiles.push(...el.files); tplStatus = null; render(); }
   if (el.dataset.tk === "type") { syncBuilder(); render(); }
   if (el.id === "sprefix") render();
 });
