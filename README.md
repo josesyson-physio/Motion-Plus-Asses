@@ -20,7 +20,7 @@ The live app is published as a Claude artifact. AI features and file saving need
 
 `posture/` is a separate static posture assessment app: front, back and side photos, on-device body landmark detection (MediaPipe), Kendall plumb-line analysis, a colour-coded body map with treat and train regions, and a graphics-only PDF report. Photos never leave the device.
 
-It is a plain static site, so any web host serves it. With GitHub Pages turned on for this repository it opens at `https://josesyson-physio.github.io/motion-plus-asses/posture/`, where the phone camera, photo upload and PDF download work directly, and it can be added to the home screen.
+It is a plain static site, so any web host serves it. With GitHub Pages turned on for this repository it opens at `https://josesyson-physio.github.io/Motion-Plus-Asses/posture/`, where the phone camera, photo upload and PDF download work directly, and it can be added to the home screen.
 
 ## Project layout
 
