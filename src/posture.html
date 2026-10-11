@@ -192,6 +192,15 @@ details summary{cursor:pointer;font-weight:600}
 .live-bar .btn{justify-self:end}
 .shutter{appearance:none;width:72px;height:72px;border-radius:50%;border:5px solid #fff;background:rgba(255,255,255,.25);cursor:pointer}
 .shutter:active{background:#fff}
+/* Progress */
+.prtrend svg{width:100%;height:auto;display:block}
+.prfigs{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(46%,180px),1fr))}
+.prfig{margin:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.prfig svg{width:100%;height:auto;display:block;max-height:360px}
+.prfig figcaption{font:600 .85rem var(--f-body);text-align:center;padding:4px;color:var(--muted)}
+.prrow{display:grid;grid-template-columns:1fr auto auto auto;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.prrow:last-child{border-bottom:0}
+.prmore summary{cursor:pointer;font-weight:600;padding:6px 0}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -203,7 +212,8 @@ details summary{cursor:pointer;font-weight:600}
       <button class="tab" role="tab" data-tab="capture" aria-selected="false" id="tab-capture">2 Capture</button>
       <button class="tab" role="tab" data-tab="analysis" aria-selected="false" id="tab-analysis">3 Analysis</button>
       <button class="tab" role="tab" data-tab="gait" aria-selected="false" id="tab-gait">4 Gait</button>
-      <button class="tab" role="tab" data-tab="report" aria-selected="false" id="tab-report">5 Report</button>
+      <button class="tab" role="tab" data-tab="progress" aria-selected="false" id="tab-progress">5 Progress</button>
+      <button class="tab" role="tab" data-tab="report" aria-selected="false" id="tab-report">6 Report</button>
     </nav>
   </div>
 </header>
@@ -378,12 +388,44 @@ details summary{cursor:pointer;font-weight:600}
   </section>
 
   <!-- 5 REPORT -->
+  <section data-pane="progress" hidden style="display:grid;gap:16px">
+    <div class="panel">
+      <h2>Progress</h2>
+      <div class="row" style="align-items:flex-end">
+        <label class="field" style="flex:1 1 220px">Patient<select id="prPatient"></select></label>
+        <button class="btn primary" id="prSave">Save today to history</button>
+        <label class="btn" for="prImport">Import session files</label><input id="prImport" type="file" accept=".json,application/json" multiple hidden>
+      </div>
+      <p class="note" id="prNote"></p>
+    </div>
+    <div class="panel" id="prEmpty"><p class="note">No visits yet. Assess a patient, then tap <b>Save today to history</b>. Each later visit is added to the same patient by name or ID.</p></div>
+    <div id="prBody" style="display:grid;gap:16px">
+      <div class="panel">
+        <h2>Score trend</h2>
+        <div class="tiles" id="prTiles"></div>
+        <div id="prTrend" class="prtrend"></div>
+        <h3>By region</h3>
+        <div class="tiles" id="prRegions"></div>
+      </div>
+      <div class="panel">
+        <h2>Before vs after</h2>
+        <div class="row"><label class="field" style="flex:1 1 150px">Before<select id="prA"></select></label><label class="field" style="flex:1 1 150px">After<select id="prB"></select></label></div>
+        <p class="note">Grey dashed: before. Blue: after. Both are scaled to the same height and lined up on the plumb line.</p>
+        <div class="prfigs" id="prFigs"></div>
+        <div class="tablewrap"><table id="prTable"></table></div>
+        <details class="prmore"><summary id="prMetricsSum">All measures</summary><div class="tablewrap"><table id="prMetrics"></table></div></details>
+      </div>
+      <div class="panel"><h2>Visits</h2><div id="prList"></div></div>
+    </div>
+  </section>
+
   <section data-pane="report" hidden style="display:grid;gap:16px">
     <div class="panel">
       <h2>Report</h2>
       <div class="row">
         <label class="row" style="gap:6px"><input type="checkbox" id="optClinical" style="width:auto"> Add clinical values page</label>
         <label class="row" style="gap:6px"><input type="checkbox" id="optFigures" checked style="width:auto"> Include alignment figures</label>
+        <label class="row" style="gap:6px" id="optProgressWrap" hidden><input type="checkbox" id="optProgress" checked style="width:auto"> Add progress page</label>
       </div>
       <p class="note">Click the summary or notes in the preview to edit them. The PDF contains graphics only, no photos.</p>
       <div class="row"><button class="btn primary" id="pdfBtn">Save PDF report</button><span class="note" id="pdfStatus"></span></div>
@@ -1202,7 +1244,7 @@ async function rasterizeSVGs(root){
 
 /* ---------------- analysis UI ---------------- */
 let A=null;
-function refreshAll(){ A = analyse(); GA = gaitAnalyse(); renderAnalysis(); renderGait(); renderReport(); }
+function refreshAll(){ A = analyse(); GA = gaitAnalyse(); renderAnalysis(); renderGait(); renderReport(); renderProgress(); }
 function renderAnalysis(){
   const used = VIEWS.filter(v=>S.views[v.k]?.pts).map(v=>v.label);
   $('#viewsUsed').textContent = used.length? `Views used: ${used.join(', ')}` : 'Add photos in Capture to start.';
@@ -1733,9 +1775,9 @@ function renderReport(){
   const flagged = scored.filter(r=>r.status==='train'||r.status==='treat').sort((a,b)=>(b.status==='treat')-(a.status==='treat'));
   const date = p.date||today();
   const hasGait = GA && Object.keys(GA.M).length>0;
-  const nPages = 2 + (hasGait?1:0) + (showClin?1:0) + (showClin&&hasGait?1:0);
+  const progHist = historyFor(pKey(S.patient)); $('#optProgressWrap').hidden = progHist.length<2;
   const ref = `MP-${date.replace(/-/g,'')}-${(p.id||'').replace(/[^\w]/g,'').slice(0,8)||'NA'}`;
-  const foot = n => `<div class="foot"><span>${esc(c.name||'MotionPlus')} · Posture Assessment · ${esc(p.name||'Patient')} ${p.id?'· '+esc(p.id):''}</span><span>Screening from 2D photographs. Supports, does not replace, clinical examination.</span><span>Page ${n} of ${nPages}</span></div><img class="sig" src="${SIG}" alt="">`;
+  const foot = n => `<div class="foot"><span>${esc(c.name||'MotionPlus')} · Posture Assessment · ${esc(p.name||'Patient')} ${p.id?'· '+esc(p.id):''}</span><span>Screening from 2D photographs. Supports, does not replace, clinical examination.</span><span>Page {{PN}} of {{NP}}</span></div><img class="sig" src="${SIG}" alt="">`;
   const slim = sub => `<div class="band slim"><div><div class="title">Posture Assessment Report</div></div><div class="refbox" style="text-align:right"><b>${sub}</b>${esc(p.name||'Patient')} · ${esc(date)}</div></div>`;
   const prevScores = S.previous? REGIONS.map(r=>S.previous.regionScores?.[r.k] ?? null) : null;
   const keyFindings = A.patterns.length ? A.patterns.map(([s,t])=>`<li><span class="dot" style="background:${hex(s)}"></span><span>${esc(t)}</span></li>`).join('')
@@ -1785,11 +1827,11 @@ function renderReport(){
   const page3 = showClin ? `<section class="rpage">${slim('Clinical values')}
     <div class="body"><div class="sec"><h3>Measurements</h3><table><thead><tr><th>Measure</th><th>Value</th><th>Normal</th><th>Mild</th><th>Status</th></tr></thead><tbody>${
       Object.keys(METRICS).filter(k=>A.M[k]).map(k=>{const m=A.M[k],n=S.norms[METRICS[k].norm]; return `<tr><td>${esc(METRICS[k].label||n.label)}</td><td><b>${fmt(m.v)}${n.unit}</b></td><td>${n.lo!=null?`${n.lo} – ${n.hi}`:'≤ '+n.n}${n.unit}</td><td>${n.lo!=null?`± ${n.m}`:'≤ '+n.m}${n.unit}</td><td><span class="pill" style="background:${hex(m.sev)};padding:3px 9px">${label(m.sev)}</span></td></tr>`;}).join('')
-    }</tbody></table><div class="small">Plumb-line values are % of ear-to-ankle height. Angles measured from 2D photographs with on-device landmark detection; screening values to be confirmed clinically. Norms follow Kendall plumb-line alignment and published photogrammetry ranges, adjustable by the clinic.</div></div></div>${foot(showClin&&hasGait?nPages-1:nPages)}</section>` : '';
+    }</tbody></table><div class="small">Plumb-line values are % of ear-to-ankle height. Angles measured from 2D photographs with on-device landmark detection; screening values to be confirmed clinically. Norms follow Kendall plumb-line alignment and published photogrammetry ranges, adjustable by the clinic.</div></div></div>${foot()}</section>` : '';
   const page4 = showClin && hasGait ? `<section class="rpage">${slim('Gait values')}
     <div class="body"><div class="sec"><h3>Gait measurements</h3><table><thead><tr><th>Measure</th><th>Value</th><th>Typical</th><th>Status</th></tr></thead><tbody>${
       Object.keys(GM).filter(k=>GA.M[k]).map(k=>{const m=GA.M[k],n=S.gaitNorms[GM[k].n]; return `<tr><td>${esc(GM[k].label||n.label)}</td><td><b>${fmt(m.v,n.d??1)}${n.unit}</b></td><td>${n.lo} – ${n.hi}${n.unit}</td><td><span class="pill" style="background:${hex(m.sev)};padding:3px 9px">${label(m.sev)}</span></td></tr>`;}).join('')
-    }</tbody></table><div class="small">Measured from 2D video with on-device pose tracking. Heel strike and toe-off are found from foot position relative to the pelvis. Typical ranges are adult values, adjustable by the clinic.</div></div></div>${foot(nPages)}</section>` : '';
+    }</tbody></table><div class="small">Measured from 2D video with on-device pose tracking. Heel strike and toe-off are found from foot position relative to the pelvis. Typical ranges are adult values, adjustable by the clinic.</div></div></div>${foot()}</section>` : '';
 
   if (hasGait && S.gait.summary==null) S.gait.summary = gaitSummary();
   const gFlag = hasGait ? GA.areas.filter(a=>a.status==='train'||a.status==='treat').sort((a,b)=>(b.status==='treat')-(a.status==='treat')) : [];
@@ -1810,7 +1852,9 @@ function renderReport(){
       <div class="sec"><h3>Gait training focus</h3>${gRx?`<div class="rx">${gRx}</div>`:'<div class="small">Walking pattern within typical ranges. Keep up regular walking and leg strength work.</div>'}</div>
     </div>${foot(3)}</section>` : '';
 
-  $('#report').innerHTML = page1 + page2 + pageG + page3 + page4;
+  const pageP = progressPage(slim,foot);
+  const html = page1 + page2 + pageG + pageP + page3 + page4; let pn=0; const np=(html.match(/\{\{PN\}\}/g)||[]).length;
+  $('#report').innerHTML = html.replace(/\{\{PN\}\}/g,()=>++pn).replace(/\{\{NP\}\}/g,np);
   if ($('#gSumEdit')) $('#gSumEdit').oninput = e => { S.gait.summary = e.target.innerText; };
   $('#sumEdit').oninput = e => { S.summary = e.target.innerText; };
   $('#notesEdit').oninput = e => { S.notes = e.target.innerText; };
@@ -1850,36 +1894,220 @@ async function makePDF(){
   }catch(e){ r.style.transform=prev; $('#pdfStatus').textContent='Could not build the PDF: '+(e?.message||e); }
   btn.disabled=false; fitReport();
 }
-function sessionData(){
-  return {app:'MotionPlus',kind:'static-posture',version:1,savedAt:new Date().toISOString(),patient:S.patient,
+function sessionData(slim=false){
+  return {app:'MotionPlus',kind:'static-posture',version:1,savedAt:new Date().toISOString(),patient:{...S.patient},
     views:Object.fromEntries(Object.entries(S.views).filter(([,v])=>v?.pts).map(([k,v])=>[k,{w:v.w,h:v.h,pts:v.pts,manual:v.manual,spine:v.spine||null}])),
     overrides:S.overrides,exercises:S.exercises,summary:S.summary,notes:S.notes,norms:S.norms,
-    regionScores:Object.fromEntries(A.regions.map(r=>[r.k,r.score])),overall:A.overall,
-    gait:{side:gaitPack(S.gait.side),back:gaitPack(S.gait.back),overrides:S.gait.overrides,exercises:S.gait.exercises,summary:S.gait.summary,
+    regionScores:Object.fromEntries(A.regions.map(r=>[r.k,r.score])),regionStatus:Object.fromEntries(A.regions.map(r=>[r.k,r.status])),overall:A.overall,
+    metrics:Object.fromEntries(Object.entries(A.M).map(([k,m])=>[k,+m.v.toFixed(2)])),
+    gait:{side:slim?null:gaitPack(S.gait.side),back:slim?null:gaitPack(S.gait.back),overrides:S.gait.overrides,exercises:S.gait.exercises,summary:S.gait.summary,
       overall:GA?.overall??null,metrics:GA?Object.fromEntries(Object.entries(GA.M).map(([k,m])=>[k,+m.v.toFixed(3)])):{}}};
 }
 function gaitPack(G){ if(!G) return null; const r=v=>Math.round(v*10)/10;
   return {kind:G.kind,fps:G.fps,w:G.w,h:G.h,synthetic:!!G.synthetic,t:G.t.map(v=>+v.toFixed(3)),frames:G.frames.map(P=>P&&Object.fromEntries(GK.map(k=>[k,{x:r(P[k].x),y:r(P[k].y),v:+(P[k].v??1).toFixed(2)}])))};
 }
 function rememberSession(d){
-  const list=store.get('mp.sessions',[]); list.unshift(d); store.set('mp.sessions',list.slice(0,30)); fillPrevSelect();
+  // One visit per patient per day; the history keeps scores, measures and landmarks, not gait video points.
+  const k=pKey(d.patient), dt=sDate(d);
+  const list=store.get('mp.sessions',[]).filter(x=>!(k && pKey(x.patient)===k && sDate(x)===dt)).map(slimSession);
+  list.unshift(slimSession(d)); let keep=list.slice(0,100);
+  while (!store.set('mp.sessions',keep) && keep.length>10) keep=keep.slice(0,-5);
+  fillPrevSelect();
 }
 function fillPrevSelect(){
   const list=store.get('mp.sessions',[]);
   $('#prevSelect').innerHTML = '<option value="">None</option>'+list.map((s,i)=>`<option value="${i}">${esc(s.patient?.name||'Unnamed')} · ${esc(s.patient?.date||s.savedAt?.slice(0,10))} · score ${s.overall==null?'–':Math.round(s.overall)}</option>`).join('');
 }
 
+/* ---------------- progress dashboard ---------------- */
+const pKey = p => ((p?.id||'').trim() || (p?.name||'').trim()).toLowerCase();
+const pLabel = p => `${p?.name||'Unnamed'}${p?.id?' · '+p.id:''}`;
+const sDate = d => d.patient?.date || d.savedAt?.slice(0,10) || '';
+const scoreHex = (pal,s) => s==null?pal.figure:s>=80?pal.ok:s>=60?pal.train:pal.treat;
+function slimSession(d){ return d?.gait ? {...d, gait:{...d.gait, side:null, back:null}} : d; }
+function hasData(){ return !!(A && (A.overall!=null || Object.keys(A.M).length)) || !!(GA && Object.keys(GA.M).length); }
+// Live values for the patient on screen, shaped like a saved session.
+function liveEntry(){ const d=sessionData(true); d.live=true; return d; }
+function storedSessions(){ return store.get('mp.sessions',[]); }
+function shiftDate(d,days){ const t=new Date((d||today())+'T00:00:00'); t.setDate(t.getDate()+days); return t.toISOString().slice(0,10); }
+// Example patient: two earlier visits built from today's values, worse further back.
+function exampleHistory(){
+  const now=liveEntry(); const out=[];
+  for (const [wk,f] of [[12,1],[6,.55]]){
+    const e=structuredClone(now); e.live=false; e.example=true; e.patient={...e.patient,date:shiftDate(now.patient.date,-7*wk)}; e.savedAt=e.patient.date+'T10:00:00Z';
+    for (const k in e.regionScores) if (e.regionScores[k]!=null) e.regionScores[k]=Math.max(15, e.regionScores[k]-f*(18+((k.length*7)%9)));
+    for (const k in e.regionScores){ const s=e.regionScores[k]; e.regionStatus[k]= s==null?'na':s>=85?'ok':s>=60?'train':'treat'; }
+    e.overall = now.overall==null?null:Math.max(15,now.overall-f*17);
+    for (const k in e.metrics){ const n=S.norms[METRICS[k]?.norm]; if(!n) continue; const v=e.metrics[k]; const tgt=n.lo!=null?(n.lo+n.hi)/2:0; e.metrics[k]=+(v+(v-tgt)*f*0.7+(n.lo!=null?Math.sign(v-tgt||1)*f*5:Math.sign(v||1)*f*2)).toFixed(2); }
+    if (e.gait){ e.gait.overall = e.gait.overall==null?null:Math.max(15,e.gait.overall-f*14);
+      for (const k in e.gait.metrics){ const n=S.gaitNorms[GM[k]?.n]; if(!n) continue; const v=e.gait.metrics[k]; const mid=(n.lo+n.hi)/2; e.gait.metrics[k]=+(v+(v-mid)*f*0.6+(k==='speed'?-.15*f:k==='cadence'?-8*f:k.includes('Asym')?3*f:0)).toFixed(3); } }
+    // Head and shoulders further forward on the side views, more lean in front.
+    for (const [vk,v] of Object.entries(e.views||{})){ const P=v.pts; if(!P) continue; const H=Math.abs(((P.lAnk?.y??P.rAnk?.y)||0)-((P.lEar?.y??P.rEar?.y)||0))||v.h*.8;
+      const dir = vk==='latL'?-1:vk==='latR'?1:0;
+      for (const q in P){ const w=/Ear|Eye|nose/.test(q)?.05:/Sh|Elb|Wri/.test(q)?.028:/Hip/.test(q)?.01:0; if(dir) P[q]={...P[q],x:P[q].x+dir*w*f*H}; else if(/^l/.test(q)&&w) P[q]={...P[q],y:P[q].y+w*f*H*.35}; }
+      if (v.spine) for (const q of ['C7','T7']) v.spine[q]={...v.spine[q],x:v.spine[q].x-dir*.015*f*H}; }
+    out.push(e);
+  }
+  return [...out, now];
+}
+function historyFor(key){
+  if (S.example && key===pKey(S.patient)) return exampleHistory();
+  let list = storedSessions().filter(d=>pKey(d.patient)===key);
+  if (key && key===pKey(S.patient) && hasData()){ const lv=liveEntry(); list=list.filter(d=>sDate(d)!==sDate(lv)); list.push(lv); }
+  return list.sort((a,b)=>sDate(a).localeCompare(sDate(b)) || (a.savedAt||'').localeCompare(b.savedAt||''));
+}
+function progressPatients(){
+  const m=new Map(); for (const d of storedSessions()){ const k=pKey(d.patient); if(k&&!m.has(k)) m.set(k,d.patient); }
+  const ck=pKey(S.patient); if (ck && (hasData()||m.has(ck))) m.set(ck,S.patient);
+  return [...m.entries()];
+}
+// distance outside the normal range, for "better or worse" arrows
+function offNorm(n,v){ if(v==null||!n) return null; if(n.lo!=null) return Math.max(n.lo-v, v-n.hi, 0); return Math.max(0, Math.abs(v)-n.n); }
+function weeksBetween(a,b){ const d=(new Date(b)-new Date(a))/864e5; return isFinite(d)?d:0; }
+function spanText(days){ return days<1?'same day':days<14?`${Math.round(days)} days`:days<90?`${Math.round(days/7)} weeks`:`${Math.round(days/30.4)} months`; }
+
+function trendSVG(hist,pal,W=640,H=230){
+  const L=40,R=W-30,T=34,B=H-30;
+  const ts=hist.map(d=>new Date(sDate(d)+'T00:00:00').getTime()); const t0=Math.min(...ts), t1=Math.max(...ts);
+  const X0=L+16; const X = i => hist.length===1 ? (X0+R)/2 : t1===t0 ? X0+(R-X0)*i/(hist.length-1) : X0+(R-X0)*(ts[i]-t0)/(t1-t0);
+  const Y = v => B-(B-T)*v/100;
+  let g='';
+  for (const [a,b,c] of [[80,100,pal.ok],[60,80,pal.train],[0,60,pal.treat]]) g+=`<rect x="${L}" y="${Y(b)}" width="${R-L}" height="${Y(a)-Y(b)}" style="fill:${c};opacity:.08"/>`;
+  for (const v of [0,20,40,60,80,100]) g+=`<line x1="${L}" x2="${R}" y1="${Y(v)}" y2="${Y(v)}" style="stroke:${pal.line};stroke-width:1"/><text x="${L-6}" y="${Y(v)+4}" text-anchor="end" style="fill:${pal.muted};font:11px ${pal.font}">${v}</text>`;
+  const every = Math.ceil(hist.length/7);
+  hist.forEach((d,i)=>{ if(i%every && i!==hist.length-1) return; const dt=sDate(d); g+=`<text x="${Math.min(X(i),W-24)}" y="${B+18}" text-anchor="middle" style="fill:${pal.muted};font:11px ${pal.font}">${d.live?'Today':esc(dt.slice(5).replace('-','/'))}</text>`; });
+  const series=[{k:'Posture',c:pal.plumb,get:d=>d.overall,dash:''},{k:'Gait',c:pal.spine||'#c2185b',get:d=>d.gait?.overall,dash:'7 5'}];
+  // Put each end label on the side away from the other line.
+  const other=(s,i)=>{ const o=series.find(q=>q!==s).get(hist[i]); return o==null?null:o; };
+  for (const s of series){ const pts=hist.map((d,i)=>[i,s.get(d)]).filter(([,v])=>v!=null); if(!pts.length) continue;
+    if (pts.length>1) g+=`<polyline points="${pts.map(([i,v])=>`${X(i)},${Y(v)}`).join(' ')}" style="fill:none;stroke:${s.c};stroke-width:3;stroke-dasharray:${s.dash};stroke-linejoin:round"/>`;
+    pts.forEach(([i,v],j)=>{ g+=`<circle cx="${X(i)}" cy="${Y(v)}" r="5" style="fill:${pal.bg};stroke:${s.c};stroke-width:3"/>`;
+      if (j===pts.length-1||j===0){ const o=other(s,i); const below = o!=null && o>v; g+=`<text x="${X(i)}" y="${below?Y(v)+20:Y(v)-10}" text-anchor="middle" style="fill:${s.c};font:700 13px ${pal.font}">${Math.round(v)}</text>`; } }); }
+  const lg = series.map((s,i)=>`<g transform="translate(${L+i*96},6)"><line x1="0" x2="22" y1="6" y2="6" style="stroke:${s.c};stroke-width:3;stroke-dasharray:${s.dash}"/><text x="28" y="10" style="fill:${pal.ink};font:600 12px ${pal.font}">${s.k}</text></g>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${g}${lg}</svg>`;
+}
+function sparkSVG(vals,pal){
+  const W=120,H=34, p=vals.map((v,i)=>[i,v]).filter(([,v])=>v!=null); if(p.length<2) return '';
+  const X=i=>4+(W-8)*i/(vals.length-1), Y=v=>H-4-(H-8)*v/100;
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:34px"><polyline points="${p.map(([i,v])=>`${X(i)},${Y(v)}`).join(' ')}" style="fill:none;stroke:${pal.plumb};stroke-width:2"/>${p.map(([i,v])=>`<circle cx="${X(i)}" cy="${Y(v)}" r="2.6" style="fill:${scoreHex(pal,v)}"/>`).join('')}</svg>`;
+}
+// Before (grey, dashed) over after (blue), both scaled to ear-to-ankle height and lined up on the plumb line.
+function overlaySVG(k,a,b,pal){
+  const vw=VIEWS.find(q=>q.k===k); const keys=keysFor(k), bones=bonesFor(k);
+  const norm = v => { const P=v.pts; const ax = vw.plane==='frontal'?(P.lAnk.x+P.rAnk.x)/2:P[vw.s+'Ank'].x, ay = vw.plane==='frontal'?(P.lAnk.y+P.rAnk.y)/2:P[vw.s+'Ank'].y;
+    const ey = vw.plane==='frontal'?(P.lEar.y+P.rEar.y)/2:P[vw.s+'Ear'].y; const H=Math.abs(ay-ey)||1; const f=q=>q&&({x:(q.x-ax)/H*100,y:(q.y-ay)/H*100});
+    const o={}; for(const q of keys) if(P[q]) o[q]=f(P[q]); const sp = v.spine?.confirmed? Object.fromEntries(SPINE.map(q=>[q,f(v.spine[q])])) : null; return {P:o,sp}; };
+  const A1=norm(a), B1=norm(b);
+  const draw=(N,col,w,dash,op)=>{ let g=''; const P=N.P;
+    for (const [p,q] of bones) if(P[p]&&P[q]) g+=`<line x1="${P[p].x}" y1="${P[p].y}" x2="${P[q].x}" y2="${P[q].y}" style="stroke:${col};stroke-width:${w};stroke-linecap:round;stroke-dasharray:${dash};opacity:${op}"/>`;
+    const head = vw.plane==='frontal'? (P.lEar&&P.rEar?{x:(P.lEar.x+P.rEar.x)/2,y:(P.lEar.y+P.rEar.y)/2}:null) : P[vw.s+'Ear'];
+    if (head) g+=`<circle cx="${head.x}" cy="${head.y-1}" r="6.5" style="fill:none;stroke:${col};stroke-width:${w};stroke-dasharray:${dash};opacity:${op}"/>`;
+    if (N.sp){ const s=['C7','T7','T12','L3','PSIS'].map(q=>N.sp[q]); g+=`<polyline points="${s.map(p=>`${p.x},${p.y}`).join(' ')}" style="fill:none;stroke:${col};stroke-width:${w*.8};stroke-dasharray:${dash};opacity:${op}"/>`; }
+    for (const q in P){ if(/Eye|nose|Elb|Wri/.test(q)) continue; g+=`<circle cx="${P[q].x}" cy="${P[q].y}" r="${w*.9}" style="fill:${col};opacity:${op}"/>`; }
+    return g; };
+  const all=[...Object.values(A1.P),...Object.values(B1.P)]; const xs=all.map(p=>p.x), ys=all.map(p=>p.y);
+  const x0=Math.min(-28,...xs)-8, x1=Math.max(28,...xs)+8, y0=Math.min(...ys)-14, y1=Math.max(...ys)+6; const w=Math.max(x1-x0,64), cx=(x0+x1)/2;
+  let g=''; for (let gy=Math.ceil(y0/10)*10; gy<y1; gy+=10) g+=`<line x1="${cx-w/2}" x2="${cx+w/2}" y1="${gy}" y2="${gy}" style="stroke:${pal.grid};stroke-width:.4"/>`;
+  g+=`<line x1="0" x2="0" y1="${y0}" y2="${y1}" style="stroke:${pal.plumb};stroke-width:.7;stroke-dasharray:2.5 2;opacity:.6"/>`;
+  return `<svg viewBox="${cx-w/2} ${y0} ${w} ${y1-y0}" xmlns="http://www.w3.org/2000/svg"><rect x="${cx-w/2}" y="${y0}" width="${w}" height="${y1-y0}" style="fill:${pal.bg}"/>${g}${draw(A1,pal.muted,1.6,'3 2',.75)}${draw(B1,pal.plumb,2.2,'',1)}</svg>`;
+}
+function compareRows(a,b){
+  const reg = REGIONS.map(r=>({label:r.label, a:a.regionScores?.[r.k]??null, b:b.regionScores?.[r.k]??null}));
+  const mets=[]; for (const k of Object.keys(METRICS)){ const n=S.norms[METRICS[k].norm]; const va=a.metrics?.[k], vb=b.metrics?.[k]; if(va==null||vb==null) continue;
+    const da=offNorm(n,va), db=offNorm(n,vb); mets.push({label:METRICS[k].label||n.label, unit:n.unit, a:va, b:vb, d:1, better: db<da-0.05?1:db>da+0.05?-1:0}); }
+  for (const k of Object.keys(GM)){ const n=S.gaitNorms[GM[k].n]; const va=a.gait?.metrics?.[k], vb=b.gait?.metrics?.[k]; if(va==null||vb==null) continue;
+    const da=offNorm(n,va), db=offNorm(n,vb), eps=(n.mild||1)*0.05; mets.push({label:GM[k].label||n.label, unit:n.unit, a:va, b:vb, d:n.d??1, gait:true, better: db<da-eps?1:db>da+eps?-1:0}); }
+  return {reg, mets};
+}
+const deltaTxt = (a,b) => a==null||b==null ? '–' : `${b-a>=0?'+':''}${Math.round(b-a)}`;
+let prSel=null, prA=null, prB=null;
+function renderProgress(){
+  if (!A || $('[data-pane=progress]').hidden) return;
+  const pats=progressPatients();
+  if (!pats.some(([k])=>k===prSel)) { prSel = pats.find(([k])=>k===pKey(S.patient))?.[0] ?? pats[0]?.[0] ?? null; prA=prB=null; }
+  $('#prPatient').innerHTML = pats.length? pats.map(([k,p])=>`<option value="${esc(k)}"${k===prSel?' selected':''}>${esc(pLabel(p))}</option>`).join('') : '<option value="">No patients yet</option>';
+  const hist = prSel? historyFor(prSel) : [];
+  const canSave = hasData() && !S.example && pKey(S.patient);
+  $('#prSave').disabled=!canSave;
+  $('#prNote').textContent = S.example ? 'Example patient: the two earlier visits are made up to show how the dashboard looks.'
+    : !pKey(S.patient) && hasData() ? 'Add the patient name or ID in step 1 so today can be saved to their history.'
+    : 'History stays in this browser. Import session files to add visits from another device.';
+  const empty = $('#prEmpty'); empty.hidden = hist.length>0; $('#prBody').hidden = !hist.length;
+  if (!hist.length) return;
+  if (prA==null||prA>=hist.length) prA=0; if (prB==null||prB>=hist.length||prB===prA) prB=hist.length-1;
+  const a=hist[prA], b=hist[prB], first=hist[0], last=hist[hist.length-1];
+  const regBetter = REGIONS.filter(r=>first.regionScores?.[r.k]!=null&&last.regionScores?.[r.k]!=null&&last.regionScores[r.k]-first.regionScores[r.k]>=3).length;
+  const regCount = REGIONS.filter(r=>first.regionScores?.[r.k]!=null&&last.regionScores?.[r.k]!=null).length;
+  const tile=(l,v,u,c)=>`<div class="tile" style="border-left:4px solid ${c}"><small>${l}</small><b>${v}</b><span class="note">${u}</span></div>`;
+  const chg=(x,y)=>x==null||y==null?'':(hist.length>1?`${deltaTxt(x,y)} since first visit`:'first visit');
+  $('#prTiles').innerHTML = tile('Visits',hist.length,hist.length>1?spanText(weeksBetween(sDate(first),sDate(last))):'one visit so far','var(--line)')
+    + tile('Posture score',last.overall==null?'–':Math.round(last.overall),chg(first.overall,last.overall),scoreHex(SCREEN,last.overall))
+    + tile('Gait score',last.gait?.overall==null?'–':Math.round(last.gait.overall),chg(first.gait?.overall,last.gait?.overall),scoreHex(SCREEN,last.gait?.overall))
+    + tile('Regions improved',regCount&&hist.length>1?`${regBetter} of ${regCount}`:'–','by 3 points or more','var(--line)');
+  const tw=Math.max(320,Math.min(720,$('#prTrend').clientWidth||640)); $('#prTrend').innerHTML = trendSVG(hist,{...SCREEN,spine:'var(--spine)'},tw,tw<500?220:240);
+  $('#prRegions').innerHTML = REGIONS.map(r=>{ const vals=hist.map(d=>d.regionScores?.[r.k]??null); const lv=vals[vals.length-1], fv=vals.find(v=>v!=null);
+    return `<div class="tile"><small>${r.short}</small><div class="row" style="justify-content:space-between;gap:6px"><b style="color:${scoreHex(SCREEN,lv)}">${lv==null?'–':Math.round(lv)}</b><span class="note">${hist.length>1&&lv!=null&&fv!=null?deltaTxt(fv,lv):''}</span></div>${sparkSVG(vals,SCREEN)}</div>`; }).join('');
+  const opt = sel => hist.map((d,i)=>`<option value="${i}"${i===sel?' selected':''}>${d.live?'Today (on screen)':esc(sDate(d))}${d.overall!=null?` · ${Math.round(d.overall)}`:''}</option>`).join('');
+  $('#prA').innerHTML=opt(prA); $('#prB').innerHTML=opt(prB);
+  const figs = VIEWS.filter(v=>a.views?.[v.k]?.pts&&b.views?.[v.k]?.pts);
+  $('#prFigs').innerHTML = figs.length ? figs.map(v=>`<figure class="prfig">${overlaySVG(v.k,a.views[v.k],b.views[v.k],SCREEN)}<figcaption>${v.label}</figcaption></figure>`).join('')
+    : '<p class="note">Figures appear when both visits have photos of the same view.</p>';
+  const {reg,mets}=compareRows(a,b);
+  const dcol=(x,y)=>x==null||y==null?'inherit':y-x>=1?'var(--ok)':y-x<=-1?'var(--treat)':'inherit';
+  const arrow = m => m.better>0?'<span style="color:var(--ok)">Better</span>':m.better<0?'<span style="color:var(--treat)">Worse</span>':'<span class="note">Same</span>';
+  const hA = a.live?'Today':sDate(a), hB = b.live?'Today':sDate(b);
+  $('#prTable').innerHTML = `<thead><tr><th>Score</th><th>${esc(hA)}</th><th>${esc(hB)}</th><th>Change</th></tr></thead><tbody>`
+    + reg.map(r=>`<tr><td>${r.label}</td><td class="num">${r.a==null?'–':Math.round(r.a)}</td><td class="num">${r.b==null?'–':Math.round(r.b)}</td><td class="num" style="color:${dcol(r.a,r.b)}">${deltaTxt(r.a,r.b)}</td></tr>`).join('')
+    + `<tr><td><b>Posture overall</b></td><td class="num">${a.overall==null?'–':Math.round(a.overall)}</td><td class="num">${b.overall==null?'–':Math.round(b.overall)}</td><td class="num" style="color:${dcol(a.overall,b.overall)}"><b>${deltaTxt(a.overall,b.overall)}</b></td></tr>`
+    + `<tr><td><b>Gait overall</b></td><td class="num">${a.gait?.overall==null?'–':Math.round(a.gait.overall)}</td><td class="num">${b.gait?.overall==null?'–':Math.round(b.gait.overall)}</td><td class="num" style="color:${dcol(a.gait?.overall,b.gait?.overall)}"><b>${deltaTxt(a.gait?.overall,b.gait?.overall)}</b></td></tr></tbody>`;
+  $('#prMetricsSum').textContent = mets.length ? `All measures (${mets.filter(m=>m.better>0).length} better, ${mets.filter(m=>m.better<0).length} worse, ${mets.filter(m=>!m.better).length} same)` : 'All measures';
+  $('#prMetrics').innerHTML = mets.length ? `<thead><tr><th>Measure</th><th>${esc(hA)}</th><th>${esc(hB)}</th><th>Toward normal</th></tr></thead><tbody>${mets.map(m=>`<tr><td>${esc(m.label)}${m.gait?' <span class="note">(gait)</span>':''}</td><td class="num">${fmt(m.a,m.d)}${m.unit}</td><td class="num">${fmt(m.b,m.d)}${m.unit}</td><td>${arrow(m)}</td></tr>`).join('')}</tbody>`
+    : '<tbody><tr><td class="note">Measurement values are kept for visits saved from this version on.</td></tr></tbody>';
+  $("#prList").innerHTML = hist.slice().reverse().map(d=>{
+    return `<div class="prrow"><b>${d.live?'Today (on screen, '+esc(sDate(d))+')':esc(sDate(d))}</b><span>Posture ${d.overall==null?'–':Math.round(d.overall)}</span><span>Gait ${d.gait?.overall==null?'–':Math.round(d.gait.overall)}</span>${d.live||d.example?'<span></span>':`<button class="btn small" data-prdel="${esc(d.savedAt||'')}">Remove</button>`}</div>`; }).join('');
+  $('#prList').querySelectorAll('[data-prdel]').forEach(btn=>btn.onclick=()=>{ if(!confirm('Remove this visit from the history in this browser?')) return;
+    store.set('mp.sessions', storedSessions().filter(d=>!(d.savedAt===btn.dataset.prdel && pKey(d.patient)===prSel))); fillPrevSelect(); prA=prB=null; renderProgress(); renderReport(); });
+}
+$('#prPatient').onchange=e=>{ prSel=e.target.value; prA=prB=null; renderProgress(); };
+$('#prA').onchange=e=>{ prA=+e.target.value; renderProgress(); };
+$('#prB').onchange=e=>{ prB=+e.target.value; renderProgress(); };
+$('#prSave').onclick=()=>{ if(!hasData()||!pKey(S.patient)) return; rememberSession(sessionData()); toast(`Saved ${S.patient.date||today()} to ${S.patient.name||S.patient.id}'s history.`); renderProgress(); };
+$('#prImport').onchange=async e=>{ let n=0; for (const f of e.target.files){ try{ const d=JSON.parse(await f.text()); if(d.app==='MotionPlus'){ rememberSession(d); n++; if(!prSel) prSel=pKey(d.patient); } }catch{} }
+  e.target.value=''; toast(n?`Added ${n} visit${n>1?'s':''} to the history.`:'Those files are not MotionPlus sessions.'); prA=prB=null; renderProgress(); renderReport(); };
+
+// Progress page for the PDF: first visit against today.
+function progressPage(slim,foot){
+  const hist=historyFor(pKey(S.patient)); if (hist.length<2 || !$('#optProgress').checked) return '';
+  const a=hist[0], b=hist[hist.length-1], hex=s=>scoreHex(PAPER,s);
+  const {reg,mets}=compareRows(a,b);
+  const figs = ['latL','latR','ant','post'].filter(k=>a.views?.[k]?.pts&&b.views?.[k]?.pts).slice(0,4);
+  const t=(l,v,u,c)=>`<div class="tl" style="border-left:3px solid ${c}"><span>${l}</span><b>${v}</b><span style="letter-spacing:.04em;text-transform:none">${u}</span></div>`;
+  const hA=sDate(a), hB=sDate(b)||today();
+  const dc=(x,y)=>x==null||y==null?PAPER.ink:y-x>=1?PAPER.ok:y-x<=-1?PAPER.treat:PAPER.ink;
+  const metRows = mets.filter(m=>m.better!==0).slice(0,8);
+  return `<section class="rpage">${slim('Progress')}
+    <div class="body">
+      <div class="tiles4">${t('Visits',hist.length,spanText(weeksBetween(hA,hB)),PAPER.line)}${t('Posture score',`${a.overall==null?'–':Math.round(a.overall)} → ${b.overall==null?'–':Math.round(b.overall)}`,a.overall!=null&&b.overall!=null?deltaTxt(a.overall,b.overall)+' points':'',hex(b.overall))}${t('Gait score',`${a.gait?.overall==null?'–':Math.round(a.gait.overall)} → ${b.gait?.overall==null?'–':Math.round(b.gait.overall)}`,a.gait?.overall!=null&&b.gait?.overall!=null?deltaTxt(a.gait.overall,b.gait.overall)+' points':'',hex(b.gait?.overall))}${t('First visit',esc(hA.slice(5).replace('-','/')),esc(hA.slice(0,4)),PAPER.line)}</div>
+      <div class="sec"><h3>Score trend</h3>${svgImg(trendSVG(hist,{...PAPER,spine:'#c2185b'},720,210))}</div>
+      ${figs.length?`<div class="sec"><h3>Before and after · grey dashed ${esc(hA)}, blue ${esc(hB)}</h3><div class="figs4">${figs.map(k=>`<div>${svgImg(overlaySVG(k,a.views[k],b.views[k],PAPER))}<span>${VIEWS.find(v=>v.k===k).label}</span></div>`).join('')}</div></div>`:''}
+      <div class="cols" style="grid-template-columns:1fr 1fr;align-items:start">
+        <div class="sec"><h3>Region scores</h3><table><thead><tr><th>Region</th><th>Before</th><th>Now</th><th>Change</th></tr></thead><tbody>${reg.map(r=>`<tr><td>${r.label}</td><td>${r.a==null?'–':Math.round(r.a)}</td><td><b>${r.b==null?'–':Math.round(r.b)}</b></td><td style="color:${dc(r.a,r.b)} !important;font-weight:700">${deltaTxt(r.a,r.b)}</td></tr>`).join('')}</tbody></table></div>
+        <div class="sec"><h3>Measures that changed</h3>${metRows.length?`<table><thead><tr><th>Measure</th><th>Before</th><th>Now</th><th></th></tr></thead><tbody>${metRows.map(m=>`<tr><td>${esc(m.label)}</td><td>${fmt(m.a,m.d)}${m.unit}</td><td><b>${fmt(m.b,m.d)}${m.unit}</b></td><td style="color:${m.better>0?PAPER.ok:PAPER.treat} !important;font-weight:700">${m.better>0?'Better':'Worse'}</td></tr>`).join('')}</tbody></table>`:'<div class="small">No measurement values to compare yet.</div>'}</div>
+      </div>
+    </div>${foot()}</section>`;
+}
+
 /* ---------------- patient form ---------------- */
 const PF = {name:'p-name',id:'p-id',age:'p-age',sex:'p-sex',height:'p-height',date:'p-date',cond:'p-cond',assessor:'p-assessor'};
 function fillPatientForm(){ for (const [k,id] of Object.entries(PF)) $('#'+id).value = S.patient[k]||''; if(!S.patient.date){ S.patient.date=today(); $('#p-date').value=S.patient.date; } }
-for (const [k,id] of Object.entries(PF)) $('#'+id).addEventListener('input',e=>{ S.patient[k]=e.target.value; if(k==='height') renderAnalysis(); renderReport(); });
+for (const [k,id] of Object.entries(PF)) $('#'+id).addEventListener('input',e=>{ S.patient[k]=e.target.value; if(k==='height') renderAnalysis(); renderReport(); renderProgress(); });
 $('#c-name').addEventListener('input',e=>{ S.clinic.name=e.target.value; store.set('mp.clinic',S.clinic); renderReport(); });
 $('#c-logo').addEventListener('change',async e=>{ const f=e.target.files[0]; if(!f) return; const img=new Image(); img.src=URL.createObjectURL(f); await img.decode();
   const sc=Math.min(1,320/img.naturalWidth); const c=document.createElement('canvas'); c.width=img.naturalWidth*sc; c.height=img.naturalHeight*sc; c.getContext('2d').drawImage(img,0,0,c.width,c.height);
   S.clinic.logo=c.toDataURL('image/png'); store.set('mp.clinic',S.clinic); showLogo(); renderReport(); });
 $('#c-logo-clear').onclick=()=>{ S.clinic.logo=''; store.set('mp.clinic',S.clinic); showLogo(); renderReport(); };
 function showLogo(){ $('#c-logo-prev').hidden=!S.clinic.logo; $('#c-logo-clear').hidden=!S.clinic.logo; if(S.clinic.logo) $('#c-logo-prev').src=S.clinic.logo; }
-$('#saveSession').onclick = async()=>{ const d=sessionData(); rememberSession(d); await saveFile(fileBase()+'.json', JSON.stringify(d,null,1)); };
+$('#saveSession').onclick = async()=>{ const d=sessionData(); if(!S.example) rememberSession(d); await saveFile(fileBase()+'.json', JSON.stringify(d,null,1)); };
 $('#openSession').onchange = async e=>{ const f=e.target.files[0]; if(!f) return; try{ const d=JSON.parse(await f.text()); if(d.app!=='MotionPlus') throw 0; askLoad(d); }catch{ toast('That file is not a MotionPlus session.'); } e.target.value=''; };
 $('#prevSelect').onchange = e=>{ const i=e.target.value; S.previous = i===''?null:store.get('mp.sessions',[])[+i]; refreshAll(); if(S.previous) toast('Comparison added to Analysis.'); };
 function askLoad(d){
@@ -1902,7 +2130,7 @@ function showTab(t){
   document.querySelectorAll('[data-pane]').forEach(p=>p.hidden = p.dataset.pane!==t);
   if (t==='analysis'||t==='report') refreshAll();
   if (t==='capture') renderCaptures();
-  if (t==='gait'){ refreshAll(); }
+  if (t==='gait'||t==='progress'){ refreshAll(); }
   try{ sessionStorage.setItem('mp.tab',t); }catch{}
 }
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
@@ -1911,7 +2139,7 @@ $('#projClose').onclick=()=>{ $('#projPicker').hidden=true; };
 document.addEventListener('paste',e=>{ if($('[data-pane=capture]').hidden) return; const f=[...(e.clipboardData?.files||[])].find(f=>f.type.startsWith('image/')); if(!f) return; e.preventDefault();
   const target = S.views[activeView] && !S.example ? (VIEWS.find(v=>!S.views[v.k])?.k || activeView) : activeView; loadPhoto(target,f); });
 $('#resetNorms').onclick=()=>{ S.norms=structuredClone(DEFAULT_NORMS); store.set('mp.norms',S.norms); renderNorms(); S.summary=null; refreshAll(); };
-$('#optClinical').onchange=renderReport; $('#optFigures').onchange=renderReport;
+$('#optClinical').onchange=renderReport; $('#optFigures').onchange=renderReport; $('#optProgress').onchange=renderReport;
 $('#pdfBtn').onclick=makePDF;
 $('#newBtn').onclick=()=>{ exitExample(); renderCaptures(); refreshAll(); showTab('patient'); toast('New assessment started.'); };
 $('#newPatientBtn').onclick=()=>{ $('#resetConfirm').hidden=false; window.scrollTo({top:0,behavior:'smooth'}); };
