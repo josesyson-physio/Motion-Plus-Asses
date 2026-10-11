@@ -192,6 +192,8 @@ details summary{cursor:pointer;font-weight:600}
 .live-bar .btn{justify-self:end}
 .shutter{appearance:none;width:72px;height:72px;border-radius:50%;border:5px solid #fff;background:rgba(255,255,255,.25);cursor:pointer}
 .shutter:active{background:#fff}
+.shutter.rec-btn{background:#e53935;border-color:#fff}
+.shutter.rec-btn.recording{background:#e53935;border-radius:18px;transform:scale(.8)}
 /* Progress */
 .prtrend svg{width:100%;height:auto;display:block}
 .prfigs{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(46%,180px),1fr))}
@@ -347,6 +349,7 @@ details summary{cursor:pointer;font-weight:600}
           <li>Phone in landscape or portrait at hip height, steady on a tripod or a shelf, about 3 m away.</li>
           <li>Side view: the patient walks across the frame at their own pace. Back view: the patient walks straight away from the camera.</li>
           <li>Record 8 to 12 seconds with at least 3 full strides in view. Shorts and fitted clothing help.</li>
+          <li><b>Record in app</b> is the most reliable way: the app films and tracks the walk itself. Phone camera and gallery videos work too; 1080p is best, as 4K or "High efficiency" clips may not open on every phone.</li>
         </ul>
         <div>
           <p class="note"><b>What is measured.</b> Side view: cadence, step length and timing, stance phase, knee and hip motion, trunk lean. Back view: pelvic drop, dynamic knee valgus, trunk side lean and step width.</p>
@@ -895,20 +898,23 @@ function getLiveLandmarker(){
   })().catch(e=>{ liveLmP=null; throw e; });
   return liveLmP;
 }
-const LV = {stream:null, view:null, seq:false, facing:'environment', raf:0, okSince:0, countFrom:0, pauseUntil:0, hist:[], tilt:null, busy:false, lastP:null, checks:[], audio:null, lastTick:-1, lastTs:0};
+const LV = {stream:null, view:null, seq:false, facing:'environment', raf:0, okSince:0, countFrom:0, pauseUntil:0, hist:[], tilt:null, busy:false, lastP:null, checks:[], audio:null, lastTick:-1, lastTs:0, mode:'photo', rec:null, recStart:0, gSamples:[], chunks:[], gW:0, gH:0};
 const liveCanvas = document.createElement('canvas');
 function beep(f=880,d=.09){ try{ const a=LV.audio; if(!a) return; const o=a.createOscillator(), g=a.createGain(); o.frequency.value=f; g.gain.value=.12; o.connect(g); g.connect(a.destination); o.start(); g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+d); o.stop(a.currentTime+d+.02); }catch{} }
 const onTilt = e => { if(e.beta!=null) LV.tilt={b:e.beta,g:e.gamma}; };
-function openLive(view, seq){
+function openLive(view, seq, mode='photo'){
   // Permission prompts for motion and sound must start inside the tap.
   try{ LV.audio = LV.audio || new (window.AudioContext||window.webkitAudioContext)(); LV.audio.resume?.(); }catch{}
   try{ if (typeof DeviceOrientationEvent!=='undefined' && typeof DeviceOrientationEvent.requestPermission==='function') DeviceOrientationEvent.requestPermission().catch(()=>{}); }catch{}
   window.addEventListener('deviceorientation',onTilt);
-  LV.view=view; LV.seq=seq; LV.okSince=0; LV.countFrom=0; LV.hist=[]; LV.pauseUntil=0; LV.lastP=null;
+  LV.view=view; LV.seq=seq; LV.mode=mode; LV.okSince=0; LV.countFrom=0; LV.hist=[]; LV.pauseUntil=0; LV.lastP=null; LV.rec=null;
+  $('#liveAuto').parentElement.hidden = mode==='gait'; $('#liveShot').classList.toggle('rec-btn', mode==='gait'); $('#liveShot').classList.remove('recording');
+  $('#liveShot').setAttribute('aria-label', mode==='gait'?'Start recording':'Take photo now');
   $('#live').hidden=false; document.body.style.overflow='hidden';
   liveTitle(); liveMsg('Starting camera…'); startLiveCam();
 }
-function liveTitle(){ const vw=VIEWS.find(v=>v.k===LV.view); $('#liveTitle').textContent = `${vw.label} · ${vw.plane==='frontal'?(vw.k==='ant'?'facing the camera':'back to the camera'):(vw.s==='l'?'left':'right')+' side toward the camera'}`; }
+function liveTitle(){ if (LV.mode==='gait'){ const g=GVIEWS.find(q=>q.k===LV.view); $('#liveTitle').textContent=`${g.label} · ${g.k==='side'?'walk across the frame':'walk away from the camera'}`; return; }
+  const vw=VIEWS.find(v=>v.k===LV.view); $('#liveTitle').textContent = `${vw.label} · ${vw.plane==='frontal'?(vw.k==='ant'?'facing the camera':'back to the camera'):(vw.s==='l'?'left':'right')+' side toward the camera'}`; }
 function liveMsg(t){ const m=$('#liveMsg'); m.hidden=!t; if(t) m.textContent=t; }
 async function startLiveCam(){
   stopLiveCam(false);
@@ -925,6 +931,7 @@ async function startLiveCam(){
 }
 function stopLiveCam(hide=true){
   cancelAnimationFrame(LV.raf); LV.raf=0;
+  if (LV.rec && hide){ const r=LV.rec; LV.rec=null; try{ r.onstop=null; r.stop?.(); }catch{} }
   if (LV.stream){ LV.stream.getTracks().forEach(t=>t.stop()); LV.stream=null; }
   if (hide){ $('#live').hidden=true; document.body.style.overflow=''; window.removeEventListener('deviceorientation',onTilt); LV.tilt=null; }
 }
@@ -966,6 +973,7 @@ function liveLoop(now){
     { const lm=liveLmPv; if(lm){ let ts=Math.round(performance.now()); if(ts<=LV.lastTs) ts=LV.lastTs+1; LV.lastTs=ts; const L=lm.detectForVideo(liveCanvas,ts).landmarks?.[0];
       if (L){ P={}; for(const k of Object.keys(MP)){ const q=L[MP[k]]; P[k]={x:q.x,y:q.y,v:q.visibility??1}; } } } }
     LV.lastP=P;
+    if (LV.mode==='gait'){ gaitLiveStep(P,now); drawLive(P,W,H,!!LV.rec,now); LV.busy=false; return; }
     const paused = now<LV.pauseUntil;
     const checks = liveLmPv ? liveChecks(P,W,H,LV.view) : [];
     const allOk = checks.length && checks.every(c=>c.ok);
@@ -989,15 +997,16 @@ function drawLive(P,W,H,ok,now){
   const x=cv.getContext('2d'); x.setTransform(dpr,0,0,dpr,0,0); x.clearRect(0,0,cw,ch);
   const s=Math.min(cw/W,ch/H), ox=(cw-W*s)/2, oy=(ch-H*s)/2; const mir=LV.facing==='user';
   const map=p=>({x:ox+(mir?1-p.x:p.x)*W*s, y:oy+p.y*H*s});
+  if (LV.mode!=='gait'){
   // target zone
   x.strokeStyle= ok?'#4cd38a':'rgba(255,255,255,.55)'; x.lineWidth=3; x.setLineDash([10,8]);
-  const zx=ox+W*s*.2, zy=oy+H*s*.04, zw=W*s*.6, zh=H*s*.92; x.beginPath(); x.roundRect?x.roundRect(zx,zy,zw,zh,18):x.rect(zx,zy,zw,zh); x.stroke(); x.setLineDash([]);
+  const zx=ox+W*s*.2, zy=oy+H*s*.04, zw=W*s*.6, zh=H*s*.92; x.beginPath(); x.roundRect?x.roundRect(zx,zy,zw,zh,18):x.rect(zx,zy,zw,zh); x.stroke(); x.setLineDash([]); }
   if (P){
     const bones=[['lSh','rSh'],['lHip','rHip'],['lSh','lHip'],['rSh','rHip'],['lSh','lElb'],['lElb','lWri'],['rSh','rElb'],['rElb','rWri'],['lHip','lKnee'],['lKnee','lAnk'],['lAnk','lHeel'],['lHeel','lToe'],['rHip','rKnee'],['rKnee','rAnk'],['rAnk','rHeel'],['rHeel','rToe']];
     x.lineCap='round';
     for (const [a,b] of bones){ const A=map(P[a]), B=map(P[b]); x.strokeStyle='rgba(0,0,0,.55)'; x.lineWidth=7; x.beginPath(); x.moveTo(A.x,A.y); x.lineTo(B.x,B.y); x.stroke(); x.strokeStyle= ok?'#4cd38a':'#ffd166'; x.lineWidth=3.5; x.stroke(); }
     // plumb line through the ankles
-    const ax=(P.lAnk.x+P.rAnk.x)/2; const T=map({x:ax,y:0}), Bm=map({x:ax,y:1}); x.strokeStyle='rgba(111,168,230,.8)'; x.lineWidth=2; x.setLineDash([8,6]); x.beginPath(); x.moveTo(T.x,oy); x.lineTo(Bm.x,oy+H*s); x.stroke(); x.setLineDash([]);
+    if (LV.mode!=='gait'){ const ax=(P.lAnk.x+P.rAnk.x)/2; const T=map({x:ax,y:0}), Bm=map({x:ax,y:1}); x.strokeStyle='rgba(111,168,230,.8)'; x.lineWidth=2; x.setLineDash([8,6]); x.beginPath(); x.moveTo(T.x,oy); x.lineTo(Bm.x,oy+H*s); x.stroke(); x.setLineDash([]); }
     // hide the face
     const n=map(P.nose), sh=Math.abs(map(P.lSh).x-map(P.rSh).x), torso=Math.abs(map(P.lSh).y-map(P.lHip).y); x.fillStyle='rgba(30,40,46,.92)'; x.beginPath(); x.arc(n.x,n.y,Math.max(sh*.45,torso*.22,14),0,7); x.fill();
   }
@@ -1019,7 +1028,46 @@ async function liveCapture(){
   else { stopLiveCam(); showTab('capture'); toast(`${vw.label} photo saved.`); }
 }
 $('#liveClose').onclick=()=>stopLiveCam();
-$('#liveShot').onclick=()=>liveCapture();
+$('#liveShot').onclick=()=>{ if (LV.mode==='gait') { LV.rec? stopGaitRec() : startGaitRec(); } else liveCapture(); };
+/* in-app gait recording: the browser records the clip itself, so it can always read it back;
+   pose is also tracked live as a backup if the recorded file cannot be decoded */
+function gaitLiveStep(P,now){
+  const side = LV.view==='side';
+  if (LV.rec){ const t=(now-LV.recStart)/1000;
+    LV.gSamples.push({t, P: P? Object.fromEntries(GK.map(k=>[k,{x:P[k].x*LV.gW,y:P[k].y*LV.gH,v:P[k].v}])) : null});
+    $('#liveHint').textContent = `Recording ${Math.floor(t)} s. ${side?'Patient walks across the frame at their own pace.':'Patient walks straight away from the camera.'}`;
+    $('#liveChecks').innerHTML = `<span class="ok">● REC ${Math.floor(t)} / ${GAIT_MAX_S} s</span><span class="${P?'ok':''}">${P?'✓ Patient tracked':'Patient not in view'}</span>`;
+    if (t>=GAIT_MAX_S) stopGaitRec();
+  } else {
+    $('#liveHint').textContent = P ? 'Patient in view. Tap the red button, then start walking.' : 'Phone at hip height, about 3 m from the walkway, whole body in view.';
+    $('#liveChecks').innerHTML = `<span class="${P?'ok':''}">${P?'✓ ':''}Patient in view</span><span>Record 8 to 12 s</span>`;
+  }
+}
+function pickRecMime(){ if (typeof MediaRecorder==='undefined') return null;
+  for (const m of ['video/mp4;codecs=avc1','video/mp4','video/webm;codecs=vp8','video/webm;codecs=vp9','video/webm']) { try{ if (MediaRecorder.isTypeSupported(m)) return m; }catch{} }
+  return ''; }
+function startGaitRec(){
+  if (!LV.stream) return;
+  LV.gW=liveCanvas.width||480; LV.gH=liveCanvas.height||640; LV.gSamples=[]; LV.chunks=[];
+  const mime=pickRecMime(); let rec=null;
+  if (mime!==null){ try{ rec = new MediaRecorder(LV.stream, mime?{mimeType:mime,videoBitsPerSecond:5e6}:undefined); rec.ondataavailable=e=>{ if(e.data?.size) LV.chunks.push(e.data); }; rec.start(250); }catch{ rec=null; } }
+  LV.rec = rec || {fake:true}; LV.recStart=performance.now();
+  $('#liveShot').classList.add('recording'); $('#liveShot').setAttribute('aria-label','Stop recording'); beep(988,.12);
+}
+function stopGaitRec(){
+  const rec=LV.rec; if(!rec) return; LV.rec=null; const kind=LV.view;
+  $('#liveShot').classList.remove('recording'); $('#liveShot').setAttribute('aria-label','Start recording'); beep(660,.15);
+  const secs=(performance.now()-LV.recStart)/1000;
+  if (secs<2.5){ try{ rec.onstop=null; rec.stop?.(); }catch{} liveMsg('Too short. Record 8 to 12 seconds with at least 3 strides.'); setTimeout(()=>liveMsg(''),2500); return; }
+  const backup = resampleGait(LV.gSamples, LV.gW, LV.gH);
+  const finish = file => { stopLiveCam(); showTab('gait');
+    if (file) loadGaitVideo(kind, file, backup);
+    else if (backup && backup.frames.filter(Boolean).length >= backup.frames.length*0.4){ if(S.example) exitExample(); delete gErr[kind]; S.gait[kind]={kind,...backup,synthetic:false}; S.gait.summary=null; renderGaitCaps(); refreshAll(); }
+    else { gErr[kind]=gaitErrorText('none'); renderGaitCaps(); } };
+  if (rec.fake){ finish(null); return; }
+  rec.onstop = () => { const type=(rec.mimeType||'video/webm').split(';')[0]; const blob=new Blob(LV.chunks,{type}); finish(blob.size? new File([blob],`gait-${kind}.${type.includes('mp4')?'mp4':'webm'}`,{type}) : null); };
+  try{ rec.requestData?.(); rec.stop(); }catch{ finish(null); }
+}
 $('#liveFlip').onclick=()=>{ LV.facing = LV.facing==='environment'?'user':'environment'; LV.hist=[]; startLiveCam(); };
 $('#guidedAll').onclick=()=>{ if(S.example){ exitExample(); renderCaptures(); refreshAll(); } openLive(VIEWS.find(v=>!S.views[v.k])?.k||'ant', true); };
 if (!hasCam) $('#guidedAll').hidden=true;
@@ -1397,42 +1445,112 @@ function getVideoLandmarker(){
 }
 const gBusy = {}; const gErr = {}; const gVideoURL = {};
 const once = (el,ev,ms) => new Promise((res,rej)=>{ const to=setTimeout(()=>{ el.removeEventListener(ev,h); rej(new Error('timeout')); },ms); const h=()=>{ clearTimeout(to); res(); }; el.addEventListener(ev,h,{once:true}); });
-async function loadGaitVideo(kind, file){
+// Opening a phone video differs a lot between browsers, so loading tries several routes:
+// 1) the video element sits in the page (iOS will not decode a detached one), 2) a muted play() nudges
+// decoding, 3) frames are read by seeking, and if seeking stalls (MediaRecorder files, some Android
+// galleries) by playing the clip slowly and grabbing each shown frame.
+const GAIT_MAX_S = 15, GAIT_FPS = 25;
+function gaitErrorText(code){
+  return ({
+    none:'The patient was not found in enough of the video. Film the whole body, head to feet, in good light, about 3 m away.',
+    short:'This video is too short. Record 8 to 12 seconds with at least 3 strides.',
+    model:'The pose model could not load. Check the internet connection once, then try again.',
+    codec:'This phone cannot decode this video format (often 4K or HEVC "High efficiency"). Use Record in app, or set the camera to 1080p / "Most compatible" and record again.',
+    big:'This video is very large. Trim it to 8 to 15 seconds, or use Record in app.',
+    read:'This video could not be read here. Use Record in app, or try an MP4 recorded with the phone camera.'
+  })[code] || 'This video could not be read here. Use Record in app instead.';
+}
+function makeVideoEl(url){
+  const v=document.createElement('video'); v.muted=true; v.defaultMuted=true; v.playsInline=true; v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline','');
+  v.preload='auto'; v.crossOrigin='anonymous';
+  v.style.cssText='position:fixed;left:-10px;top:-10px;width:2px;height:2px;opacity:0;pointer-events:none';
+  document.body.appendChild(v); v.src=url; v.load(); return v;
+}
+function videoFailed(v){ return new Promise((_,rej)=>v.addEventListener('error',()=>rej(new Error(v.error?.code===4||v.error?.code===3?'codec':'read')),{once:true})); }
+async function openVideo(v){
+  const fail=videoFailed(v);
+  const meta=Promise.race([once(v,'loadedmetadata',15000), fail]);
+  try{ await meta; }catch(e){ try{ await v.play(); v.pause(); await Promise.race([once(v,'loadedmetadata',8000),fail]); }catch(e2){ throw new Error(e.message==='codec'||e2.message==='codec'?'codec':'read'); } }
+  if (v.readyState<2){ try{ await v.play(); v.pause(); }catch{} await Promise.race([once(v,'loadeddata',10000).catch(()=>{}), fail]); }
+  if (!v.videoWidth) throw new Error('codec');
+  let dur=v.duration;
+  if (!isFinite(dur)||dur<=0){ v.currentTime=1e6; await once(v,'seeked',6000).catch(()=>{}); dur=isFinite(v.duration)&&v.duration>0?v.duration:v.currentTime; v.currentTime=0; await once(v,'seeked',3000).catch(()=>{}); }
+  return dur;
+}
+// Turn landmarks sampled at uneven times into an even grid the gait maths expects.
+function resampleGait(samples,w,h){
+  const ok=samples.filter(s=>s.P).sort((a,b)=>a.t-b.t); if(ok.length<4) return null;
+  const t0=ok[0].t, span=Math.min(ok[ok.length-1].t-t0, GAIT_MAX_S); const fps=Math.min(GAIT_FPS, Math.floor(300/Math.max(span,1)));
+  const n=Math.floor(span*fps)+1, frames=[], t=[]; let j=0;
+  for (let i=0;i<n;i++){ const tt=t0+i/fps; while(j<ok.length-2 && ok[j+1].t<tt) j++;
+    const a=ok[j], b=ok[Math.min(j+1,ok.length-1)]; let P=null;
+    if (Math.abs(a.t-tt)<1e-3) P=a.P; else if (b.t>a.t && tt>=a.t && tt<=b.t && b.t-a.t<0.25){ const u=(tt-a.t)/(b.t-a.t); P={}; for(const k of GK) P[k]={x:a.P[k].x+(b.P[k].x-a.P[k].x)*u,y:a.P[k].y+(b.P[k].y-a.P[k].y)*u,v:Math.min(a.P[k].v,b.P[k].v)}; }
+    else if (Math.abs(a.t-tt)<0.05) P=a.P;
+    frames.push(P); t.push(+(i/fps).toFixed(3)); }
+  return {fps,t,frames,w,h,dur:span};
+}
+// The VIDEO landmarker needs timestamps that only ever go up, across every clip it sees,
+// so each clip is shifted past the last timestamp used.
+let vClock=0;
+const clipClock = () => ({base: vClock+1000});
+function detectFrame(lm,c,cx,v,tsMs,state){
+  cx.drawImage(v,0,0,c.width,c.height);
+  let ts=Math.round(state.base+tsMs); if(ts<=vClock) ts=vClock+1; vClock=ts;
+  const L=lm.detectForVideo(c,ts).landmarks?.[0]; if(!L) return null;
+  const P={}; for(const k of GK){ const q=L[MP[k]]; P[k]={x:q.x*c.width,y:q.y*c.height,v:q.visibility??1}; } return P;
+}
+async function trackBySeeking(v,lm,c,cx,dur,prog){
+  const span=Math.min(dur,GAIT_MAX_S), fps=Math.min(GAIT_FPS, Math.floor(300/span)), n=Math.floor(span*fps); const out=[], st=clipClock(); let slow=0;
+  for (let i=0;i<n;i++){ const tt=i/fps; const t0=performance.now(); v.currentTime=tt;
+    try{ await once(v,'seeked',2500); }catch{ if(++slow>=3) throw new Error('seekstall'); }
+    if (i<6 && performance.now()-t0>1500) slow++; if (slow>=3) throw new Error('seekstall');
+    out.push({t:tt,P:detectFrame(lm,c,cx,v,tt*1000,st)});
+    if (i%3===0){ prog((i+1)/n); await new Promise(r=>setTimeout(r,0)); } }
+  return out;
+}
+async function trackByPlaying(v,lm,c,cx,dur,prog){
+  const span=Math.min(isFinite(dur)&&dur>0?dur:GAIT_MAX_S,GAIT_MAX_S); const out=[], st=clipClock();
+  v.currentTime=0; await once(v,'seeked',3000).catch(()=>{});
+  v.playbackRate = 0.35; let done=false;
+  const end=new Promise(res=>{ const fin=()=>{ done=true; res(); }; v.addEventListener('ended',fin,{once:true}); setTimeout(fin,(span/0.35+8)*1000); });
+  const grab=(mt)=>{ if(done) return; const tt=mt??v.currentTime; if(tt>span){ done=true; v.pause(); return; }
+    out.push({t:tt,P:detectFrame(lm,c,cx,v,tt*1000,st)}); prog(Math.min(1,tt/span));
+    if (v.requestVideoFrameCallback) v.requestVideoFrameCallback((_,m)=>grab(m.mediaTime)); else requestAnimationFrame(()=>grab()); };
+  await v.play();
+  if (v.requestVideoFrameCallback) v.requestVideoFrameCallback((_,m)=>grab(m.mediaTime)); else requestAnimationFrame(()=>grab());
+  await end; v.pause(); return out;
+}
+async function loadGaitVideo(kind, file, liveFallback){
   if (S.example){ exitExample(); }
   delete gErr[kind]; gBusy[kind]={p:0,msg:'Opening video…'}; renderGaitCaps();
   if (gVideoURL[kind]) URL.revokeObjectURL(gVideoURL[kind]);
   const url = URL.createObjectURL(file); gVideoURL[kind]=url;
-  const vid=document.createElement('video'); vid.muted=true; vid.playsInline=true; vid.setAttribute('playsinline',''); vid.preload='auto'; vid.src=url;
+  let v=null;
+  const prog=(p,msg)=>{ gBusy[kind]={p,msg:msg||`Tracking movement… ${Math.round(p*100)}%`}; updateGaitProgress(kind); };
   try{
-    await once(vid,'loadeddata',20000);
-    try{ await vid.play(); vid.pause(); }catch{}
-    let dur=vid.duration; if(!isFinite(dur)||dur<=0){ vid.currentTime=1e6; await once(vid,'seeked',5000).catch(()=>{}); dur=vid.duration||vid.currentTime; }
+    if (file.size>600e6) throw new Error('big');
+    v=makeVideoEl(url);
+    const dur=await openVideo(v);
     if (!(dur>1.5)) throw new Error('short');
-    const iw=vid.videoWidth, ih=vid.videoHeight; const sc=Math.min(1,640/Math.max(iw,ih));
-    const c=document.createElement('canvas'); c.width=Math.round(iw*sc); c.height=Math.round(ih*sc); const cx=c.getContext('2d');
+    const iw=v.videoWidth, ih=v.videoHeight; const sc=Math.min(1,640/Math.max(iw,ih));
+    const c=document.createElement('canvas'); c.width=Math.round(iw*sc); c.height=Math.round(ih*sc); const cx=c.getContext('2d',{willReadFrequently:true});
     gBusy[kind]={p:0,msg:'Loading pose model…'}; renderGaitCaps();
-    const lm = await withTimeout(getVideoLandmarker(),30000);
-    const span=Math.min(dur,15), fps=Math.min(25, Math.floor(300/span)); const n=Math.floor(span*fps);
-    const frames=[], t=[]; let found=0, last=-1;
-    for (let i=0;i<n;i++){
-      const tt=i/fps; vid.currentTime=tt; await once(vid,'seeked',4000).catch(()=>{});
-      cx.drawImage(vid,0,0,c.width,c.height);
-      let ts=Math.round(tt*1000); if(ts<=last) ts=last+1; last=ts;
-      const r=lm.detectForVideo(c,ts); const L=r.landmarks?.[0];
-      if (L){ const P={}; for(const k of GK){ const q=L[MP[k]]; P[k]={x:q.x*c.width,y:q.y*c.height,v:q.visibility??1}; } frames.push(P); found++; } else frames.push(null);
-      t.push(tt);
-      if (i%3===0){ gBusy[kind]={p:(i+1)/n,msg:`Tracking movement… ${Math.round((i+1)/n*100)}%`}; updateGaitProgress(kind); await new Promise(r=>setTimeout(r,0)); }
-    }
-    if (found < n*0.4) throw new Error('none');
-    S.gait[kind]={kind,fps,t,frames,w:c.width,h:c.height,synthetic:false,dur:span};
+    let lm; try{ lm=await withTimeout(getVideoLandmarker(),45000); }catch{ throw new Error('model'); }
+    let samples;
+    try{ samples=await trackBySeeking(v,lm,c,cx,dur,prog); }
+    catch(e){ if(e.message!=='seekstall') throw e; prog(0,'Reading the video another way…');
+      samples=await trackByPlaying(v,lm,c,cx,dur,prog); }
+    const G=resampleGait(samples,c.width,c.height);
+    if (!G || G.frames.filter(Boolean).length < G.frames.length*0.4) throw new Error('none');
+    if (G.dur<1.5) throw new Error('short');
+    S.gait[kind]={kind,...G,synthetic:false};
     S.gait.summary=null;
   }catch(e){
-    gErr[kind] = e.message==='none' ? 'The patient was not found in enough of the video. Film the whole body, from head to feet, in good light.'
-      : e.message==='short' ? 'This video is too short. Record 8 to 12 seconds with at least 3 strides.'
-      : /model|import|wasm/i.test(e.message) ? 'The pose model could not load on this device.'
-      : 'This video could not be read. Try an MP4 or MOV recorded with the phone camera.';
-    S.gait[kind]=null;
+    const code=['none','short','model','codec','big'].includes(e.message)?e.message:/model|import|wasm/i.test(e.message||'')?'model':'read';
+    if (liveFallback && code!=='none' && code!=='short'){ S.gait[kind]={kind,...liveFallback,synthetic:false}; S.gait.summary=null; gVideoURL[kind]=null; }
+    else { gErr[kind]=gaitErrorText(code); S.gait[kind]=null; }
   }
+  if (v){ v.pause(); v.remove(); }
   delete gBusy[kind]; renderGaitCaps(); refreshAll();
 }
 function updateGaitProgress(kind){ const b=gBusy[kind]; const el=document.getElementById('gp-'+kind); if(el&&b){ el.querySelector('i').style.width=(b.p*100)+'%'; el.nextElementSibling.textContent=b.msg; } }
@@ -1663,7 +1781,7 @@ function renderGaitCaps(){
     const G=S.gait[gv.k], busy=gBusy[gv.k];
     const el=document.createElement('div'); el.className='panel gcap';
     el.innerHTML=`<div class="cap-head"><h3>${gv.label}</h3>${G?`<span class="note">${G.synthetic?'Sample walk':`${G.frames.filter(Boolean).length} frames tracked`}</span>`:''}</div>
-      <div class="row" style="gap:6px"><label class="btn small ${G?'':'primary'}" for="gcam-${gv.k}">Record video</label><label class="btn small" for="ggal-${gv.k}">${G?'Replace video':'Choose video'}</label></div>
+      <div class="row" style="gap:6px">${hasCam?`<button class="btn small ${G?'':'primary'}" data-grec="${gv.k}">Record in app</button>`:''}<label class="btn small ${G||hasCam?'':'primary'}" for="gcam-${gv.k}">Phone camera</label><label class="btn small" for="ggal-${gv.k}">${G?'Replace video':'Choose video'}</label></div>
       <input class="vh" id="gcam-${gv.k}" type="file" accept="video/*" capture="environment"><input class="vh" id="ggal-${gv.k}" type="file" accept="video/*">
       ${busy?`<div class="gprog" id="gp-${gv.k}"><i style="width:${busy.p*100}%"></i></div><p class="note">${esc(busy.msg)}</p>`
         : G?`<div class="gstage">${!G.synthetic&&gVideoURL[gv.k]?`<video id="gv-${gv.k}" src="${gVideoURL[gv.k]}" muted playsinline loop autoplay></video><canvas class="ov" id="go-${gv.k}"></canvas>`:`<canvas id="go-${gv.k}"></canvas>`}</div>`
@@ -1672,6 +1790,7 @@ function renderGaitCaps(){
       ${G&&GA?.[gv.k]?.warn?`<p class="warn">${esc(GA[gv.k].warn)}</p>`:''}
       ${G&&gv.k==='side'&&GA?.side?.nStrides?`<p class="ok-line">${GA.side.nStrides} strides analysed.</p>`:''}`;
     g.appendChild(el);
+    el.querySelector('[data-grec]')?.addEventListener('click',()=>openLive(gv.k,false,'gait'));
     for (const id of ['gcam-','ggal-']) el.querySelector('#'+id+gv.k).addEventListener('change',e=>{ const f=e.target.files?.[0]; e.target.value=''; if(f) loadGaitVideo(gv.k,f); });
   }
   startGaitLoop();
