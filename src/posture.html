@@ -1493,7 +1493,7 @@ function renderReport(){
   const flagged = scored.filter(r=>r.status==='train'||r.status==='treat').sort((a,b)=>(b.status==='treat')-(a.status==='treat'));
   const date = p.date||today();
   const hasGait = GA && Object.keys(GA.M).length>0;
-  const nPages = 2 + (hasGait?1:0) + (showClin?1:0);
+  const nPages = 2 + (hasGait?1:0) + (showClin?1:0) + (showClin&&hasGait?1:0);
   const ref = `MP-${date.replace(/-/g,'')}-${(p.id||'').replace(/[^\w]/g,'').slice(0,8)||'NA'}`;
   const foot = n => `<div class="foot"><span>${esc(c.name||'MotionPlus')} · Posture Assessment · ${esc(p.name||'Patient')} ${p.id?'· '+esc(p.id):''}</span><span>Screening from 2D photographs. Supports, does not replace, clinical examination.</span><span>Page ${n} of ${nPages}</span></div><img class="sig" src="${SIG}" alt="">`;
   const slim = sub => `<div class="band slim"><div><div class="title">Posture Assessment Report</div></div><div class="refbox" style="text-align:right"><b>${sub}</b>${esc(p.name||'Patient')} · ${esc(date)}</div></div>`;
@@ -1545,9 +1545,11 @@ function renderReport(){
   const page3 = showClin ? `<section class="rpage">${slim('Clinical values')}
     <div class="body"><div class="sec"><h3>Measurements</h3><table><thead><tr><th>Measure</th><th>Value</th><th>Normal</th><th>Mild</th><th>Status</th></tr></thead><tbody>${
       Object.keys(METRICS).filter(k=>A.M[k]).map(k=>{const m=A.M[k],n=S.norms[METRICS[k].norm]; return `<tr><td>${esc(METRICS[k].label||n.label)}</td><td><b>${fmt(m.v)}${n.unit}</b></td><td>≤ ${n.n}${n.unit}</td><td>≤ ${n.m}${n.unit}</td><td><span class="pill" style="background:${hex(m.sev)};padding:3px 9px">${label(m.sev)}</span></td></tr>`;}).join('')
-    }</tbody></table><div class="small">Plumb-line values are % of ear-to-ankle height. Angles measured from 2D photographs with on-device landmark detection; screening values to be confirmed clinically. Norms follow Kendall plumb-line alignment and published photogrammetry ranges, adjustable by the clinic.</div>${hasGait?`<h3 style="margin-top:14px">Gait measurements</h3><table><thead><tr><th>Measure</th><th>Value</th><th>Typical</th><th>Status</th></tr></thead><tbody>${
+    }</tbody></table><div class="small">Plumb-line values are % of ear-to-ankle height. Angles measured from 2D photographs with on-device landmark detection; screening values to be confirmed clinically. Norms follow Kendall plumb-line alignment and published photogrammetry ranges, adjustable by the clinic.</div></div></div>${foot(showClin&&hasGait?nPages-1:nPages)}</section>` : '';
+  const page4 = showClin && hasGait ? `<section class="rpage">${slim('Gait values')}
+    <div class="body"><div class="sec"><h3>Gait measurements</h3><table><thead><tr><th>Measure</th><th>Value</th><th>Typical</th><th>Status</th></tr></thead><tbody>${
       Object.keys(GM).filter(k=>GA.M[k]).map(k=>{const m=GA.M[k],n=S.gaitNorms[GM[k].n]; return `<tr><td>${esc(GM[k].label||n.label)}</td><td><b>${fmt(m.v,n.d??1)}${n.unit}</b></td><td>${n.lo} – ${n.hi}${n.unit}</td><td><span class="pill" style="background:${hex(m.sev)};padding:3px 9px">${label(m.sev)}</span></td></tr>`;}).join('')
-    }</tbody></table>`:''}</div></div>${foot(nPages)}</section>` : '';
+    }</tbody></table><div class="small">Measured from 2D video with on-device pose tracking. Heel strike and toe-off are found from foot position relative to the pelvis. Typical ranges are adult values, adjustable by the clinic.</div></div></div>${foot(nPages)}</section>` : '';
 
   if (hasGait && S.gait.summary==null) S.gait.summary = gaitSummary();
   const gFlag = hasGait ? GA.areas.filter(a=>a.status==='train'||a.status==='treat').sort((a,b)=>(b.status==='treat')-(a.status==='treat')) : [];
@@ -1568,7 +1570,7 @@ function renderReport(){
       <div class="sec"><h3>Gait training focus</h3>${gRx?`<div class="rx">${gRx}</div>`:'<div class="small">Walking pattern within typical ranges. Keep up regular walking and leg strength work.</div>'}</div>
     </div>${foot(3)}</section>` : '';
 
-  $('#report').innerHTML = page1 + page2 + pageG + page3;
+  $('#report').innerHTML = page1 + page2 + pageG + page3 + page4;
   if ($('#gSumEdit')) $('#gSumEdit').oninput = e => { S.gait.summary = e.target.innerText; };
   $('#sumEdit').oninput = e => { S.summary = e.target.innerText; };
   $('#notesEdit').oninput = e => { S.notes = e.target.innerText; };
