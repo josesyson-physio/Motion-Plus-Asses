@@ -6,7 +6,7 @@
 :root{
   --bg:#eef2f4; --surface:#ffffff; --surface-2:#f5f8f9; --ink:#14232b; --muted:#56666e; --line:#d3dce0;
   --grid:#c9dbe8; --plumb:#1d5fa8; --accent:#1d5fa8; --accent-ink:#ffffff; --figure:#c7d0d5; --bone:#33444d;
-  --ok:#2c8a57; --train:#c98410; --treat:#c3352b; --ok-bg:#e3f2e9; --train-bg:#fbf0d9; --treat-bg:#f9e1de;
+  --spine:#c2185b; --ok:#2c8a57; --train:#c98410; --treat:#c3352b; --ok-bg:#e3f2e9; --train-bg:#fbf0d9; --treat-bg:#f9e1de;
   --paper:#ffffff; --paper-ink:#14232b;
   --r-paper:#ffffff; --r-ink:#15222c; --r-muted:#5d6b74; --r-line:#dfe5e9; --r-wash:#f3f6f8; --r-navy:#0f2438; --r-blue:#1d5fa8; --r-teal:#2a9d8f; --r-mist:#a9bccb;
   --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
@@ -16,11 +16,11 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0f171b; --surface:#16222a; --surface-2:#1c2a33; --ink:#e3ecf0; --muted:#97a9b2; --line:#2c3d47;
   --grid:#24394a; --plumb:#6fa8e6; --accent:#6fa8e6; --accent-ink:#0b1620; --figure:#3a4c57; --bone:#c9d6dc;
-  --ok:#5cc28a; --train:#e8ab45; --treat:#ef6f63; --ok-bg:#183326; --train-bg:#3a2c12; --treat-bg:#3d1c19; color-scheme:dark}}
+  --spine:#f06292; --ok:#5cc28a; --train:#e8ab45; --treat:#ef6f63; --ok-bg:#183326; --train-bg:#3a2c12; --treat-bg:#3d1c19; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0f171b; --surface:#16222a; --surface-2:#1c2a33; --ink:#e3ecf0; --muted:#97a9b2; --line:#2c3d47;
   --grid:#24394a; --plumb:#6fa8e6; --accent:#6fa8e6; --accent-ink:#0b1620; --figure:#3a4c57; --bone:#c9d6dc;
-  --ok:#5cc28a; --train:#e8ab45; --treat:#ef6f63; --ok-bg:#183326; --train-bg:#3a2c12; --treat-bg:#3d1c19; color-scheme:dark}
+  --spine:#f06292; --ok:#5cc28a; --train:#e8ab45; --treat:#ef6f63; --ok-bg:#183326; --train-bg:#3a2c12; --treat-bg:#3d1c19; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45}
@@ -252,6 +252,7 @@ details summary{cursor:pointer;font-weight:600}
             <li>Front: ASIS, centre of patella, mid-ankle.</li>
             <li>Back: C7, PSIS, mid-heel.</li>
             <li>Side: ear tragus, acromion, greater trochanter, lateral knee joint line, lateral malleolus.</li>
+            <li>Spine curves (side photos): C7, most rounded point of the upper back, T12, deepest point of the low back, PSIS and ASIS. Then tap Add spine markers.</li>
           </ul>
         </div>
       </div>
@@ -417,6 +418,9 @@ const DEFAULT_NORMS = {
   trunkIncl:{label:'Trunk inclination',unit:'°',n:4,m:8},
   kneeSag:{label:'Knee sagittal angle',unit:'°',n:5,m:10},
   shankIncl:{label:'Lower leg inclination',unit:'°',n:6,m:12},
+  kyphosis:{label:'Thoracic kyphosis',unit:'°',lo:20,hi:45,m:10},
+  lordosis:{label:'Lumbar lordosis',unit:'°',lo:40,hi:60,m:10},
+  pelvicTilt:{label:'Pelvic tilt (anterior +)',unit:'°',lo:4,hi:15,m:5},
 };
 const METRICS = {
   headTilt:{norm:'headTilt',plane:'frontal'}, headShift:{norm:'headShift',plane:'frontal'},
@@ -430,12 +434,13 @@ const METRICS = {
   kneeSagL:{norm:'kneeSag',plane:'sag',label:'Left knee sagittal angle'},
   kneeSagR:{norm:'kneeSag',plane:'sag',label:'Right knee sagittal angle'},
   shankIncl:{norm:'shankIncl',plane:'sag'},
+  kyphosis:{norm:'kyphosis',plane:'sag'}, lordosis:{norm:'lordosis',plane:'sag'}, pelvicTilt:{norm:'pelvicTilt',plane:'sag'},
 };
 const REGIONS = [
   {k:'head',short:'Head & neck',label:'Head & neck',metrics:['headTilt','headShift','fwdHead','earPlumb']},
   {k:'shoulder',short:'Shoulders',label:'Shoulders & upper back',metrics:['shoulderLevel','shoulderPlumb']},
-  {k:'trunk',short:'Trunk',label:'Trunk & spine',metrics:['trunkShift','trunkIncl']},
-  {k:'pelvis',short:'Pelvis & hips',label:'Pelvis & hips',metrics:['pelvicLevel','hipPlumb']},
+  {k:'trunk',short:'Trunk',label:'Trunk & spine',metrics:['trunkShift','trunkIncl','kyphosis','lordosis']},
+  {k:'pelvis',short:'Pelvis & hips',label:'Pelvis & hips',metrics:['pelvicLevel','hipPlumb','pelvicTilt']},
   {k:'knee',short:'Knees',label:'Knees',metrics:['kneeFrontL','kneeFrontR','kneeSagL','kneeSagR','kneePlumb']},
   {k:'ankle',short:'Ankles & feet',label:'Ankles & feet',metrics:['shankIncl']},
 ];
@@ -456,7 +461,36 @@ const EX = {
   flexed:['Terminal knee extension with band: 3 × 15','Hamstring and calf stretch: 3 × 30 s each','Prone hang for knee extension: 3 × 60 s'],
   shankFwd:['Gastrocnemius and soleus stretch: 3 × 30 s each','Knee-to-wall ankle mobilisation: 2 × 15','Single-leg balance, firm then soft surface: 3 × 30 s'],
   shankBack:['Knee-to-wall ankle mobilisation: 2 × 15','Tibialis anterior raises: 3 × 15','Single-leg balance with forward reach: 3 × 8'],
+  kyphUp:['Thoracic extension over foam roller: 2 × 10 slow reps','Prone Y raise for lower trapezius: 3 × 10','Seated band row with chest up: 3 × 12'],
+  kyphDown:['Cat-camel for segmental spinal motion: 2 × 10','Child pose with breathing into the upper back: 3 × 30 s','Quadruped thoracic rotation: 2 × 10 each side'],
+  lordUp:['Posterior pelvic tilt in crook lying: 3 × 10','Half-kneeling hip flexor stretch: 3 × 30 s each side','Dead bug with flat back: 3 × 8 each side'],
+  lordDown:['Prone press-up: 2 × 10','Cat-camel, emphasise the lumbar arch: 2 × 10','Hip hinge with neutral lumbar curve: 3 × 10'],
+  tiltAnt:['Half-kneeling hip flexor stretch: 3 × 30 s each side','Glute bridge with posterior tilt: 3 × 12','Dead bug: 3 × 8 each side'],
+  tiltPost:['Hamstring stretch in supine: 3 × 30 s each side','Quadruped rocking with lumbar arch: 2 × 10','Standing hip hinge drill: 3 × 10'],
 };
+const SPINE = ['C7','T7','T12','L3','PSIS','ASIS'];
+const SPINE_NAMES = {C7:'C7',T7:'thoracic apex',T12:'T12',L3:'lumbar apex',PSIS:'PSIS',ASIS:'ASIS'};
+function spineDefaults(P,s){
+  // Rough start positions along the trunk axis, behind it; the clinician drags each onto its skin dot.
+  const sh=P[s+'Sh'], hp=P[s+'Hip']; const f=Math.sign(P[s+'Toe'].x-P[s+'Heel'].x)||1;
+  const L=Math.max(40,dist(sh,hp)), u={x:(hp.x-sh.x)/L,y:(hp.y-sh.y)/L}; let n={x:-u.y,y:u.x}; if(n.x*f>0) n={x:-n.x,y:-n.y};
+  const at=(a,b)=>({x:sh.x+u.x*a*L+n.x*b*L, y:sh.y+u.y*a*L+n.y*b*L});
+  return {C7:at(-.08,.10),T7:at(.30,.19),T12:at(.62,.18),L3:at(.80,.135),PSIS:at(.98,.16),ASIS:at(1.0,-.16)};
+}
+// Curvature from three markers: the angle between the two chords at the apex is half the arc angle,
+// so twice its supplement estimates a Cobb-equivalent angle.
+function curveAngle(a,apex,b,post){
+  const v=2*(180-ang3(a,apex,b)); const chordX=a.x+(b.x-a.x)*(apex.y-a.y)/((b.y-a.y)||1);
+  return {v, bulge:(apex.x-chordX)*post};
+}
+function spineMetrics(v,s,P){
+  const Sp=v.spine; if(!Sp?.confirmed) return {};
+  const f=Math.sign(P[s+'Toe'].x-P[s+'Heel'].x)||1, post=-f;
+  const k=curveAngle(Sp.C7,Sp.T7,Sp.T12,post), l=curveAngle(Sp.T12,Sp.L3,Sp.PSIS,post);
+  const kv = k.bulge>=0? k.v : -k.v, lv = l.bulge<=0? l.v : -l.v;
+  const tilt = deg(Math.atan2(Sp.ASIS.y-Sp.PSIS.y, Math.abs(Sp.ASIS.x-Sp.PSIS.x)||1));
+  return {kyphosis:{v:kv,signed:kv}, lordosis:{v:lv,signed:lv}, pelvicTilt:{v:tilt,signed:tilt,dir:tilt>=0?'anterior':'posterior'}};
+}
 
 /* ---------------- state ---------------- */
 const S = {
@@ -526,10 +560,13 @@ function sagittalMetrics(P,s){
 }
 function severity(normKey, v){
   const n=S.norms[normKey]; if (v==null||!isFinite(v)) return 'na';
+  if (n.lo!=null){ const d=v<n.lo?n.lo-v:v>n.hi?v-n.hi:0; return d===0?'ok':d<=n.m?'train':'treat'; }
   return v<=n.n?'ok':v<=n.m?'train':'treat';
 }
 function scoreOf(normKey, v){
-  const n=S.norms[normKey]; const a=Math.abs(v);
+  const n=S.norms[normKey];
+  if (n.lo!=null){ const d=v<n.lo?n.lo-v:v>n.hi?v-n.hi:0; if(d===0) return 96; if(d<=n.m) return 85-30*d/n.m; return Math.max(20,55-35*Math.min(1,(d-n.m)/n.m)); }
+  const a=Math.abs(v);
   if (a<=n.n) return 100-15*a/n.n;
   if (a<=n.m) return 85-30*(a-n.n)/(n.m-n.n);
   return Math.max(20, 55-35*Math.min(1,(a-n.m)/n.m));
@@ -552,6 +589,8 @@ function analyse(){
     const o = avgObj(a,b); if(o.signed!=null) o.dir = key==='fwdHead'?(o.signed>=0?'forward':'back'):key.endsWith('Plumb')?(o.signed>=0?'forward of':'behind'):(o.signed>=0?'forward':'backward');
     o.v = Math.abs(o.signed ?? o.v); M[key]=o;
   }
+  const sp = {l:S.views.latL?.pts?spineMetrics(S.views.latL,'l',S.views.latL.pts):{}, r:S.views.latR?.pts?spineMetrics(S.views.latR,'r',S.views.latR.pts):{}};
+  for (const key of ['kyphosis','lordosis','pelvicTilt']){ const a=sp.l[key], b=sp.r[key]; if(!a&&!b) continue; const vv=mean([a?.v,b?.v]); M[key]={v:vv,signed:vv,dir:vv>=0?'anterior':'posterior'}; }
   if (sg.l?.kneeSag) M.kneeSagL = sg.l.kneeSag;
   if (sg.r?.kneeSag) M.kneeSagR = sg.r.kneeSag;
   for (const k in M){ const nk=METRICS[k].norm; M[k].sev=severity(nk,M[k].v); M[k].score=scoreOf(nk,M[k].v); }
@@ -582,6 +621,12 @@ function patternsOf(M){
   if (hyper.length) out.push([hyper.some(k=>M[k].sev==='treat')?'treat':'train', `Knee hyperextension (${hyper.map(k=>k.endsWith('L')?'left':'right').join(' and ')})`]);
   const valg = ['kneeFrontL','kneeFrontR'].filter(k=>M[k] && M[k].dir==='valgus' && M[k].v>N.kneeFront.n);
   if (valg.length) out.push([valg.some(k=>M[k].sev==='treat')?'treat':'train', `Knee valgus (${valg.map(k=>k.endsWith('L')?'left':'right').join(' and ')})`]);
+  const Nk=N.kyphosis, Nl=N.lordosis, Nt=N.pelvicTilt;
+  const hyK = M.kyphosis && M.kyphosis.v>Nk.hi, hyL = M.lordosis && M.lordosis.v>Nl.hi, loL = M.lordosis && M.lordosis.v<Nl.lo, antT = M.pelvicTilt && M.pelvicTilt.v>Nt.hi, postT = M.pelvicTilt && M.pelvicTilt.v<Nt.lo;
+  if (hyK && hyL) out.push(['train','Kypho-lordotic posture (Kendall)']);
+  else if (hyL && antT) out.push(['train','Lordotic posture with anterior pelvic tilt (lower-crossed pattern, Janda)']);
+  else if (loL && postT) out.push(['train','Flat-back posture (Kendall): reduced lumbar curve, posterior pelvic tilt']);
+  else { if (hyK) out.push([M.kyphosis.sev,'Increased thoracic kyphosis']); if (M.kyphosis && M.kyphosis.v<Nk.lo) out.push([M.kyphosis.sev,'Flattened thoracic curve']); if (hyL) out.push([M.lordosis.sev,'Increased lumbar lordosis']); if (loL) out.push([M.lordosis.sev,'Reduced lumbar lordosis']); }
   if (M.shoulderLevel && M.pelvicLevel && M.shoulderLevel.sev!=='ok' && M.pelvicLevel.sev!=='ok' && M.shoulderLevel.side!==M.pelvicLevel.side) out.push(['train','Opposite shoulder and pelvic drop (screen for scoliosis)']);
   return out;
 }
@@ -604,6 +649,9 @@ function plainText(k, m, frH){
     case 'trunkIncl': return `Trunk leans ${v}° ${m.dir}.`;
     case 'kneeSagL': case 'kneeSagR': return `${k.endsWith('L')?'Left':'Right'} knee is ${v}° ${m.dir==='flexed'?'bent':'hyperextended (locked back)'}.`;
     case 'shankIncl': return `Lower leg leans ${v}° ${m.dir} over the foot.`;
+    case 'kyphosis': { const n=S.norms.kyphosis; return `Upper back curve about ${v}°${m.v>n.hi?', more rounded than typical':m.v<n.lo?', flatter than typical':', in the typical range'}.`; }
+    case 'lordosis': { const n=S.norms.lordosis; return `Lower back curve about ${v}°${m.v>n.hi?', more arched than typical':m.v<n.lo?', flatter than typical':', in the typical range'}.`; }
+    case 'pelvicTilt': return `Pelvis tilts ${fmt(Math.abs(m.v))}° ${m.v>=0?'forward (anterior)':'backward (posterior)'}.`;
   }
   return '';
 }
@@ -618,6 +666,7 @@ function exercisesFor(region, M){
     kneeFrontL: m.dir==='valgus'?'valgus':'varus', kneeFrontR: m.dir==='valgus'?'valgus':'varus',
     kneeSagL: m.signed<0?'hyperext':'flexed', kneeSagR: m.signed<0?'hyperext':'flexed', kneePlumb: m.signed<0?'hyperext':'flexed',
     shankIncl: m.signed>=0?'shankFwd':'shankBack',
+    kyphosis: m.v>S.norms.kyphosis.hi?'kyphUp':'kyphDown', lordosis: m.v>S.norms.lordosis.hi?'lordUp':'lordDown', pelvicTilt: m.v>S.norms.pelvicTilt.hi?'tiltAnt':'tiltPost',
   }[w];
   return EX[pick] || [];
 }
@@ -638,6 +687,9 @@ function loadExample(){
   S.patient = {name:'Example patient',id:'DEMO-01',age:'34',sex:'Female',height:'165',date:today(),cond:'Recreational runner, neck and knee pain',assessor:''};
   S.views = {};
   for (const v of VIEWS) S.views[v.k] = {w:600,h:1000,pts:P[v.k],src:null,manual:false,checks:[]};
+  const spL = {C7:[352,185],T7:[374,280],T12:[352,375],L3:[341,420],PSIS:[350,468],ASIS:[250,493]};
+  const conv2 = o => ({...Object.fromEntries(Object.entries(o).map(([k,[x,y]])=>[k,{x,y}])),confirmed:true});
+  S.views.latL.spine = conv2(spL); S.views.latR.spine = conv2(Object.fromEntries(Object.entries(spL).map(([k,[x,y]])=>[k,[600-x,y]])));
   S.overrides={}; S.exercises={}; S.summary=null; S.notes=''; S.previous=null;
   S.gait = {...emptyGait(), side:synthGait('side'), back:synthGait('back')};
 }
@@ -722,7 +774,7 @@ function photoChecks(c){
   if (c.width>c.height) out.push('Photo is landscape. Portrait framing fits the whole body better.');
   return out;
 }
-function exitExample(){ S.example=false; S.views={}; S.gait=emptyGait(); for(const k in gErr) delete gErr[k]; S.patient={date:today()}; S.overrides={}; S.exercises={}; S.summary=null; S.notes=''; S.previous=null; editing=null; drag=null; for(const k in capError) delete capError[k]; fillPatientForm(); $('#exampleBanner').hidden=true; $('#prevSelect').value=''; }
+function exitExample(){ S.example=false; S.views={}; S.gait=emptyGait(); for(const k in gErr) delete gErr[k]; S.patient={date:today()}; S.overrides={}; S.exercises={}; S.summary=null; S.notes=''; S.previous=null; editing=null; drag=null; spineEdit=null; for(const k in capError) delete capError[k]; fillPatientForm(); $('#exampleBanner').hidden=true; $('#prevSelect').value=''; }
 
 /* ---------------- photos attached in the project chat ---------------- */
 let filesCap; const filesP = (async()=>{ try{ filesCap = await window.claude?.use?.('files'); }catch{ filesCap=null; } if(filesCap) setTimeout(()=>renderCaptures(),0); return filesCap; })();
@@ -766,13 +818,16 @@ async function openProjectPicker(view){
 }
 
 /* ---------------- capture rendering & editing ---------------- */
-let editing = null, drag=null;
+let editing = null, drag=null, spineEdit=null;
 function renderCaptures(){
   const g=$('#capGrid'); g.innerHTML='';
   for (const vw of VIEWS){
     const v=S.views[vw.k];
     const el=document.createElement('div'); el.className='panel cap';
-    el.innerHTML = `<div class="cap-head"><h3>${vw.label}</h3>${v?.pts?`<button class="btn small" data-edit="${vw.k}">${editing===vw.k?'Done':'Adjust points'}</button>`:''}</div>
+    const canSpine = vw.plane==='sag' && v?.pts && !v.busy;
+    el.innerHTML = `<div class="cap-head"><h3>${vw.label}</h3>${v?.pts?`<span class="row" style="gap:6px">${canSpine?`<button class="btn small" data-spine="${vw.k}">${spineEdit===vw.k?'Done':v.spine?'Spine markers':'Add spine markers'}</button>`:''}<button class="btn small" data-edit="${vw.k}">${editing===vw.k?'Done':'Adjust points'}</button></span>`:''}</div>
+      ${spineEdit===vw.k?`<p class="note" style="color:var(--spine)">Drag each pink marker onto its skin dot: C7, thoracic apex (most rounded point of the upper back), T12, lumbar apex (deepest point of the low back), PSIS and ASIS. Tap Done when they are in place.</p><button class="btn small" data-spine-clear="${vw.k}">Remove spine markers</button>`:''}
+      ${v?.spine && !v.spine.confirmed && spineEdit!==vw.k?'<p class="warn">Spine markers are placed roughly. Tap Spine markers and drag them onto the dots to measure the curves.</p>':''}
       <div class="row" style="gap:6px">
         <label class="btn small ${v?'':'primary'}" for="cam-${vw.k}">Take photo</label>
         <label class="btn small" for="gal-${vw.k}">${v?'Replace from gallery':'Choose from gallery'}</label>
@@ -780,7 +835,7 @@ function renderCaptures(){
       </div>
       <input class="vh" id="cam-${vw.k}" type="file" accept="image/*" capture="environment">
       <input class="vh" id="gal-${vw.k}" type="file" accept="image/*">
-      ${v && !v.loading ? `<canvas id="cv-${vw.k}" class="${editing===vw.k?'editing':''}"></canvas>` : `<label class="empty" for="gal-${vw.k}">${v?.loading?'Opening photo…':(vw.plane==='frontal'?'Facing the camera':'Side on, '+(vw.s==='l'?'left':'right')+' side toward the camera')+'<br>Tap to choose a full-body photo, or drop or paste one here'}</label>`}
+      ${v && !v.loading ? `<canvas id="cv-${vw.k}" class="${editing===vw.k||spineEdit===vw.k?'editing':''}"></canvas>` : `<label class="empty" for="gal-${vw.k}">${v?.loading?'Opening photo…':(vw.plane==='frontal'?'Facing the camera':'Side on, '+(vw.s==='l'?'left':'right')+' side toward the camera')+'<br>Tap to choose a full-body photo, or drop or paste one here'}</label>`}
       ${v?.busy && !v.loading?'<p class="note">Finding landmarks…</p>':''}
       ${capError[vw.k]?`<p class="warn" style="color:var(--treat)">${esc(capError[vw.k])}</p>`:''}
       ${(v?.checks||[]).map(c=>`<p class="warn">${esc(c)}</p>`).join('')}
@@ -791,7 +846,11 @@ function renderCaptures(){
     const pj=el.querySelector('[data-proj]'); if(pj) pj.onclick=()=>openProjectPicker(vw.k);
     el.addEventListener('dragover',e=>{ e.preventDefault(); });
     el.addEventListener('drop',e=>{ e.preventDefault(); const f=[...(e.dataTransfer?.files||[])].find(f=>f.type.startsWith('image/')); if(f) loadPhoto(vw.k,f); });
-    const eb=el.querySelector('[data-edit]'); if(eb) eb.addEventListener('click',()=>{ editing = editing===vw.k?null:vw.k; renderCaptures(); if(!editing) refreshAll(); });
+    const eb=el.querySelector('[data-edit]'); if(eb) eb.addEventListener('click',()=>{ spineEdit=null; editing = editing===vw.k?null:vw.k; renderCaptures(); if(!editing) refreshAll(); });
+    const sb=el.querySelector('[data-spine]'); if(sb) sb.addEventListener('click',()=>{ editing=null;
+      if (spineEdit===vw.k){ spineEdit=null; v.spine.confirmed=true; S.summary=null; renderCaptures(); refreshAll(); return; }
+      if (!v.spine) v.spine={...spineDefaults(v.pts,vw.s),confirmed:false}; spineEdit=vw.k; renderCaptures(); });
+    const sc=el.querySelector('[data-spine-clear]'); if(sc) sc.addEventListener('click',()=>{ v.spine=null; spineEdit=null; S.summary=null; renderCaptures(); refreshAll(); });
     if (v) drawCapture(vw.k);
   }
 }
@@ -813,8 +872,14 @@ function drawCapture(k){
   for (const [a,b] of bonesFor(k)){ if(P[a]&&P[b]){ x.beginPath(); x.moveTo(P[a].x,P[a].y); x.lineTo(P[b].x,P[b].y); x.stroke(); } }
   for (const key of keysFor(k)){ const p=P[key]; if(!p) continue;
     x.beginPath(); x.arc(p.x,p.y,editing===k?r*1.15:r*0.8,0,Math.PI*2); x.fillStyle = key===drag?.key?col('--treat'):col('--accent'); x.fill(); x.lineWidth=r*0.3; x.strokeStyle='#fff'; x.stroke(); }
-  if (drag && drag.view===k){ const p=P[drag.key]; x.font=`600 ${r*2.2}px sans-serif`; x.fillStyle='#fff'; x.strokeStyle='rgba(0,0,0,.7)'; x.lineWidth=r*0.5; const t=nice(drag.key); x.strokeText(t,p.x+r*2,p.y-r*2); x.fillText(t,p.x+r*2,p.y-r*2); }
-  if (editing===k) bindDrag(cv,k);
+  if (v.spine){ const Sp=v.spine, spc=col('--spine');
+    x.strokeStyle=spc; x.lineWidth=r*0.45; x.beginPath(); const sp=['C7','T7','T12','L3','PSIS'].map(q=>Sp[q]); x.moveTo(sp[0].x,sp[0].y);
+    for (let i=1;i<sp.length-1;i++){ const mx=(sp[i].x+sp[i+1].x)/2, my=(sp[i].y+sp[i+1].y)/2; x.quadraticCurveTo(sp[i].x,sp[i].y,mx,my); } x.lineTo(sp[4].x,sp[4].y); x.stroke();
+    x.setLineDash([r*.8,r*.6]); x.beginPath(); x.moveTo(Sp.PSIS.x,Sp.PSIS.y); x.lineTo(Sp.ASIS.x,Sp.ASIS.y); x.stroke(); x.setLineDash([]);
+    for (const q of SPINE){ const p=Sp[q]; x.beginPath(); x.arc(p.x,p.y,spineEdit===k?r*1.1:r*.7,0,7); x.fillStyle=drag?.key===q?col('--treat'):spc; x.fill(); x.lineWidth=r*.3; x.strokeStyle='#fff'; x.stroke();
+      if (spineEdit===k){ x.font=`600 ${r*1.8}px sans-serif`; x.fillStyle='#fff'; x.strokeStyle='rgba(0,0,0,.7)'; x.lineWidth=r*.45; x.strokeText(q==='T7'?'T apex':q==='L3'?'L apex':q,p.x+r*1.6,p.y+r*.6); x.fillText(q==='T7'?'T apex':q==='L3'?'L apex':q,p.x+r*1.6,p.y+r*.6); } } }
+  if (drag && drag.view===k && !SPINE.includes(drag.key)){ const p=P[drag.key]; x.font=`600 ${r*2.2}px sans-serif`; x.fillStyle='#fff'; x.strokeStyle='rgba(0,0,0,.7)'; x.lineWidth=r*0.5; const t=nice(drag.key); x.strokeText(t,p.x+r*2,p.y-r*2); x.fillText(t,p.x+r*2,p.y-r*2); }
+  if (editing===k || spineEdit===k) bindDrag(cv,k);
 }
 function drawGrid(x,w,h,c){ const s=Math.max(w,h)/24; x.strokeStyle=c; x.lineWidth=1; x.beginPath(); for(let i=0;i<=w;i+=s){x.moveTo(i,0);x.lineTo(i,h);} for(let j=0;j<=h;j+=s){x.moveTo(0,j);x.lineTo(w,j);} x.stroke(); }
 function pixelateFace(x,v,k){
@@ -827,12 +892,12 @@ function pixelateFace(x,v,k){
   x.save(); x.beginPath(); x.ellipse(cx,cy,R,R*1.2,0,0,Math.PI*2); x.clip(); x.imageSmoothingEnabled=false; x.drawImage(t,cx-R,cy-R*1.2,R*2,R*2.4); x.restore();
 }
 function bindDrag(cv,k){
-  const v=S.views[k];
+  const v=S.views[k]; const isSp = spineEdit===k; const T = isSp? v.spine : v.pts; const keys = isSp? SPINE : keysFor(k);
   const toImg = e => { const b=cv.getBoundingClientRect(); return {x:(e.clientX-b.left)*v.w/b.width, y:(e.clientY-b.top)*v.h/b.height, s:v.w/b.width}; };
-  cv.onpointerdown = e => { const p=toImg(e); let best=null,bd=1e9; for(const key of keysFor(k)){ const q=v.pts[key]; const d=Math.hypot(q.x-p.x,q.y-p.y); if(d<bd){bd=d;best=key;} }
+  cv.onpointerdown = e => { const p=toImg(e); let best=null,bd=1e9; for(const key of keys){ const q=T[key]; const d=Math.hypot(q.x-p.x,q.y-p.y); if(d<bd){bd=d;best=key;} }
     if (bd < 34*p.s){ drag={view:k,key:best}; cv.setPointerCapture(e.pointerId); drawCapture(k); e.preventDefault(); } };
-  cv.onpointermove = e => { if(!drag||drag.view!==k) return; const p=toImg(e); v.pts[drag.key]={x:Math.max(0,Math.min(v.w,p.x)),y:Math.max(0,Math.min(v.h,p.y))}; drawCapture(k); };
-  cv.onpointerup = cv.onpointercancel = () => { if(drag){ drag=null; v.manual=true; S.summary=null; drawCapture(k); } };
+  cv.onpointermove = e => { if(!drag||drag.view!==k) return; const p=toImg(e); T[drag.key]={x:Math.max(0,Math.min(v.w,p.x)),y:Math.max(0,Math.min(v.h,p.y))}; drawCapture(k); };
+  cv.onpointerup = cv.onpointercancel = () => { if(drag){ drag=null; if(!isSp) v.manual=true; S.summary=null; drawCapture(k); } };
 }
 
 /* ---------------- SVG graphics ---------------- */
@@ -922,7 +987,8 @@ function figureSVG(k,A,pal){
   const v=S.views[k]; const vw=VIEWS.find(q=>q.k===k);
   if (!v?.pts) return `<svg viewBox="0 0 100 160" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="98" height="158" rx="6" style="fill:none;stroke:${pal.line};stroke-dasharray:4 3"/><text x="50" y="84" text-anchor="middle" style="fill:${pal.muted};font:10px ${pal.font}">No photo</text></svg>`;
   const P=v.pts, keys=keysFor(k).filter(q=>P[q]);
-  const xs=keys.map(q=>P[q].x), ys=keys.map(q=>P[q].y);
+  const spx = v.spine?.confirmed? SPINE.map(q=>v.spine[q].x) : [];
+  const xs=[...keys.map(q=>P[q].x),...spx], ys=keys.map(q=>P[q].y);
   const H=Math.max(...ys)-Math.min(...ys); const pad=H*0.1; const headR=H*0.06;
   const x0=Math.min(...xs)-pad*1.6, x1=Math.max(...xs)+pad*1.6, y0=Math.min(...ys)-pad-headR, y1=Math.max(...ys)+pad*0.6;
   const w=Math.max(x1-x0,H*0.55), cxm=(x0+x1)/2; const vx=cxm-w/2;
@@ -937,6 +1003,11 @@ function figureSVG(k,A,pal){
   const regionOf = q => /Ear|nose|Eye/.test(q)?'head':/Sh/.test(q)?'shoulder':/Hip/.test(q)?'pelvis':/Knee/.test(q)?'knee':/Ank|Heel|Toe/.test(q)?'ankle':null;
   for (const q of keys){ if(/Eye|nose/.test(q)) continue; const rg=regionOf(q); const st=rg? A.regions.find(r=>r.k===rg)?.status : null;
     g+=`<circle cx="${P[q].x}" cy="${P[q].y}" r="${sw*4.5}" style="fill:${rg?STC(pal,st):pal.bone};stroke:${pal.bg};stroke-width:${sw*1.2}"/>`; }
+  if (v.spine?.confirmed){ const Sp=v.spine, sp=['C7','T7','T12','L3','PSIS'].map(q=>Sp[q]); let d=`M${sp[0].x} ${sp[0].y}`;
+    for (let i=1;i<sp.length-1;i++) d+=` Q${sp[i].x} ${sp[i].y} ${(sp[i].x+sp[i+1].x)/2} ${(sp[i].y+sp[i+1].y)/2}`; d+=` L${sp[4].x} ${sp[4].y}`;
+    const sc = st => STC(pal, A.regions.find(r=>r.k===st)?.status);
+    g+=`<path d="${d}" style="fill:none;stroke:${sc('trunk')};stroke-width:${sw*2.6};stroke-linecap:round"/><line x1="${Sp.PSIS.x}" y1="${Sp.PSIS.y}" x2="${Sp.ASIS.x}" y2="${Sp.ASIS.y}" style="stroke:${sc('pelvis')};stroke-width:${sw*2};stroke-dasharray:${sw*4} ${sw*3}"/>`;
+    for (const q of SPINE) g+=`<circle cx="${Sp[q].x}" cy="${Sp[q].y}" r="${sw*3}" style="fill:${pal.bg};stroke:${q==='ASIS'||q==='PSIS'?sc('pelvis'):sc('trunk')};stroke-width:${sw*1.4}"/>`; }
   if (vw.plane==='frontal'){ for (const [a,b] of [['lSh','rSh'],['lHip','rHip']]){ const y=(P[a].y+P[b].y)/2; g+=`<line x1="${vx+pad*0.3}" y1="${y}" x2="${vx+w-pad*0.3}" y2="${y}" style="stroke:${pal.muted};stroke-width:${sw};stroke-dasharray:${sw*2} ${sw*3}"/>`; } }
   return `<svg viewBox="${vx} ${y0} ${w} ${y1-y0}" xmlns="http://www.w3.org/2000/svg"><rect x="${vx}" y="${y0}" width="${w}" height="${y1-y0}" style="fill:${pal.bg}"/>${g}</svg>`;
 }
@@ -989,7 +1060,7 @@ function renderAnalysis(){
   $('#regions').querySelectorAll('[data-ex]').forEach(inp=>inp.onchange=()=>{ const k=inp.dataset.ex; const r=A.regions.find(x=>x.k===k); const cur=[...exercisesFor(r,A.M)]; cur[+inp.dataset.i]=inp.value; S.exercises[k]=cur; renderReport(); });
   // table
   const rows = Object.keys(METRICS).filter(k=>A.M[k]).map(k=>{ const m=A.M[k], n=S.norms[METRICS[k].norm];
-    return `<tr><td>${esc(METRICS[k].label||n.label)}</td><td class="num">${fmt(m.v)}${n.unit}</td><td class="num">≤${n.n}${n.unit}</td><td><span class="chip s-${m.sev}">${label(m.sev)}</span></td><td>${esc(plainText(k,m))}</td></tr>`; }).join('');
+    return `<tr><td>${esc(METRICS[k].label||n.label)}</td><td class="num">${fmt(m.v)}${n.unit}</td><td class="num">${n.lo!=null?`${n.lo}–${n.hi}`:'≤'+n.n}${n.unit}</td><td><span class="chip s-${m.sev}">${label(m.sev)}</span></td><td>${esc(plainText(k,m))}</td></tr>`; }).join('');
   $('#mtable').innerHTML = `<thead><tr><th>Measure</th><th>Value</th><th>Normal</th><th>Status</th><th>What it means</th></tr></thead><tbody>${rows||'<tr><td colspan="5">No measurements yet.</td></tr>'}</tbody>`;
   // compare
   if (S.previous){
@@ -1004,8 +1075,10 @@ function renderAnalysis(){
 const label = s => ({ok:'Normal',train:'Train',treat:'Treat',na:'No data'})[s];
 function renderNorms(){
   $('#norms').innerHTML = `<div class="normrow" style="font-weight:600"><span>Measure</span><span>Normal ≤</span><span>Mild ≤</span></div><span></span>` +
-    Object.entries(S.norms).map(([k,n])=>`<div class="normrow"><span>${n.label} (${n.unit})</span><input id="n-${k}-n" type="number" step="0.5" value="${n.n}" data-nk="${k}" data-f="n"><input id="n-${k}-m" type="number" step="0.5" value="${n.m}" data-nk="${k}" data-f="m"></div>`).join('');
-  $('#norms').querySelectorAll('input').forEach(i=>i.onchange=()=>{ const v=parseFloat(i.value); if(isFinite(v)&&v>0){ S.norms[i.dataset.nk][i.dataset.f]=v; store.set('mp.norms',S.norms); S.summary=null; refreshAll(); } });
+    Object.entries(S.norms).filter(([,n])=>n.lo==null).map(([k,n])=>`<div class="normrow"><span>${n.label} (${n.unit})</span><input id="n-${k}-n" type="number" step="0.5" value="${n.n}" data-nk="${k}" data-f="n"><input id="n-${k}-m" type="number" step="0.5" value="${n.m}" data-nk="${k}" data-f="m"></div>`).join('') +
+    `<div class="normrow" style="grid-template-columns:1fr 56px 56px 56px;font-weight:600;margin-top:6px"><span>Spine curves</span><span>From</span><span>To</span><span>Margin</span></div><span></span>` +
+    Object.entries(S.norms).filter(([,n])=>n.lo!=null).map(([k,n])=>`<div class="normrow" style="grid-template-columns:1fr 56px 56px 56px"><span>${n.label} (${n.unit})</span>${['lo','hi','m'].map(f=>`<input id="n-${k}-${f}" type="number" step="0.5" value="${n[f]}" data-nk="${k}" data-f="${f}">`).join('')}</div>`).join('');
+  $('#norms').querySelectorAll('input').forEach(i=>i.onchange=()=>{ const v=parseFloat(i.value); if(isFinite(v)&&(v>0||i.dataset.f==='lo')){ S.norms[i.dataset.nk][i.dataset.f]=v; store.set('mp.norms',S.norms); S.summary=null; refreshAll(); } });
 }
 
 /* ---------------- gait from video ---------------- */
@@ -1544,7 +1617,7 @@ function renderReport(){
 
   const page3 = showClin ? `<section class="rpage">${slim('Clinical values')}
     <div class="body"><div class="sec"><h3>Measurements</h3><table><thead><tr><th>Measure</th><th>Value</th><th>Normal</th><th>Mild</th><th>Status</th></tr></thead><tbody>${
-      Object.keys(METRICS).filter(k=>A.M[k]).map(k=>{const m=A.M[k],n=S.norms[METRICS[k].norm]; return `<tr><td>${esc(METRICS[k].label||n.label)}</td><td><b>${fmt(m.v)}${n.unit}</b></td><td>≤ ${n.n}${n.unit}</td><td>≤ ${n.m}${n.unit}</td><td><span class="pill" style="background:${hex(m.sev)};padding:3px 9px">${label(m.sev)}</span></td></tr>`;}).join('')
+      Object.keys(METRICS).filter(k=>A.M[k]).map(k=>{const m=A.M[k],n=S.norms[METRICS[k].norm]; return `<tr><td>${esc(METRICS[k].label||n.label)}</td><td><b>${fmt(m.v)}${n.unit}</b></td><td>${n.lo!=null?`${n.lo} – ${n.hi}`:'≤ '+n.n}${n.unit}</td><td>${n.lo!=null?`± ${n.m}`:'≤ '+n.m}${n.unit}</td><td><span class="pill" style="background:${hex(m.sev)};padding:3px 9px">${label(m.sev)}</span></td></tr>`;}).join('')
     }</tbody></table><div class="small">Plumb-line values are % of ear-to-ankle height. Angles measured from 2D photographs with on-device landmark detection; screening values to be confirmed clinically. Norms follow Kendall plumb-line alignment and published photogrammetry ranges, adjustable by the clinic.</div></div></div>${foot(showClin&&hasGait?nPages-1:nPages)}</section>` : '';
   const page4 = showClin && hasGait ? `<section class="rpage">${slim('Gait values')}
     <div class="body"><div class="sec"><h3>Gait measurements</h3><table><thead><tr><th>Measure</th><th>Value</th><th>Typical</th><th>Status</th></tr></thead><tbody>${
@@ -1612,7 +1685,7 @@ async function makePDF(){
 }
 function sessionData(){
   return {app:'MotionPlus',kind:'static-posture',version:1,savedAt:new Date().toISOString(),patient:S.patient,
-    views:Object.fromEntries(Object.entries(S.views).filter(([,v])=>v?.pts).map(([k,v])=>[k,{w:v.w,h:v.h,pts:v.pts,manual:v.manual}])),
+    views:Object.fromEntries(Object.entries(S.views).filter(([,v])=>v?.pts).map(([k,v])=>[k,{w:v.w,h:v.h,pts:v.pts,manual:v.manual,spine:v.spine||null}])),
     overrides:S.overrides,exercises:S.exercises,summary:S.summary,notes:S.notes,norms:S.norms,
     regionScores:Object.fromEntries(A.regions.map(r=>[r.k,r.score])),overall:A.overall,
     gait:{side:gaitPack(S.gait.side),back:gaitPack(S.gait.back),overrides:S.gait.overrides,exercises:S.gait.exercises,summary:S.gait.summary,
