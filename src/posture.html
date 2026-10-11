@@ -174,6 +174,24 @@ details summary{cursor:pointer;font-weight:600}
 .rpage .tl{background:var(--r-wash);border-radius:8px;padding:8px 10px;display:grid;gap:2px}
 .rpage .tl b{font:700 22px/1 var(--f-display)}
 .rpage .tl span{font:600 8.5px var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--r-muted) !important}
+/* Live camera guide */
+.live{position:fixed;inset:0;z-index:30;background:#05080a;color:#fff;display:grid;grid-template-rows:auto 1fr auto auto;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+.live-top{display:flex;align-items:center;gap:10px;padding:10px 14px}
+.live-top b{font:600 1.25rem var(--f-display);letter-spacing:.03em}
+.live-top .btn{margin-left:auto}
+.live-stage{position:relative;min-height:0;overflow:hidden}
+.live-stage video,.live-stage canvas{position:absolute;inset:0;width:100%;height:100%}
+.live-stage video{object-fit:contain}
+.live-msg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(5,8,10,.78);padding:16px 20px;border-radius:14px;text-align:center;font:600 1.2rem var(--f-body);max-width:86%}
+.live-hint{padding:8px 14px 0;text-align:center;font:600 1.05rem var(--f-body);min-height:2.2em}
+.live-checks{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;padding:8px 12px}
+.live-checks span{font:600 .8rem var(--f-body);padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.12);color:#cfd8dc}
+.live-checks span.ok{background:#2c8a57;color:#fff}
+.live-bar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;padding:8px 16px 16px}
+.live-bar label{font-size:.9rem;color:#cfd8dc}
+.live-bar .btn{justify-self:end}
+.shutter{appearance:none;width:72px;height:72px;border-radius:50%;border:5px solid #fff;background:rgba(255,255,255,.25);cursor:pointer}
+.shutter:active{background:#fff}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -257,7 +275,8 @@ details summary{cursor:pointer;font-weight:600}
         </div>
       </div>
       <p class="note">Detection runs on this device. Faces are pixelated on screen and photos never leave the device or appear in reports.</p>
-      <div class="row"><label class="row" style="gap:6px"><input type="checkbox" id="showPhoto" checked style="width:auto"> Show photo behind points</label></div>
+      <div class="row"><button class="btn primary" id="guidedAll">Guided capture, all 4 views</button><label class="row" style="gap:6px"><input type="checkbox" id="showPhoto" checked style="width:auto"> Show photo behind points</label></div>
+      <p class="note">The live guide shows a skeleton over the camera, checks framing, distance, facing direction, phone tilt and stillness, then takes the photo by itself and moves on to the next view.</p>
     </div>
     <div class="panel" id="projPicker" hidden>
       <div class="row" style="justify-content:space-between"><h3>Photos from the project chat · <span id="projView"></span></h3>
@@ -372,6 +391,12 @@ details summary{cursor:pointer;font-weight:600}
     <div class="scaler" id="scaler"><div class="report" id="report"></div></div>
   </section>
 </main>
+<div class="live" id="live" hidden role="dialog" aria-label="Live camera guide">
+  <div class="live-top"><b id="liveTitle">Live guide</b><button class="btn small" id="liveClose">Close</button></div>
+  <div class="live-stage"><video id="liveVid" playsinline muted></video><canvas id="liveOv"></canvas><div class="live-msg" id="liveMsg" hidden></div></div>
+  <div><div class="live-hint" id="liveHint"></div><div class="live-checks" id="liveChecks"></div></div>
+  <div class="live-bar"><label class="row" style="gap:6px"><input type="checkbox" id="liveAuto" checked style="width:auto"> Auto-capture</label><button class="shutter" id="liveShot" aria-label="Take photo now"></button><button class="btn small" id="liveFlip">Switch camera</button></div>
+</div>
 <div class="toast" id="toast" hidden></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -817,6 +842,146 @@ async function openProjectPicker(view){
   $('#projRefresh').onclick=()=>openProjectPicker(view);
 }
 
+/* ---------------- live camera guide ---------------- */
+const hasCam = !!navigator.mediaDevices?.getUserMedia;
+let liveLmP=null;
+function getLiveLandmarker(){
+  if (!liveLmP) liveLmP=(async()=>{
+    const m = await import('./vision_bundle.mjs');
+    const fs = await m.FilesetResolver.forVisionTasks(new URL('./wasm', location.href).href.replace(/\/$/,''));
+    return m.PoseLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:new URL('./models/pose_landmarker.wasm',location.href).href, delegate:'CPU'}, runningMode:'VIDEO', numPoses:1, minPoseDetectionConfidence:0.5, minTrackingConfidence:0.5});
+  })().catch(e=>{ liveLmP=null; throw e; });
+  return liveLmP;
+}
+const LV = {stream:null, view:null, seq:false, facing:'environment', raf:0, okSince:0, countFrom:0, pauseUntil:0, hist:[], tilt:null, busy:false, lastP:null, checks:[], audio:null, lastTick:-1, lastTs:0};
+const liveCanvas = document.createElement('canvas');
+function beep(f=880,d=.09){ try{ const a=LV.audio; if(!a) return; const o=a.createOscillator(), g=a.createGain(); o.frequency.value=f; g.gain.value=.12; o.connect(g); g.connect(a.destination); o.start(); g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+d); o.stop(a.currentTime+d+.02); }catch{} }
+const onTilt = e => { if(e.beta!=null) LV.tilt={b:e.beta,g:e.gamma}; };
+function openLive(view, seq){
+  // Permission prompts for motion and sound must start inside the tap.
+  try{ LV.audio = LV.audio || new (window.AudioContext||window.webkitAudioContext)(); LV.audio.resume?.(); }catch{}
+  try{ if (typeof DeviceOrientationEvent!=='undefined' && typeof DeviceOrientationEvent.requestPermission==='function') DeviceOrientationEvent.requestPermission().catch(()=>{}); }catch{}
+  window.addEventListener('deviceorientation',onTilt);
+  LV.view=view; LV.seq=seq; LV.okSince=0; LV.countFrom=0; LV.hist=[]; LV.pauseUntil=0; LV.lastP=null;
+  $('#live').hidden=false; document.body.style.overflow='hidden';
+  liveTitle(); liveMsg('Starting camera…'); startLiveCam();
+}
+function liveTitle(){ const vw=VIEWS.find(v=>v.k===LV.view); $('#liveTitle').textContent = `${vw.label} · ${vw.plane==='frontal'?(vw.k==='ant'?'facing the camera':'back to the camera'):(vw.s==='l'?'left':'right')+' side toward the camera'}`; }
+function liveMsg(t){ const m=$('#liveMsg'); m.hidden=!t; if(t) m.textContent=t; }
+async function startLiveCam(){
+  stopLiveCam(false);
+  try{
+    LV.stream = await navigator.mediaDevices.getUserMedia({audio:false, video:{facingMode:{ideal:LV.facing}, width:{ideal:1080}, height:{ideal:1920}}});
+    const v=$('#liveVid'); v.srcObject=LV.stream; v.style.transform = LV.facing==='user'?'scaleX(-1)':''; await v.play();
+    liveMsg('Loading pose model…');
+    liveLmPv = await withTimeout(getLiveLandmarker(),30000);
+    liveMsg(''); cancelAnimationFrame(LV.raf); LV.raf=requestAnimationFrame(liveLoop);
+  }catch(e){
+    liveMsg(e?.name==='NotAllowedError' ? 'Camera access was blocked. Allow the camera for this site in the browser settings, or use Take photo.' : e?.message==='timeout'||/model|wasm/i.test(e?.message||'') ? 'The pose model could not load. You can still take the photo with the shutter button.' : 'The camera could not start on this device. Use Take photo instead.');
+    if (LV.stream){ cancelAnimationFrame(LV.raf); LV.raf=requestAnimationFrame(liveLoop); }
+  }
+}
+function stopLiveCam(hide=true){
+  cancelAnimationFrame(LV.raf); LV.raf=0;
+  if (LV.stream){ LV.stream.getTracks().forEach(t=>t.stop()); LV.stream=null; }
+  if (hide){ $('#live').hidden=true; document.body.style.overflow=''; window.removeEventListener('deviceorientation',onTilt); LV.tilt=null; }
+}
+function liveChecks(P,W,H,view){
+  const vw=VIEWS.find(v=>v.k===view); const out=[];
+  if (!P) return [{k:'body',label:'Person in view',ok:false,hint:'Step into the frame so your whole body is visible.'}];
+  const px=k=>({x:P[k].x*W,y:P[k].y*H,v:P[k].v});
+  const s=vw.s||'l';
+  const core = vw.plane==='frontal' ? ['lSh','rSh','lHip','rHip','lKnee','rKnee','lAnk','rAnk','lHeel','rHeel'] : [s+'Sh',s+'Hip',s+'Knee',s+'Ank',s+'Heel',s+'Toe'];
+  const ys=[...core,'nose'].map(k=>P[k].y), xs=[...core,'nose'].map(k=>P[k].x);
+  const top=Math.min(...ys)-0.06, bot=Math.max(...ys);
+  const inFrame = top>0.01 && bot<0.985 && Math.min(...xs)>0.02 && Math.max(...xs)<0.98 && core.every(k=>(P[k].v??1)>0.5);
+  out.push({k:'frame',label:'Whole body in frame',ok:inFrame,hint: top<=0.01?'Tilt down or step back: the head is cut off.' : bot>=0.985?'Step back: the feet are cut off.' : 'Show the whole body, head to feet.'});
+  const span=bot-top;
+  out.push({k:'dist',label:'Distance',ok:span>=0.62&&span<=0.93,hint: span<0.62?'Come a little closer to the camera.':'Step back a little.'});
+  const mhx=(P.lHip.x+P.rHip.x)/2;
+  out.push({k:'centre',label:'Centred',ok:mhx>0.32&&mhx<0.68,hint: mhx<=0.32?'Move to your left (toward the middle of the frame).':'Move to your right (toward the middle of the frame).'});
+  const sw=Math.abs(px('lSh').x-px('rSh').x), torso=Math.abs((px('lSh').y+px('rSh').y)/2-(px('lHip').y+px('rHip').y)/2)||1, ratio=sw/torso;
+  if (vw.plane==='frontal'){ const towards = P.lSh.x>P.rSh.x; const right = vw.k==='ant'?towards:!towards;
+    out.push({k:'face',label:vw.k==='ant'?'Facing camera':'Back to camera',ok:ratio>0.42&&right,hint: !right?(vw.k==='ant'?'Turn around to face the camera.':'Turn around so your back faces the camera.'):vw.k==='ant'?'Face the camera square on.':'Turn your back square to the camera.'}); }
+  else { const f=Math.sign(P[s+'Toe'].x-P[s+'Heel'].x) || Math.sign(P.nose.x-(P.lEar?.x??P.nose.x)); const want = vw.s==='l'?-1:1;
+    out.push({k:'face',label:'Side on',ok:ratio<0.3&&f===want,hint: ratio>=0.3?'Turn fully side on to the camera.':`Turn around: the ${vw.s==='l'?'left':'right'} side should face the camera.`}); }
+  if (LV.tilt){ const {b,g}=LV.tilt; const up = (Math.abs(b-90)<4&&Math.abs(g)<4) || (Math.abs(Math.abs(g)-90)<4&&Math.abs(b)<4);
+    out.push({k:'tilt',label:'Phone upright',ok:up,hint:'Hold the phone straight up and down, not tilted.'}); }
+  LV.hist.push(core.map(k=>[P[k].x,P[k].y])); if(LV.hist.length>12) LV.hist.shift();
+  let mv=1; if (LV.hist.length>=8){ const a=LV.hist[0], b=LV.hist[LV.hist.length-1]; mv=a.reduce((s,q,i)=>s+Math.hypot(q[0]-b[i][0],q[1]-b[i][1]),0)/a.length; }
+  out.push({k:'still',label:'Hold still',ok:mv<0.008,hint:'Hold still for a moment.'});
+  return out;
+}
+function liveLoop(now){
+  LV.raf=requestAnimationFrame(liveLoop);
+  const v=$('#liveVid'); if(v.readyState<2||LV.busy) return;
+  const W=v.videoWidth, H=v.videoHeight; if(!W) return;
+  LV.busy=true;
+  try{
+    const sc=Math.min(1,480/Math.max(W,H)); liveCanvas.width=Math.round(W*sc); liveCanvas.height=Math.round(H*sc);
+    liveCanvas.getContext('2d').drawImage(v,0,0,liveCanvas.width,liveCanvas.height);
+    let P=null;
+    { const lm=liveLmPv; if(lm){ let ts=Math.round(performance.now()); if(ts<=LV.lastTs) ts=LV.lastTs+1; LV.lastTs=ts; const L=lm.detectForVideo(liveCanvas,ts).landmarks?.[0];
+      if (L){ P={}; for(const k of Object.keys(MP)){ const q=L[MP[k]]; P[k]={x:q.x,y:q.y,v:q.visibility??1}; } } } }
+    LV.lastP=P;
+    const paused = now<LV.pauseUntil;
+    const checks = liveLmPv ? liveChecks(P,W,H,LV.view) : [];
+    const allOk = checks.length && checks.every(c=>c.ok);
+    if (!paused){
+      if (allOk){ if(!LV.okSince) LV.okSince=now; } else { LV.okSince=0; LV.countFrom=0; LV.lastTick=-1; }
+      if ($('#liveAuto').checked && allOk && now-LV.okSince>1000 && !LV.countFrom) LV.countFrom=now;
+      if (LV.countFrom){ const left=3-Math.floor((now-LV.countFrom)/1000); if(left!==LV.lastTick){ LV.lastTick=left; if(left>0) beep(left===1?1175:880); }
+        if (left<=0){ LV.countFrom=0; LV.okSince=0; LV.lastTick=-1; liveCapture(); } }
+    }
+    const bad=checks.find(c=>!c.ok);
+    $('#liveHint').textContent = paused? '' : !liveLmPv ? 'Frame the whole body and tap the shutter.' : allOk ? (LV.countFrom?'Hold it…':$('#liveAuto').checked?'Perfect. Hold still…':'Ready. Tap the shutter.') : bad?.hint||'';
+    $('#liveChecks').innerHTML = checks.map(c=>`<span class="${c.ok?'ok':''}">${c.ok?'✓ ':''}${c.label}</span>`).join('');
+    drawLive(P,W,H,allOk,now);
+  }catch(e){ /* keep the preview running */ }
+  LV.busy=false;
+}
+let liveLmPv=null; // resolved live landmarker
+function drawLive(P,W,H,ok,now){
+  const cv=$('#liveOv'), st=cv.parentElement; const cw=st.clientWidth, ch=st.clientHeight; const dpr=Math.min(2,window.devicePixelRatio||1);
+  if (cv.width!==Math.round(cw*dpr)||cv.height!==Math.round(ch*dpr)){ cv.width=Math.round(cw*dpr); cv.height=Math.round(ch*dpr); }
+  const x=cv.getContext('2d'); x.setTransform(dpr,0,0,dpr,0,0); x.clearRect(0,0,cw,ch);
+  const s=Math.min(cw/W,ch/H), ox=(cw-W*s)/2, oy=(ch-H*s)/2; const mir=LV.facing==='user';
+  const map=p=>({x:ox+(mir?1-p.x:p.x)*W*s, y:oy+p.y*H*s});
+  // target zone
+  x.strokeStyle= ok?'#4cd38a':'rgba(255,255,255,.55)'; x.lineWidth=3; x.setLineDash([10,8]);
+  const zx=ox+W*s*.2, zy=oy+H*s*.04, zw=W*s*.6, zh=H*s*.92; x.beginPath(); x.roundRect?x.roundRect(zx,zy,zw,zh,18):x.rect(zx,zy,zw,zh); x.stroke(); x.setLineDash([]);
+  if (P){
+    const bones=[['lSh','rSh'],['lHip','rHip'],['lSh','lHip'],['rSh','rHip'],['lSh','lElb'],['lElb','lWri'],['rSh','rElb'],['rElb','rWri'],['lHip','lKnee'],['lKnee','lAnk'],['lAnk','lHeel'],['lHeel','lToe'],['rHip','rKnee'],['rKnee','rAnk'],['rAnk','rHeel'],['rHeel','rToe']];
+    x.lineCap='round';
+    for (const [a,b] of bones){ const A=map(P[a]), B=map(P[b]); x.strokeStyle='rgba(0,0,0,.55)'; x.lineWidth=7; x.beginPath(); x.moveTo(A.x,A.y); x.lineTo(B.x,B.y); x.stroke(); x.strokeStyle= ok?'#4cd38a':'#ffd166'; x.lineWidth=3.5; x.stroke(); }
+    // plumb line through the ankles
+    const ax=(P.lAnk.x+P.rAnk.x)/2; const T=map({x:ax,y:0}), Bm=map({x:ax,y:1}); x.strokeStyle='rgba(111,168,230,.8)'; x.lineWidth=2; x.setLineDash([8,6]); x.beginPath(); x.moveTo(T.x,oy); x.lineTo(Bm.x,oy+H*s); x.stroke(); x.setLineDash([]);
+    // hide the face
+    const n=map(P.nose), sh=Math.abs(map(P.lSh).x-map(P.rSh).x), torso=Math.abs(map(P.lSh).y-map(P.lHip).y); x.fillStyle='rgba(30,40,46,.92)'; x.beginPath(); x.arc(n.x,n.y,Math.max(sh*.45,torso*.22,14),0,7); x.fill();
+  }
+  if (LV.countFrom){ const left=Math.max(1,3-Math.floor((now-LV.countFrom)/1000)); x.fillStyle='rgba(0,0,0,.35)'; x.beginPath(); x.arc(cw/2,ch/2,70,0,7); x.fill(); x.fillStyle='#fff'; x.font='700 84px "Barlow Condensed",Arial'; x.textAlign='center'; x.textBaseline='middle'; x.fillText(String(left),cw/2,ch/2+4); }
+}
+async function liveCapture(){
+  const v=$('#liveVid'); if(!v.videoWidth) return;
+  const c=document.createElement('canvas'); c.width=v.videoWidth; c.height=v.videoHeight; const x=c.getContext('2d');
+  if (LV.facing==='user'){ x.translate(c.width,0); x.scale(-1,1); }
+  x.drawImage(v,0,0);
+  beep(1568,.15); const ov=$('#liveOv').getContext('2d'); ov.fillStyle='rgba(255,255,255,.85)'; ov.fillRect(0,0,9999,9999);
+  const blob = await new Promise(r=>c.toBlob(r,'image/jpeg',0.92)); if(!blob) return;
+  const view=LV.view; loadPhoto(view, new File([blob],`${view}.jpg`,{type:'image/jpeg'}));
+  const next = LV.seq ? VIEWS.find(q=>q.k!==view && !S.views[q.k]) : null;
+  const vw=VIEWS.find(q=>q.k===view);
+  if (next){ LV.view=next.k; LV.hist=[]; LV.okSince=0; liveTitle(); LV.pauseUntil=performance.now()+2600;
+    liveMsg(`${vw.label} saved. Next: ${next.plane==='frontal'?(next.k==='ant'?'face the camera':'turn your back to the camera'):'turn so the '+(next.s==='l'?'left':'right')+' side faces the camera'}.`);
+    setTimeout(()=>liveMsg(''),2500); }
+  else { stopLiveCam(); showTab('capture'); toast(`${vw.label} photo saved.`); }
+}
+$('#liveClose').onclick=()=>stopLiveCam();
+$('#liveShot').onclick=()=>liveCapture();
+$('#liveFlip').onclick=()=>{ LV.facing = LV.facing==='environment'?'user':'environment'; LV.hist=[]; startLiveCam(); };
+$('#guidedAll').onclick=()=>{ if(S.example){ exitExample(); renderCaptures(); refreshAll(); } openLive(VIEWS.find(v=>!S.views[v.k])?.k||'ant', true); };
+if (!hasCam) $('#guidedAll').hidden=true;
+
 /* ---------------- capture rendering & editing ---------------- */
 let editing = null, drag=null, spineEdit=null;
 function renderCaptures(){
@@ -829,7 +994,8 @@ function renderCaptures(){
       ${spineEdit===vw.k?`<p class="note" style="color:var(--spine)">Drag each pink marker onto its skin dot: C7, thoracic apex (most rounded point of the upper back), T12, lumbar apex (deepest point of the low back), PSIS and ASIS. Tap Done when they are in place.</p><button class="btn small" data-spine-clear="${vw.k}">Remove spine markers</button>`:''}
       ${v?.spine && !v.spine.confirmed && spineEdit!==vw.k?'<p class="warn">Spine markers are placed roughly. Tap Spine markers and drag them onto the dots to measure the curves.</p>':''}
       <div class="row" style="gap:6px">
-        <label class="btn small ${v?'':'primary'}" for="cam-${vw.k}">Take photo</label>
+        ${hasCam?`<button class="btn small ${v?'':'primary'}" data-live="${vw.k}">Live guide</button>`:''}
+        <label class="btn small ${v||hasCam?'':'primary'}" for="cam-${vw.k}">Take photo</label>
         <label class="btn small" for="gal-${vw.k}">${v?'Replace from gallery':'Choose from gallery'}</label>
         ${filesCap?`<button class="btn small" data-proj="${vw.k}">From project chat</button>`:''}
       </div>
@@ -844,6 +1010,7 @@ function renderCaptures(){
     for (const id of ['cam-','gal-']) el.querySelector('#'+id+vw.k).addEventListener('change',e=>{ const f=e.target.files?.[0]; e.target.value=''; if(f) loadPhoto(vw.k,f); });
     el.addEventListener('pointerdown',()=>{ activeView=vw.k; });
     const pj=el.querySelector('[data-proj]'); if(pj) pj.onclick=()=>openProjectPicker(vw.k);
+    const lv=el.querySelector('[data-live]'); if(lv) lv.onclick=()=>openLive(vw.k,false);
     el.addEventListener('dragover',e=>{ e.preventDefault(); });
     el.addEventListener('drop',e=>{ e.preventDefault(); const f=[...(e.dataTransfer?.files||[])].find(f=>f.type.startsWith('image/')); if(f) loadPhoto(vw.k,f); });
     const eb=el.querySelector('[data-edit]'); if(eb) eb.addEventListener('click',()=>{ spineEdit=null; editing = editing===vw.k?null:vw.k; renderCaptures(); if(!editing) refreshAll(); });
