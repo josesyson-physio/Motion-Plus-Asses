@@ -158,17 +158,34 @@ details summary{cursor:pointer;font-weight:600}
 .rpage th{font:600 9.5px var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--r-muted) !important;text-align:left;padding:8px;border-bottom:2px solid var(--r-ink)}
 .rpage td{padding:7px 8px;border-bottom:1px solid var(--r-line)}
 .rpage tr:nth-child(even) td{background:var(--r-wash)}
+/* Gait */
+.gcap{display:grid;gap:8px;align-content:start;min-width:0}
+.gstage{position:relative;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:var(--surface-2)}
+.gstage video,.gstage canvas{display:block;width:100%;height:auto}
+.gstage canvas.ov{position:absolute;inset:0;height:100%}
+.gprog{height:8px;border-radius:999px;background:var(--line);overflow:hidden}
+.gprog i{display:block;height:100%;background:var(--accent);width:0}
+.tiles{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,120px),1fr))}
+.tile{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:2px}
+.tile b{font:700 1.7rem/1 var(--f-display)}
+.tile small{color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.06em}
+.gtable{min-width:640px}
+.rpage .tiles4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.rpage .tl{background:var(--r-wash);border-radius:8px;padding:8px 10px;display:grid;gap:2px}
+.rpage .tl b{font:700 22px/1 var(--f-display)}
+.rpage .tl span{font:600 8.5px var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--r-muted) !important}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
 <header class="bar">
   <div class="bar-in">
-    <div class="brand"><h1>Motion<span>Plus</span></h1><small>Static posture assessment · plumb-line &amp; photogrammetry</small><button class="btn small" id="newPatientBtn" style="margin-left:auto">New patient</button></div>
+    <div class="brand"><h1>Motion<span>Plus</span></h1><small>Posture and gait assessment · plumb-line, photogrammetry and video</small><button class="btn small" id="newPatientBtn" style="margin-left:auto">New patient</button></div>
     <nav class="tabs" role="tablist">
       <button class="tab" role="tab" data-tab="patient" aria-selected="true" id="tab-patient">1 Patient</button>
       <button class="tab" role="tab" data-tab="capture" aria-selected="false" id="tab-capture">2 Capture</button>
       <button class="tab" role="tab" data-tab="analysis" aria-selected="false" id="tab-analysis">3 Analysis</button>
-      <button class="tab" role="tab" data-tab="report" aria-selected="false" id="tab-report">4 Report</button>
+      <button class="tab" role="tab" data-tab="gait" aria-selected="false" id="tab-gait">4 Gait</button>
+      <button class="tab" role="tab" data-tab="report" aria-selected="false" id="tab-report">5 Report</button>
     </nav>
   </div>
 </header>
@@ -290,7 +307,57 @@ details summary{cursor:pointer;font-weight:600}
     </div>
   </section>
 
-  <!-- 4 REPORT -->
+  <!-- 4 GAIT -->
+  <section data-pane="gait" hidden style="display:grid;gap:16px">
+    <div class="panel">
+      <h2>Gait from video</h2>
+      <div class="grid2">
+        <ul class="checklist">
+          <li>Clear walkway of 6 to 8 m, or a treadmill at the patient's comfortable speed.</li>
+          <li>Phone in landscape or portrait at hip height, steady on a tripod or a shelf, about 3 m away.</li>
+          <li>Side view: the patient walks across the frame at their own pace. Back view: the patient walks straight away from the camera.</li>
+          <li>Record 8 to 12 seconds with at least 3 full strides in view. Shorts and fitted clothing help.</li>
+        </ul>
+        <div>
+          <p class="note"><b>What is measured.</b> Side view: cadence, step length and timing, stance phase, knee and hip motion, trunk lean. Back view: pelvic drop, dynamic knee valgus, trunk side lean and step width.</p>
+          <p class="note">Video is processed on this device and is not saved. Only the measured points go into the session file.</p>
+        </div>
+      </div>
+    </div>
+    <div class="grid2" id="gaitCaps"></div>
+    <div class="grid2">
+      <div class="panel">
+        <div class="row" style="justify-content:space-between;align-items:flex-start">
+          <div><h2>Gait score</h2><p class="note" id="gUsed"></p></div>
+          <div class="svgbox" id="gDial" style="width:min(170px,100%)"></div>
+        </div>
+        <div class="tiles" id="gTiles"></div>
+        <div id="gFindings" class="patterns"></div>
+      </div>
+      <div class="panel"><h3>Knee flexion through the stride</h3><div class="svgbox" id="gKnee"></div><p class="note">Shaded band: typical adult knee motion. Stance is the first 60% of the stride, swing the last 40%.</p></div>
+    </div>
+    <div class="grid2">
+      <div class="panel"><h3>Pelvic control from behind</h3><div class="svgbox" id="gPelvis"></div></div>
+      <div class="panel"><h3>Left vs right</h3><div class="svgbox" id="gSym"></div></div>
+    </div>
+    <div class="panel">
+      <h3>Gait areas to treat or train</h3>
+      <p class="note">Tap a status to change it. Edit any exercise; your wording goes into the report.</p>
+      <div class="grid2" id="gAreas"></div>
+    </div>
+    <div class="panel">
+      <h3>Gait measurements</h3>
+      <div class="tablewrap"><table id="gTable" class="gtable"></table></div>
+      <details>
+        <summary>Normal ranges (editable)</summary>
+        <p class="note">Values inside the range score green; within the margin outside it amber; beyond that red. Defaults are typical adult values; adjust for children, older adults or athletes.</p>
+        <div class="normgrid" id="gNorms"></div>
+        <button class="btn small" id="gResetNorms">Reset to defaults</button>
+      </details>
+    </div>
+  </section>
+
+  <!-- 5 REPORT -->
   <section data-pane="report" hidden style="display:grid;gap:16px">
     <div class="panel">
       <h2>Report</h2>
@@ -572,6 +639,7 @@ function loadExample(){
   S.views = {};
   for (const v of VIEWS) S.views[v.k] = {w:600,h:1000,pts:P[v.k],src:null,manual:false,checks:[]};
   S.overrides={}; S.exercises={}; S.summary=null; S.notes=''; S.previous=null;
+  S.gait = {...emptyGait(), side:synthGait('side'), back:synthGait('back')};
 }
 function today(){ const d=new Date(); return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10); }
 
@@ -654,7 +722,7 @@ function photoChecks(c){
   if (c.width>c.height) out.push('Photo is landscape. Portrait framing fits the whole body better.');
   return out;
 }
-function exitExample(){ S.example=false; S.views={}; S.patient={date:today()}; S.overrides={}; S.exercises={}; S.summary=null; S.notes=''; S.previous=null; editing=null; drag=null; for(const k in capError) delete capError[k]; fillPatientForm(); $('#exampleBanner').hidden=true; $('#prevSelect').value=''; }
+function exitExample(){ S.example=false; S.views={}; S.gait=emptyGait(); for(const k in gErr) delete gErr[k]; S.patient={date:today()}; S.overrides={}; S.exercises={}; S.summary=null; S.notes=''; S.previous=null; editing=null; drag=null; for(const k in capError) delete capError[k]; fillPatientForm(); $('#exampleBanner').hidden=true; $('#prevSelect').value=''; }
 
 /* ---------------- photos attached in the project chat ---------------- */
 let filesCap; const filesP = (async()=>{ try{ filesCap = await window.claude?.use?.('files'); }catch{ filesCap=null; } if(filesCap) setTimeout(()=>renderCaptures(),0); return filesCap; })();
@@ -896,7 +964,7 @@ async function rasterizeSVGs(root){
 
 /* ---------------- analysis UI ---------------- */
 let A=null;
-function refreshAll(){ A = analyse(); renderAnalysis(); renderReport(); }
+function refreshAll(){ A = analyse(); GA = gaitAnalyse(); renderAnalysis(); renderGait(); renderReport(); }
 function renderAnalysis(){
   const used = VIEWS.filter(v=>S.views[v.k]?.pts).map(v=>v.label);
   $('#viewsUsed').textContent = used.length? `Views used: ${used.join(', ')}` : 'Add photos in Capture to start.';
@@ -940,6 +1008,465 @@ function renderNorms(){
   $('#norms').querySelectorAll('input').forEach(i=>i.onchange=()=>{ const v=parseFloat(i.value); if(isFinite(v)&&v>0){ S.norms[i.dataset.nk][i.dataset.f]=v; store.set('mp.norms',S.norms); S.summary=null; refreshAll(); } });
 }
 
+/* ---------------- gait from video ---------------- */
+const GK = ['nose','lSh','rSh','lHip','rHip','lKnee','rKnee','lAnk','rAnk','lHeel','rHeel','lToe','rToe'];
+const GVIEWS = [{k:'side',label:'Side view',hint:'Walking across the frame, side on'},{k:'back',label:'Back view',hint:'Walking straight away from the camera'}];
+const GAIT_NORMS = {
+  cadence:{label:'Cadence',unit:' steps/min',lo:100,hi:125,mild:10,d:0},
+  speed:{label:'Walking speed',unit:' m/s',lo:1.0,hi:1.6,mild:.2,d:2},
+  stepLen:{label:'Step length',unit:' × leg',lo:.72,hi:1.0,mild:.1,d:2},
+  stepTimeAsym:{label:'Step time asymmetry',unit:'%',lo:0,hi:5,mild:5,d:1},
+  stepLenAsym:{label:'Step length asymmetry',unit:'%',lo:0,hi:6,mild:6,d:1},
+  stance:{label:'Stance phase',unit:'%',lo:57,hi:65,mild:4,d:0},
+  kneeSwing:{label:'Peak knee flexion in swing',unit:'°',lo:55,hi:72,mild:8,d:0},
+  kneeIC:{label:'Knee flexion at heel strike',unit:'°',lo:0,hi:8,mild:7,d:0},
+  hipExt:{label:'Hip extension at push-off',unit:'°',lo:5,hi:25,mild:5,d:0},
+  hipFlex:{label:'Hip flexion in swing',unit:'°',lo:18,hi:38,mild:7,d:0},
+  trunkLean:{label:'Trunk forward lean',unit:'°',lo:-3,hi:7,mild:5,d:0},
+  pelvicDrop:{label:'Pelvic drop',unit:'°',lo:0,hi:5,mild:3,d:1},
+  dynValgus:{label:'Dynamic knee valgus',unit:'°',lo:0,hi:8,mild:5,d:0},
+  trunkSway:{label:'Trunk side lean',unit:'°',lo:0,hi:4,mild:3,d:1},
+  stepWidth:{label:'Step width',unit:' × hip',lo:.3,hi:1.3,mild:.25,d:2},
+};
+const GM = { // measure → norm, view, label
+  cadence:{n:'cadence',v:'side'}, speed:{n:'speed',v:'side'}, stepLen:{n:'stepLen',v:'side'},
+  stepTimeAsym:{n:'stepTimeAsym',v:'side'}, stepLenAsym:{n:'stepLenAsym',v:'side'}, stance:{n:'stance',v:'side'},
+  kneeSwingL:{n:'kneeSwing',v:'side',label:'Left peak knee flexion in swing'}, kneeSwingR:{n:'kneeSwing',v:'side',label:'Right peak knee flexion in swing'},
+  kneeIC:{n:'kneeIC',v:'side'},
+  hipExtL:{n:'hipExt',v:'side',label:'Left hip extension at push-off'}, hipExtR:{n:'hipExt',v:'side',label:'Right hip extension at push-off'},
+  hipFlex:{n:'hipFlex',v:'side'}, trunkLean:{n:'trunkLean',v:'side'},
+  pelvicDropL:{n:'pelvicDrop',v:'back',label:'Pelvic drop, left side'}, pelvicDropR:{n:'pelvicDrop',v:'back',label:'Pelvic drop, right side'},
+  dynValgusL:{n:'dynValgus',v:'back',label:'Left dynamic knee valgus'}, dynValgusR:{n:'dynValgus',v:'back',label:'Right dynamic knee valgus'},
+  trunkSway:{n:'trunkSway',v:'back'}, stepWidth:{n:'stepWidth',v:'back'},
+};
+const GAREAS = [
+  {k:'rhythm',label:'Rhythm and symmetry',metrics:['cadence','speed','stepLen','stepTimeAsym','stepLenAsym','stance']},
+  {k:'knee',label:'Knee motion',metrics:['kneeSwingL','kneeSwingR','kneeIC']},
+  {k:'hip',label:'Hip extension and swing',metrics:['hipExtL','hipExtR','hipFlex']},
+  {k:'pelvis',label:'Pelvic control',metrics:['pelvicDropL','pelvicDropR','stepWidth']},
+  {k:'kneeCtl',label:'Knee control',metrics:['dynValgusL','dynValgusR']},
+  {k:'trunk',label:'Trunk posture',metrics:['trunkLean','trunkSway']},
+];
+const GEX = {
+  slow:['Metronome walking 5 to 10% above current cadence: 3 × 2 min','Long-stride walking along a line: 3 × 10 m','Calf raise, slow lower: 3 × 15'],
+  asym:['Metronome walking with even steps: 3 × 2 min','Single-leg stance on the weaker side: 3 × 30 s','Step-ups leading with the weaker leg: 3 × 10'],
+  kneeSwing:['Standing hamstring curl: 3 × 12 each leg','High-knee marching: 3 × 20 steps','Step-over hurdle walking: 3 × 6 passes'],
+  kneeIC:['Terminal knee extension with band: 3 × 15','Heel-strike walking drill, knee straight at contact: 3 × 10 m','Quadriceps sets in long sitting: 3 × 10, 5 s hold'],
+  hipExt:['Half-kneeling hip flexor stretch: 3 × 30 s each side','Glute bridge with 3 s hold: 3 × 12','Split-stance push-off drill: 3 × 10 each side'],
+  hipFlex:['Standing hip flexor march: 3 × 12 each side','Seated knee lift with band: 3 × 10','Step-over walking: 3 × 6 passes'],
+  pelvis:['Side-lying hip abduction: 3 × 15 each side','Single-leg stance with a level pelvis, mirror: 3 × 30 s','Lateral step-up with pelvic control: 3 × 10'],
+  wide:['Tandem walking along a line: 3 × 5 m','Single-leg balance, firm then soft surface: 3 × 30 s','Lateral weight-shift drill: 3 × 10'],
+  narrow:['Banded side-steps: 3 × 10 m','Walking with feet on two parallel lines: 3 × 10 m','Side plank: 3 × 20 s each side'],
+  valgus:['Clamshell with band: 3 × 15','Step-down with knee over 2nd toe, mirror: 3 × 10','Banded mini squat: 3 × 12'],
+  lean:['Wall posture drill: 5 × 30 s','Walking tall with a chin-tuck cue: 3 × 1 min','Prone press-up: 2 × 10'],
+  sway:['Side plank: 3 × 20 to 30 s each side','Suitcase carry: 3 × 20 m each side','Single-leg stance with an upright trunk: 3 × 30 s'],
+};
+// Typical adult sagittal curves through one stride (0% = heel strike), degrees
+const KNEE_NORM=[[0,5],[10,17],[15,18],[30,8],[40,5],[50,8],[60,35],[66,52],[72,60],[78,55],[88,25],[96,7],[100,5]];
+const HIP_NORM=[[0,25],[10,22],[30,5],[50,-10],[60,-5],[75,18],[87,27],[100,25]];
+const curveAt=(tab,p)=>{ p=((p%100)+100)%100; for(let i=1;i<tab.length;i++){ if(p<=tab[i][0]){ const [a,va]=tab[i-1],[b,vb]=tab[i]; return va+(vb-va)*(p-a)/(b-a); } } return tab[tab.length-1][1]; };
+const emptyGait = () => ({side:null, back:null, overrides:{}, exercises:{}, summary:null});
+S.gait = emptyGait();
+S.gaitNorms = structuredClone(GAIT_NORMS);
+
+// Synthetic walker, used for the example patient: treadmill walk with a mildly stiff right knee and left pelvic drop.
+function synthGait(kind,{dur=8,fps=25,cad=106,kneeR=.86,hipAmp=1.35,dropL=6.5,dropR=2.5,valgL=4,valgR=10}={}){
+  const frames=[], t=[], W=480, H=640, thigh=150, shank=145, hipY=300, stride=120/cad;
+  const bump = p => p<60 ? Math.sin(Math.PI*p/60) : 0;
+  for (let i=0;i<Math.round(dur*fps);i++){
+    const tt=i/fps; t.push(tt); const pL=(tt/stride*100)%100, pR=(pL+50)%100; const P={};
+    if (kind==='side'){
+      const hx=240, hy=hipY+4*Math.cos(4*Math.PI*tt/stride);
+      P.lHip={x:hx,y:hy}; P.rHip={x:hx+2,y:hy};
+      for (const [s,p,kf] of [['l',pL,1],['r',pR,kneeR]]){
+        const ha=(curveAt(HIP_NORM,p)-7)*hipAmp*Math.PI/180+7*Math.PI/180, ka=curveAt(KNEE_NORM,p)*kf*Math.PI/180;
+        const hip=P[s+'Hip'], knee={x:hip.x+Math.sin(ha)*thigh,y:hip.y+Math.cos(ha)*thigh};
+        const sa=ha-ka, ank={x:knee.x+Math.sin(sa)*shank,y:knee.y+Math.cos(sa)*shank};
+        const fw={x:Math.cos(sa),y:-Math.sin(sa)}, dn={x:Math.sin(sa),y:Math.cos(sa)};
+        P[s+'Knee']=knee; P[s+'Ank']=ank; P[s+'Heel']={x:ank.x-fw.x*14+dn.x*10,y:ank.y-fw.y*14+dn.y*10}; P[s+'Toe']={x:ank.x+fw.x*44+dn.x*12,y:ank.y+fw.y*44+dn.y*12};
+      }
+      const lean=4*Math.PI/180; P.lSh={x:hx+Math.sin(lean)*170,y:hy-170}; P.rSh={x:P.lSh.x+3,y:P.lSh.y}; P.nose={x:P.lSh.x+26,y:P.lSh.y-58};
+    } else {
+      const cx=240, hw=38, th=(dropL*bump(pR)-dropR*bump(pL))*Math.PI/180;
+      P.lHip={x:cx-hw,y:hipY+hw*Math.tan(th)}; P.rHip={x:cx+hw,y:hipY-hw*Math.tan(th)};
+      for (const [s,p,vg,side] of [['l',pL,valgL,-1],['r',pR,valgR,1]]){
+        const hip=P[s+'Hip'], lift=p>60?Math.sin(Math.PI*(p-60)/40)*30:0;
+        const ank={x:cx+side*hw*.62,y:hip.y+thigh+shank-lift}; const L=dist(hip,ank);
+        const dev=vg*bump(p)*Math.PI/180, d=L/2*Math.tan(dev/2);
+        P[s+'Knee']={x:(hip.x+ank.x)/2-side*d,y:(hip.y+ank.y)/2}; P[s+'Ank']=ank; P[s+'Heel']={x:ank.x,y:ank.y+10}; P[s+'Toe']={x:ank.x,y:ank.y+4};
+      }
+      const sway=1.5*Math.sin(2*Math.PI*tt/stride)*Math.PI/180; P.lSh={x:cx-62+Math.sin(sway)*170,y:hipY-170}; P.rSh={x:cx+62+Math.sin(sway)*170,y:hipY-170}; P.nose={x:cx+Math.sin(sway)*230,y:hipY-228};
+    }
+    for (const k of GK) P[k]={x:P[k].x,y:P[k].y,v:1};
+    frames.push(P);
+  }
+  return {kind,fps,t,frames,w:W,h:H,synthetic:true};
+}
+
+/* video → landmarks, on this device */
+let vLandmarkerP=null;
+function getVideoLandmarker(){
+  if (!vLandmarkerP) vLandmarkerP=(async()=>{
+    const m = await import('./vision_bundle.mjs');
+    const fs = await m.FilesetResolver.forVisionTasks(new URL('./wasm', location.href).href.replace(/\/$/,''));
+    return m.PoseLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:new URL('./models/pose_landmarker.wasm',location.href).href, delegate:'CPU'}, runningMode:'VIDEO', numPoses:1, minPoseDetectionConfidence:0.4, minTrackingConfidence:0.4});
+  })().catch(e=>{ vLandmarkerP=null; throw e; });
+  return vLandmarkerP;
+}
+const gBusy = {}; const gErr = {}; const gVideoURL = {};
+const once = (el,ev,ms) => new Promise((res,rej)=>{ const to=setTimeout(()=>{ el.removeEventListener(ev,h); rej(new Error('timeout')); },ms); const h=()=>{ clearTimeout(to); res(); }; el.addEventListener(ev,h,{once:true}); });
+async function loadGaitVideo(kind, file){
+  if (S.example){ exitExample(); }
+  delete gErr[kind]; gBusy[kind]={p:0,msg:'Opening video…'}; renderGaitCaps();
+  if (gVideoURL[kind]) URL.revokeObjectURL(gVideoURL[kind]);
+  const url = URL.createObjectURL(file); gVideoURL[kind]=url;
+  const vid=document.createElement('video'); vid.muted=true; vid.playsInline=true; vid.setAttribute('playsinline',''); vid.preload='auto'; vid.src=url;
+  try{
+    await once(vid,'loadeddata',20000);
+    try{ await vid.play(); vid.pause(); }catch{}
+    let dur=vid.duration; if(!isFinite(dur)||dur<=0){ vid.currentTime=1e6; await once(vid,'seeked',5000).catch(()=>{}); dur=vid.duration||vid.currentTime; }
+    if (!(dur>1.5)) throw new Error('short');
+    const iw=vid.videoWidth, ih=vid.videoHeight; const sc=Math.min(1,640/Math.max(iw,ih));
+    const c=document.createElement('canvas'); c.width=Math.round(iw*sc); c.height=Math.round(ih*sc); const cx=c.getContext('2d');
+    gBusy[kind]={p:0,msg:'Loading pose model…'}; renderGaitCaps();
+    const lm = await withTimeout(getVideoLandmarker(),30000);
+    const span=Math.min(dur,15), fps=Math.min(25, Math.floor(300/span)); const n=Math.floor(span*fps);
+    const frames=[], t=[]; let found=0, last=-1;
+    for (let i=0;i<n;i++){
+      const tt=i/fps; vid.currentTime=tt; await once(vid,'seeked',4000).catch(()=>{});
+      cx.drawImage(vid,0,0,c.width,c.height);
+      let ts=Math.round(tt*1000); if(ts<=last) ts=last+1; last=ts;
+      const r=lm.detectForVideo(c,ts); const L=r.landmarks?.[0];
+      if (L){ const P={}; for(const k of GK){ const q=L[MP[k]]; P[k]={x:q.x*c.width,y:q.y*c.height,v:q.visibility??1}; } frames.push(P); found++; } else frames.push(null);
+      t.push(tt);
+      if (i%3===0){ gBusy[kind]={p:(i+1)/n,msg:`Tracking movement… ${Math.round((i+1)/n*100)}%`}; updateGaitProgress(kind); await new Promise(r=>setTimeout(r,0)); }
+    }
+    if (found < n*0.4) throw new Error('none');
+    S.gait[kind]={kind,fps,t,frames,w:c.width,h:c.height,synthetic:false,dur:span};
+    S.gait.summary=null;
+  }catch(e){
+    gErr[kind] = e.message==='none' ? 'The patient was not found in enough of the video. Film the whole body, from head to feet, in good light.'
+      : e.message==='short' ? 'This video is too short. Record 8 to 12 seconds with at least 3 strides.'
+      : /model|import|wasm/i.test(e.message) ? 'The pose model could not load on this device.'
+      : 'This video could not be read. Try an MP4 or MOV recorded with the phone camera.';
+    S.gait[kind]=null;
+  }
+  delete gBusy[kind]; renderGaitCaps(); refreshAll();
+}
+function updateGaitProgress(kind){ const b=gBusy[kind]; const el=document.getElementById('gp-'+kind); if(el&&b){ el.querySelector('i').style.width=(b.p*100)+'%'; el.nextElementSibling.textContent=b.msg; } }
+
+/* signal helpers */
+const median = a => { const b=a.filter(v=>v!=null&&isFinite(v)).sort((x,y)=>x-y); if(!b.length) return null; const m=b.length>>1; return b.length%2?b[m]:(b[m-1]+b[m])/2; };
+const mean = a => { const b=a.filter(v=>v!=null&&isFinite(v)); return b.length? b.reduce((s,v)=>s+v,0)/b.length : null; };
+const pct = (a,q) => { const b=a.filter(v=>v!=null&&isFinite(v)).sort((x,y)=>x-y); if(!b.length) return null; return b[Math.min(b.length-1,Math.floor(q*(b.length-1)))]; };
+function fillGaps(fr,maxGap=5){
+  const out=fr.map(f=>f&&{...f}); let i=0;
+  while(i<out.length){ if(out[i]){ i++; continue; } let j=i; while(j<out.length&&!out[j]) j++;
+    if (i>0 && j<out.length && j-i<=maxGap){ const a=out[i-1], b=out[j]; for(let k=i;k<j;k++){ const u=(k-i+1)/(j-i+1); const P={}; for(const key of GK) P[key]={x:a[key].x+(b[key].x-a[key].x)*u,y:a[key].y+(b[key].y-a[key].y)*u,v:Math.min(a[key].v,b[key].v)}; out[k]=P; } }
+    i=j; }
+  return out;
+}
+function smooth(a,k=2){ return a.map((_,i)=>{ let s=0,n=0; for(let j=i-k;j<=i+k;j++){ if(a[j]!=null&&isFinite(a[j])){ s+=a[j]; n++; } } return a[i]==null||!n?null:s/n; }); }
+function peaks(a,minSep,minProm){
+  const out=[];
+  for (let i=1;i<a.length-1;i++){ if(a[i]==null) continue; let isMax=true;
+    for (let j=Math.max(0,i-minSep);j<=Math.min(a.length-1,i+minSep);j++){ if(j!==i&&a[j]!=null&&a[j]>a[i]){ isMax=false; break; } }
+    if (!isMax) continue;
+    const win=a.slice(Math.max(0,i-minSep*2),i+minSep*2+1).filter(v=>v!=null); if(Math.max(...win)-Math.min(...win)<minProm) continue;
+    if (!out.length || i-out[out.length-1]>=minSep) out.push(i); }
+  return out;
+}
+const ang3 = (a,b,c) => { const v1={x:a.x-b.x,y:a.y-b.y}, v2={x:c.x-b.x,y:c.y-b.y}; const d=Math.hypot(v1.x,v1.y)*Math.hypot(v2.x,v2.y)||1; return deg(Math.acos(Math.max(-1,Math.min(1,(v1.x*v2.x+v1.y*v2.y)/d)))); };
+
+function analyseSide(G){
+  const F=fillGaps(G.frames), fps=G.fps, n=F.length; const live=F.filter(Boolean);
+  if (live.length<fps*2) return {warn:'Not enough of the walk was tracked.'};
+  let ds=0; for(const f of live) ds+=(f.lToe.x-f.lHeel.x)+(f.rToe.x-f.rHeel.x); const dir=Math.sign(ds)||1;
+  const legLen=median(live.flatMap(f=>[dist(f.lHip,f.lAnk),dist(f.rHip,f.rAnk)]));
+  const mh=f=>mid(f.lHip,f.rHip);
+  const rel=(s,part)=>smooth(F.map(f=>f?(f[s+part].x-mh(f).x)*dir/legLen:null),1);
+  const heel={l:rel('l','Heel'),r:rel('r','Heel')}, toe={l:rel('l','Toe'),r:rel('r','Toe')};
+  // Walking moves the two feet in opposite phase; anything else (standing, sitting, tracking noise) is rejected.
+  const pairs=heel.l.map((v,i)=>[v,heel.r[i]]).filter(([a,b])=>a!=null&&b!=null);
+  const ma=mean(pairs.map(q=>q[0])), mb=mean(pairs.map(q=>q[1]));
+  const cov=mean(pairs.map(([a,b])=>(a-ma)*(b-mb))), sa=Math.sqrt(mean(pairs.map(([a])=>(a-ma)**2))), sb=Math.sqrt(mean(pairs.map(([,b])=>(b-mb)**2)));
+  const corr=cov/((sa*sb)||1);
+  if (!(corr<-0.3) || Math.min(sa,sb)<0.12) return {warn:'No walking pattern was found in this video. Film the patient walking side on, with the whole body and feet in view for at least 3 strides.'};
+  const sep=Math.max(2,Math.round(0.35*fps));
+  const HS={l:peaks(heel.l,sep,.25),r:peaks(heel.r,sep,.25)};
+  const TO={l:peaks(toe.l.map(v=>v==null?null:-v),sep,.25),r:peaks(toe.r.map(v=>v==null?null:-v),sep,.25)};
+  const knee={l:smooth(F.map(f=>f?180-ang3(f.lHip,f.lKnee,f.lAnk):null),1),r:smooth(F.map(f=>f?180-ang3(f.rHip,f.rKnee,f.rAnk):null),1)};
+  const hip={l:smooth(F.map(f=>f?deg(Math.atan2((f.lKnee.x-f.lHip.x)*dir,f.lKnee.y-f.lHip.y)):null),1),r:smooth(F.map(f=>f?deg(Math.atan2((f.rKnee.x-f.rHip.x)*dir,f.rKnee.y-f.rHip.y)):null),1)};
+  const trunk=smooth(F.map(f=>{ if(!f) return null; const a=mid(f.lSh,f.rSh), b=mh(f); return deg(Math.atan2((a.x-b.x)*dir,b.y-a.y)); }));
+  const strides={l:[],r:[]}, curves={};
+  for (const s of ['l','r']){
+    const hs=HS[s];
+    for (let i=0;i<hs.length-1;i++){ const a=hs[i], b=hs[i+1], dt=(b-a)/fps; if(dt<0.7||dt>2.2) continue;
+      const kn=knee[s].slice(a,b+1), hp=hip[s].slice(a,b+1); if(kn.some(v=>v==null)) continue;
+      const hr=heel[s].slice(a,b+1).filter(v=>v!=null); if(Math.max(...kn)-Math.min(...kn)<25 || Math.max(...hr)-Math.min(...hr)<0.4) continue; // not a real walking stride
+      const to=TO[s].find(j=>j>a&&j<b);
+      strides[s].push({a,b,kMax:Math.max(...kn),kIC:knee[s][a],hMin:Math.min(...hp),hMax:Math.max(...hp),stance:to!=null?(to-a)/(b-a)*100:null,
+        curve:Array.from({length:51},(_,q)=>{ const x=q/50*(kn.length-1), i0=Math.floor(x), u=x-i0; return kn[i0]+((kn[Math.min(kn.length-1,i0+1)]-kn[i0])*u); })});
+    }
+    curves[s] = strides[s].length? Array.from({length:51},(_,q)=>mean(strides[s].map(st=>st.curve[q]))) : null;
+  }
+  const M={};
+  const all=[...HS.l.map(i=>({i,s:'l'})),...HS.r.map(i=>({i,s:'r'}))].sort((a,b)=>a.i-b.i);
+  const stepT={l:[],r:[]}, stepL={l:[],r:[]};
+  for (let k=1;k<all.length;k++){ const a=all[k-1], b=all[k]; if(a.s===b.s) continue; const dt=(b.i-a.i)/fps; if(dt<0.25||dt>1.2) continue;
+    stepT[b.s].push(dt); const f=F[b.i]; if(f){ const o=b.s==='l'?'r':'l'; stepL[b.s].push(Math.abs(f[b.s+'Heel'].x-f[o+'Heel'].x)/legLen); } }
+  const nStr=strides.l.length+strides.r.length;
+  if (nStr<2) return {warn:'No clear walking strides were found. Film at least 3 strides side on, with the whole body and feet in view.',dir};
+  const stT=median([...stepT.l,...stepT.r]);
+  if (!strides.l.length && !strides.r.length && !stT) return {warn:'No full strides were found. Film at least 3 strides side on, with the feet in view.',dir};
+  if (stT){ M.cadence={v:60/stT}; }
+  const tl=median(stepT.l), tr=median(stepT.r); if(tl&&tr) M.stepTimeAsym={v:Math.abs(tl-tr)/((tl+tr)/2)*100,l:tl,r:tr,unitLR:' s'};
+  const sl=median(stepL.l), sr=median(stepL.r);
+  if (sl||sr){ M.stepLen={v:mean([sl,sr]),l:sl,r:sr}; if(sl&&sr) M.stepLenAsym={v:Math.abs(sl-sr)/((sl+sr)/2)*100,l:sl,r:sr};
+    const h=+S.patient.height; if(h>0&&M.cadence){ const stepM=M.stepLen.v*0.48*h/100; M.speed={v:M.cadence.v/60*stepM,stepCm:stepM*100}; } }
+  const per=(s,f)=>median(strides[s].map(f));
+  const stL=per('l',x=>x.stance), stR=per('r',x=>x.stance); if(stL!=null||stR!=null) M.stance={v:mean([stL,stR]),l:stL,r:stR};
+  for (const s of ['l','r']){ const S_=s.toUpperCase(); if(!strides[s].length) continue;
+    M['kneeSwing'+S_]={v:per(s,x=>x.kMax)}; M['hipExt'+S_]={v:-per(s,x=>x.hMin)}; }
+  const ic=mean([per('l',x=>x.kIC),per('r',x=>x.kIC)]); if(ic!=null) M.kneeIC={v:ic};
+  const hf=mean([per('l',x=>x.hMax),per('r',x=>x.hMax)]); if(hf!=null) M.hipFlex={v:hf};
+  const tk=median(trunk); if(tk!=null) M.trunkLean={v:tk};
+  return {M,curves,HS,TO,knee,dir,legLen,nStrides:strides.l.length+strides.r.length,t:G.t};
+}
+function analyseBack(G){
+  const F=fillGaps(G.frames).map(f=>{ if(!f) return f; if(f.lHip.x<=f.rHip.x) return f; const o={}; for(const k of GK){ const sw=k[0]==='l'?'r'+k.slice(1):k[0]==='r'?'l'+k.slice(1):k; o[k]=f[sw]; } return o; });
+  const live=F.filter(Boolean); if(live.length<G.fps*2) return {warn:'Not enough of the walk was tracked.'};
+  const legB=median(live.flatMap(f=>[dist(f.lHip,f.lAnk),dist(f.rHip,f.rAnk)]))||1;
+  const ay=s=>F.map(f=>f?(f[s+'Ank'].y-(f.lHip.y+f.rHip.y)/2)/legB:null);
+  { const A1=ay('l'), A2=ay('r'); const pr=A1.map((v,i)=>[v,A2[i]]).filter(([a,b])=>a!=null&&b!=null); const ma=mean(pr.map(q=>q[0])), mb=mean(pr.map(q=>q[1]));
+    const sa=Math.sqrt(mean(pr.map(([a])=>(a-ma)**2))), sb=Math.sqrt(mean(pr.map(([,b])=>(b-mb)**2))); const corr=mean(pr.map(([a,b])=>(a-ma)*(b-mb)))/((sa*sb)||1);
+    if (!(corr<-0.2) || Math.min(sa,sb)<0.012) return {warn:'No walking pattern was found in this video. Film the patient from behind, walking straight away, with the whole body in view.'}; }
+  const pel=smooth(F.map(f=>f?deg(Math.atan2(f.lHip.y-f.rHip.y,f.rHip.x-f.lHip.x)):null));
+  const valg=s=>smooth(F.map(f=>{ if(!f) return null; const hip=f[s+'Hip'],knee=f[s+'Knee'],ank=f[s+'Ank']; const mhx=(f.lHip.x+f.rHip.x)/2;
+    const a1=Math.atan2(knee.x-hip.x,knee.y-hip.y), a2=Math.atan2(ank.x-knee.x,ank.y-knee.y); const dv=Math.abs(deg(a1-a2));
+    const lineX=hip.x+(ank.x-hip.x)*(knee.y-hip.y)/((ank.y-hip.y)||1); const medial=Math.sign(mhx-hip.x)||1; return (knee.x-lineX)*medial>0?dv:-dv; }));
+  const vL=valg('l'), vR=valg('r');
+  const sway=smooth(F.map(f=>{ if(!f) return null; const a=mid(f.lSh,f.rSh), b=mid(f.lHip,f.rHip); return deg(Math.atan2(a.x-b.x,b.y-a.y)); }));
+  const M={};
+  const dl=pct(pel.map(v=>v==null?null:Math.max(0,v)),.95), dr=pct(pel.map(v=>v==null?null:Math.max(0,-v)),.95);
+  M.pelvicDropL={v:dl}; M.pelvicDropR={v:dr};
+  M.dynValgusL={v:Math.max(0,pct(vL,.9)??0)}; M.dynValgusR={v:Math.max(0,pct(vR,.9)??0)};
+  M.trunkSway={v:pct(sway.map(v=>v==null?null:Math.abs(v)),.95)};
+  M.stepWidth={v:median(F.map(f=>f?Math.abs(f.lAnk.x-f.rAnk.x)/(Math.abs(f.lHip.x-f.rHip.x)||1):null))};
+  return {M,pel,vL,vR,t:G.t};
+}
+function gSev(nk,v){ const n=S.gaitNorms[nk]; if(v==null||!isFinite(v)) return 'na'; const d=v<n.lo?n.lo-v:v>n.hi?v-n.hi:0; return d===0?'ok':d<=n.mild?'train':'treat'; }
+function gScore(nk,v){ const n=S.gaitNorms[nk]; const d=v<n.lo?n.lo-v:v>n.hi?v-n.hi:0; if(d===0) return 96; if(d<=n.mild) return 85-30*d/n.mild; return Math.max(20,55-35*Math.min(1,(d-n.mild)/n.mild)); }
+function gaitAnalyse(){
+  const side=S.gait.side?analyseSide(S.gait.side):null, back=S.gait.back?analyseBack(S.gait.back):null;
+  const M={...(side?.M||{}),...(back?.M||{})};
+  for (const k of Object.keys(M)){ if(M[k].v==null||!isFinite(M[k].v)){ delete M[k]; continue; } const nk=GM[k].n; M[k].sev=gSev(nk,M[k].v); M[k].score=gScore(nk,M[k].v); }
+  const rank={na:-1,ok:0,train:1,treat:2};
+  const areas=GAREAS.map(a=>{ const ms=a.metrics.filter(k=>M[k]); let sev='na',worst=null; for(const k of ms){ if(rank[M[k].sev]>rank[sev]) sev=M[k].sev; if(!worst||M[k].score<M[worst].score) worst=k; }
+    const score=ms.length?ms.reduce((s,k)=>s+M[k].score,0)/ms.length:null; return {...a,ms,auto:sev,status:S.gait.overrides[a.k]||sev,score,worst}; });
+  const sc=areas.filter(a=>a.score!=null); const overall=sc.length?sc.reduce((s,a)=>s+a.score,0)/sc.length:null;
+  return {M,side,back,areas,overall,findings:gaitFindings(M)};
+}
+function gaitFindings(M){
+  const out=[], N=S.gaitNorms;
+  if (!Object.keys(M).length) return out;
+  if (Object.values(M).every(m=>m.sev==='ok')) out.push(['ok','Walking pattern within typical ranges']);
+  if (M.cadence && M.cadence.v<N.cadence.lo) out.push([M.cadence.sev,'Slow walking rhythm']);
+  if (M.stepLen && M.stepLen.v<N.stepLen.lo) out.push([M.stepLen.sev,'Short steps']);
+  const asy=[M.stepTimeAsym,M.stepLenAsym].filter(m=>m&&m.sev!=='ok'); if(asy.length) out.push([asy.some(m=>m.sev==='treat')?'treat':'train','Uneven steps between left and right']);
+  const ks=['kneeSwingL','kneeSwingR'].filter(k=>M[k]&&M[k].v<N.kneeSwing.lo); if(ks.length) out.push([ks.some(k=>M[k].sev==='treat')?'treat':'train',`Stiff-knee swing (${ks.map(k=>k.endsWith('L')?'left':'right').join(' and ')})`]);
+  const he=['hipExtL','hipExtR'].filter(k=>M[k]&&M[k].v<N.hipExt.lo); if(he.length) out.push([he.some(k=>M[k].sev==='treat')?'treat':'train',`Limited hip extension at push-off (${he.map(k=>k.endsWith('L')?'left':'right').join(' and ')})`]);
+  const pd=['pelvicDropL','pelvicDropR'].filter(k=>M[k]&&M[k].sev!=='ok'); if(pd.length) out.push([pd.some(k=>M[k].sev==='treat')?'treat':'train',`Pelvic drop on the ${pd.map(k=>k.endsWith('L')?'left':'right').join(' and ')} side (Trendelenburg pattern)`]);
+  const dv=['dynValgusL','dynValgusR'].filter(k=>M[k]&&M[k].sev!=='ok'); if(dv.length) out.push([dv.some(k=>M[k].sev==='treat')?'treat':'train',`Knee falls inward when loading (${dv.map(k=>k.endsWith('L')?'left':'right').join(' and ')})`]);
+  if (M.trunkLean && M.trunkLean.sev!=='ok') out.push([M.trunkLean.sev, M.trunkLean.v>N.trunkLean.hi?'Forward trunk lean while walking':'Backward trunk lean while walking']);
+  if (M.trunkSway && M.trunkSway.sev!=='ok') out.push([M.trunkSway.sev,'Trunk sways side to side']);
+  return out;
+}
+function gText(k,m){
+  const v=fmt(m.v,S.gaitNorms[GM[k].n].d??1); const N=S.gaitNorms;
+  switch(k){
+    case 'cadence': return `${v} steps per minute${m.v<N.cadence.lo?', slower than typical':m.v>N.cadence.hi?', quicker and shorter than typical':''}.`;
+    case 'speed': return `Walking speed about ${v} m/s, with steps of about ${fmt(m.stepCm,0)} cm.`;
+    case 'stepLen': return `Steps are ${v} leg lengths long${m.l&&m.r?` (left ${fmt(m.l,2)}, right ${fmt(m.r,2)})`:''}.`;
+    case 'stepTimeAsym': return `Step time differs by ${v}% between sides (left ${fmt(m.l,2)} s, right ${fmt(m.r,2)} s).`;
+    case 'stepLenAsym': return `Step length differs by ${v}% between sides; the ${m.l<m.r?'left':'right'} step is shorter.`;
+    case 'stance': return `Each foot is on the ground for ${v}% of the stride${m.l&&m.r?` (left ${fmt(m.l,0)}%, right ${fmt(m.r,0)}%)`:''}.`;
+    case 'kneeSwingL': case 'kneeSwingR': return `${k.endsWith('L')?'Left':'Right'} knee bends to ${v}° in swing${m.v<N.kneeSwing.lo?', less than typical':''}.`;
+    case 'kneeIC': return `Knee is bent ${v}° when the heel lands${m.v>N.kneeIC.hi?', more than typical':''}.`;
+    case 'hipExtL': case 'hipExtR': return `${k.endsWith('L')?'Left':'Right'} hip extends ${v}° behind the body at push-off${m.v<N.hipExt.lo?', less than typical':''}.`;
+    case 'hipFlex': return `Thigh swings ${v}° forward.`;
+    case 'trunkLean': return `Trunk leans ${fmt(Math.abs(m.v),0)}° ${m.v>=0?'forward':'backward'} while walking.`;
+    case 'pelvicDropL': case 'pelvicDropR': return `Pelvis drops up to ${v}° on the ${k.endsWith('L')?'left':'right'} side, which points to weaker ${k.endsWith('L')?'right':'left'} hip abductors.`;
+    case 'dynValgusL': case 'dynValgusR': return `${k.endsWith('L')?'Left':'Right'} knee moves up to ${v}° inward during loading.`;
+    case 'trunkSway': return `Trunk leans up to ${v}° to the side.`;
+    case 'stepWidth': return `Feet land ${v} hip widths apart${m.v<N.stepWidth.lo?', a narrow or crossing pattern':m.v>N.stepWidth.hi?', a wide base':''}.`;
+  }
+  return '';
+}
+function gaitExercises(area,M){
+  if (S.gait.exercises[area.k]) return S.gait.exercises[area.k];
+  const w=area.worst, m=w&&M[w]; if(!m) return [];
+  const N=S.gaitNorms;
+  const pick = {rhythm: /Asym/.test(w)?'asym':'slow', knee: w==='kneeIC'?'kneeIC':'kneeSwing', hip: w==='hipFlex'?'hipFlex':'hipExt',
+    pelvis: w==='stepWidth'?(m.v>N.stepWidth.hi?'wide':'narrow'):'pelvis', kneeCtl:'valgus', trunk: w==='trunkSway'?'sway':'lean'}[area.k];
+  return GEX[pick]||[];
+}
+
+/* gait graphics */
+function kneeCycleSVG(G,pal){
+  const W=420,H=230,x0=40,x1=W-12,y0=16,y1=H-34, X=p=>x0+(x1-x0)*p/100, Y=v=>y1-(y1-y0)*Math.max(-5,Math.min(80,v))/80;
+  let g='';
+  for (const v of [0,20,40,60,80]) g+=`<line x1="${x0}" y1="${Y(v)}" x2="${x1}" y2="${Y(v)}" style="stroke:${pal.line};stroke-width:1"/><text x="${x0-6}" y="${Y(v)+4}" text-anchor="end" style="fill:${pal.muted};font:10px ${pal.font}">${v}°</text>`;
+  const band=[]; for(let p=0;p<=100;p+=2) band.push([X(p),Y(curveAt(KNEE_NORM,p)+7)]); for(let p=100;p>=0;p-=2) band.push([X(p),Y(Math.max(0,curveAt(KNEE_NORM,p)-7))]);
+  g+=`<polygon points="${band.map(q=>q.join(',')).join(' ')}" style="fill:${pal.ok};fill-opacity:.14"/>`;
+  g+=`<line x1="${X(60)}" y1="${y0}" x2="${X(60)}" y2="${y1}" style="stroke:${pal.muted};stroke-width:1;stroke-dasharray:3 3"/>`;
+  g+=`<text x="${X(30)}" y="${H-18}" text-anchor="middle" style="fill:${pal.muted};font:600 10px ${pal.font};letter-spacing:1px">STANCE</text><text x="${X(80)}" y="${H-18}" text-anchor="middle" style="fill:${pal.muted};font:600 10px ${pal.font};letter-spacing:1px">SWING</text>`;
+  g+=`<text x="${x0}" y="${H-4}" style="fill:${pal.muted};font:10px ${pal.font}">heel strike</text><text x="${x1}" y="${H-4}" text-anchor="end" style="fill:${pal.muted};font:10px ${pal.font}">next heel strike</text>`;
+  const cv=G?.side?.curves; const cols={l:pal.plumb,r:pal.train};
+  if (!cv||(!cv.l&&!cv.r)) g+=`<text x="${(x0+x1)/2}" y="${(y0+y1)/2}" text-anchor="middle" style="fill:${pal.muted};font:12px ${pal.font}">Add a side-view walking video</text>`;
+  else for (const s of ['l','r']){ if(!cv[s]) continue; g+=`<polyline points="${cv[s].map((v,i)=>`${X(i*2)},${Y(v)}`).join(' ')}" style="fill:none;stroke:${cols[s]};stroke-width:2.5;stroke-linejoin:round"/>`; }
+  if (cv) g+=`<rect x="${x1-118}" y="${y0}" width="10" height="3" style="fill:${cols.l}"/><text x="${x1-104}" y="${y0+5}" style="fill:${pal.ink};font:600 10px ${pal.font}">Left</text><rect x="${x1-66}" y="${y0}" width="10" height="3" style="fill:${cols.r}"/><text x="${x1-52}" y="${y0+5}" style="fill:${pal.ink};font:600 10px ${pal.font}">Right</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${g}</svg>`;
+}
+function pelvisSVG(G,pal){
+  const W=420,H=200,x0=40,x1=W-12,y0=14,y1=H-30; const b=G?.back;
+  if (!b?.pel) return `<svg viewBox="0 0 ${W} 60" xmlns="http://www.w3.org/2000/svg"><text x="0" y="30" style="fill:${pal.muted};font:12px ${pal.font}">Add a back-view walking video to see pelvic control.</text></svg>`;
+  const T=b.t[b.t.length-1]||1, lim=Math.max(8,Math.ceil(Math.max(...b.pel.filter(v=>v!=null).map(Math.abs))+1));
+  const X=t=>x0+(x1-x0)*t/T, Y=v=>(y0+y1)/2-(y1-y0)/2*v/lim; const nb=S.gaitNorms.pelvicDrop.hi;
+  let g=`<rect x="${x0}" y="${Y(nb)}" width="${x1-x0}" height="${Y(-nb)-Y(nb)}" style="fill:${pal.ok};fill-opacity:.12"/>`;
+  g+=`<line x1="${x0}" y1="${Y(0)}" x2="${x1}" y2="${Y(0)}" style="stroke:${pal.muted};stroke-width:1"/>`;
+  for (const v of [lim,-lim]) g+=`<text x="${x0-6}" y="${Y(v)+4}" text-anchor="end" style="fill:${pal.muted};font:10px ${pal.font}">${Math.abs(v)}°</text>`;
+  g+=`<text x="${x0+4}" y="${y0+10}" style="fill:${pal.muted};font:600 10px ${pal.font}">LEFT SIDE LOWER</text><text x="${x0+4}" y="${y1-4}" style="fill:${pal.muted};font:600 10px ${pal.font}">RIGHT SIDE LOWER</text>`;
+  g+=`<polyline points="${b.pel.map((v,i)=>v==null?'':`${X(b.t[i])},${Y(v)}`).filter(Boolean).join(' ')}" style="fill:none;stroke:${pal.plumb};stroke-width:2;stroke-linejoin:round"/>`;
+  g+=`<text x="${x1}" y="${H-6}" text-anchor="end" style="fill:${pal.muted};font:10px ${pal.font}">time, ${fmt(T,0)} s</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${g}</svg>`;
+}
+function gaitSymRows(M){
+  const rows=[]; const add=(label,l,r,unit,d=1,nk)=>{ if(l==null||r==null) return; rows.push({label,l,r,unit,d,asym:(l+r)>0?Math.abs(l-r)/((l+r)/2)*100:0,flag:nk&&(gSev(nk,l)!=='ok'||gSev(nk,r)!=='ok')}); };
+  if (M.stepTimeAsym) add('Step time',M.stepTimeAsym.l,M.stepTimeAsym.r,' s',2);
+  if (M.stepLen?.l!=null) add('Step length (× leg)',M.stepLen.l,M.stepLen.r,'',2);
+  if (M.stance?.l!=null) add('Stance phase',M.stance.l,M.stance.r,'%',0);
+  if (M.kneeSwingL&&M.kneeSwingR) add('Knee flexion in swing',M.kneeSwingL.v,M.kneeSwingR.v,'°',0,'kneeSwing');
+  if (M.hipExtL&&M.hipExtR) add('Hip extension',M.hipExtL.v,M.hipExtR.v,'°',0,'hipExt');
+  if (M.pelvicDropL&&M.pelvicDropR) add('Pelvic drop',M.pelvicDropL.v,M.pelvicDropR.v,'°',1,'pelvicDrop');
+  if (M.dynValgusL&&M.dynValgusR) add('Dynamic knee valgus',M.dynValgusL.v,M.dynValgusR.v,'°',0,'dynValgus');
+  return rows;
+}
+function gaitSymSVG(rows,pal){
+  if (!rows.length) return `<svg viewBox="0 0 320 40" xmlns="http://www.w3.org/2000/svg"><text x="0" y="24" style="fill:${pal.muted};font:12px ${pal.font}">Add walking videos to compare sides.</text></svg>`;
+  const rowH=40, W=340, cx=170, H=rows.length*rowH+24; let g=`<text x="${cx-8}" y="12" text-anchor="end" style="fill:${pal.muted};font:700 10px ${pal.font};letter-spacing:1px">LEFT</text><text x="${cx+8}" y="12" style="fill:${pal.muted};font:700 10px ${pal.font};letter-spacing:1px">RIGHT</text>`;
+  rows.forEach((r,i)=>{ const y=22+i*rowH, mx=Math.max(Math.abs(r.l),Math.abs(r.r))||1, bl=Math.abs(r.l)/mx*95, br=Math.abs(r.r)/mx*95;
+    const c = r.flag||r.asym>10 ? pal.train : pal.plumb;
+    g+=`<text x="0" y="${y+9}" style="fill:${pal.ink};font:600 11px ${pal.font}">${esc(r.label)}</text><text x="${W}" y="${y+9}" text-anchor="end" style="fill:${c};font:700 11px ${pal.font}">${fmt(r.asym,0)}% asym</text>`;
+    g+=`<rect x="${cx-bl}" y="${y+14}" width="${bl}" height="11" rx="2" style="fill:${c};fill-opacity:.75"/><rect x="${cx}" y="${y+14}" width="${br}" height="11" rx="2" style="fill:${c};fill-opacity:.45"/>`;
+    g+=`<text x="${cx-bl-4}" y="${y+23}" text-anchor="end" style="fill:${pal.muted};font:10px ${pal.font}">${fmt(r.l,r.d)}${r.unit}</text><text x="${cx+br+4}" y="${y+23}" style="fill:${pal.muted};font:10px ${pal.font}">${fmt(r.r,r.d)}${r.unit}</text>`; });
+  g+=`<line x1="${cx}" y1="16" x2="${cx}" y2="${H-2}" style="stroke:${pal.ink};stroke-width:1"/>`;
+  return `<svg viewBox="-4 0 ${W+8} ${H}" xmlns="http://www.w3.org/2000/svg">${g}</svg>`;
+}
+function gaitTiles(M){
+  const t=[];
+  if (M.cadence) t.push(['Cadence',fmt(M.cadence.v,0),'steps/min',M.cadence.sev]);
+  if (M.speed) t.push(['Speed',fmt(M.speed.v,2),'m/s',M.speed.sev]);
+  if (M.stepLen) t.push(['Step length',M.speed?fmt(M.speed.stepCm,0):fmt(M.stepLen.v,2),M.speed?'cm':'× leg length',M.stepLen.sev]);
+  if (M.stance) t.push(['Stance',fmt(M.stance.v,0),'% of stride',M.stance.sev]);
+  if (!M.cadence && M.pelvicDropL) t.push(['Pelvic drop',fmt(Math.max(M.pelvicDropL.v,M.pelvicDropR.v),1),'° peak',[M.pelvicDropL.sev,M.pelvicDropR.sev].includes('treat')?'treat':[M.pelvicDropL.sev,M.pelvicDropR.sev].includes('train')?'train':'ok']);
+  return t;
+}
+
+/* gait screen */
+let GA=null;
+function renderGaitCaps(){
+  const g=$('#gaitCaps'); if(!g) return; g.innerHTML='';
+  for (const gv of GVIEWS){
+    const G=S.gait[gv.k], busy=gBusy[gv.k];
+    const el=document.createElement('div'); el.className='panel gcap';
+    el.innerHTML=`<div class="cap-head"><h3>${gv.label}</h3>${G?`<span class="note">${G.synthetic?'Sample walk':`${G.frames.filter(Boolean).length} frames tracked`}</span>`:''}</div>
+      <div class="row" style="gap:6px"><label class="btn small ${G?'':'primary'}" for="gcam-${gv.k}">Record video</label><label class="btn small" for="ggal-${gv.k}">${G?'Replace video':'Choose video'}</label></div>
+      <input class="vh" id="gcam-${gv.k}" type="file" accept="video/*" capture="environment"><input class="vh" id="ggal-${gv.k}" type="file" accept="video/*">
+      ${busy?`<div class="gprog" id="gp-${gv.k}"><i style="width:${busy.p*100}%"></i></div><p class="note">${esc(busy.msg)}</p>`
+        : G?`<div class="gstage">${!G.synthetic&&gVideoURL[gv.k]?`<video id="gv-${gv.k}" src="${gVideoURL[gv.k]}" muted playsinline loop autoplay></video><canvas class="ov" id="go-${gv.k}"></canvas>`:`<canvas id="go-${gv.k}"></canvas>`}</div>`
+        : `<label class="empty" for="ggal-${gv.k}" style="aspect-ratio:4/3">${gv.hint}<br>Tap to choose a walking video</label>`}
+      ${gErr[gv.k]?`<p class="warn" style="color:var(--treat)">${esc(gErr[gv.k])}</p>`:''}
+      ${G&&GA?.[gv.k]?.warn?`<p class="warn">${esc(GA[gv.k].warn)}</p>`:''}
+      ${G&&gv.k==='side'&&GA?.side?.nStrides?`<p class="ok-line">${GA.side.nStrides} strides analysed.</p>`:''}`;
+    g.appendChild(el);
+    for (const id of ['gcam-','ggal-']) el.querySelector('#'+id+gv.k).addEventListener('change',e=>{ const f=e.target.files?.[0]; e.target.value=''; if(f) loadGaitVideo(gv.k,f); });
+  }
+  startGaitLoop();
+}
+let gLoop=null;
+function startGaitLoop(){
+  if (gLoop) return;
+  const t0=performance.now();
+  const step=()=>{ gLoop=null; if($('[data-pane=gait]').hidden) return;
+    for (const gv of GVIEWS){ const G=S.gait[gv.k], cv=document.getElementById('go-'+gv.k); if(!G||!cv) continue;
+      const vid=document.getElementById('gv-'+gv.k); const T=G.t[G.t.length-1]||1;
+      const t = vid? vid.currentTime : ((performance.now()-t0)/1000)%T;
+      let i=Math.min(G.frames.length-1,Math.max(0,Math.round(t*G.fps)));
+      drawGaitFrame(cv,G,G.frames[i],!!vid); }
+    gLoop=requestAnimationFrame(step); };
+  gLoop=requestAnimationFrame(step);
+}
+function drawGaitFrame(cv,G,P,overVideo){
+  if (cv.width!==G.w) { cv.width=G.w; cv.height=G.h; }
+  const x=cv.getContext('2d'); const css=getComputedStyle(document.documentElement); const col=n=>css.getPropertyValue(n).trim();
+  x.clearRect(0,0,G.w,G.h);
+  if (!overVideo){ x.fillStyle=col('--surface'); x.fillRect(0,0,G.w,G.h); drawGrid(x,G.w,G.h,col('--grid')); }
+  if (!P) return;
+  const r=Math.max(G.w,G.h)/120;
+  if (overVideo){ const sw=dist(P.lSh,P.rSh), hr=Math.max(sw*.55, dist(mid(P.lSh,P.rSh),P.nose)*.6, G.h*.035); x.fillStyle='rgba(200,210,215,.96)'; x.beginPath(); x.arc(P.nose.x,P.nose.y,hr,0,7); x.fill(); }
+  const bones=[['lSh','rSh'],['lHip','rHip'],['lSh','lHip'],['rSh','rHip'],['lHip','lKnee'],['lKnee','lAnk'],['lAnk','lHeel'],['lHeel','lToe'],['lAnk','lToe'],['rHip','rKnee'],['rKnee','rAnk'],['rAnk','rHeel'],['rHeel','rToe'],['rAnk','rToe']];
+  x.lineCap='round';
+  for (const [a,b] of bones){ const side=a[0]==='l'&&b[0]==='l'?'l':a[0]==='r'&&b[0]==='r'?'r':'c';
+    x.strokeStyle='rgba(20,35,43,.8)'; x.lineWidth=r*1.1; x.beginPath(); x.moveTo(P[a].x,P[a].y); x.lineTo(P[b].x,P[b].y); x.stroke();
+    x.strokeStyle= side==='l'?col('--accent'):side==='r'?col('--train'):'#fff'; x.lineWidth=r*.55; x.stroke(); }
+  if (!overVideo){ x.strokeStyle=col('--bone'); x.lineWidth=r*.6; x.beginPath(); x.arc(P.nose.x,P.nose.y,r*4,0,7); x.stroke(); }
+}
+function renderGait(){
+  if (!GA) return;
+  renderGaitCaps();
+  const used=GVIEWS.filter(v=>S.gait[v.k]).map(v=>v.label);
+  $('#gUsed').textContent = used.length? `Videos: ${used.join(', ')}${S.gait.side?.synthetic?' (sample walk)':''}` : 'Add a walking video to start.';
+  $('#gDial').innerHTML = dialSVG(GA.overall,SCREEN);
+  $('#gTiles').innerHTML = gaitTiles(GA.M).map(([l,v,u,s])=>`<div class="tile" style="border-left:4px solid var(--${s==='na'?'line':s})"><small>${l}</small><b>${v}</b><span class="note">${u}</span></div>`).join('');
+  $('#gFindings').innerHTML = GA.findings.length? `<div class="row" style="gap:6px">${GA.findings.map(([s,t])=>`<span class="chip s-${s}">${esc(t)}</span>`).join('')}</div>`:'';
+  $('#gKnee').innerHTML = kneeCycleSVG(GA,SCREEN);
+  $('#gPelvis').innerHTML = pelvisSVG(GA,SCREEN);
+  $('#gSym').innerHTML = gaitSymSVG(gaitSymRows(GA.M),SCREEN);
+  $('#gAreas').innerHTML = GA.areas.map(a=>{ const st=a.status, ex=gaitExercises(a,GA.M);
+    const lines=a.ms.filter(k=>GA.M[k].sev!=='ok').map(k=>`<li>${esc(gText(k,GA.M[k]))}</li>`).join('');
+    return `<div class="region st-${st}"><div class="row" style="justify-content:space-between"><b>${a.label}</b>
+      <span class="row" style="gap:6px"><span class="num note">${a.score==null?'':Math.round(a.score)}</span><button class="chip s-${st}" data-gcycle="${a.k}">${label(st)}${S.gait.overrides[a.k]?' · edited':''}</button></span></div>
+      ${a.ms.length?(lines?`<ul>${lines}</ul>`:'<p class="note">Within typical range.</p>'):`<p class="note">Needs a ${a.metrics.every(k=>GM[k].v==='back')?'back':'side'}-view video.</p>`}
+      ${(st==='train'||st==='treat')?`<div style="display:grid;gap:6px">${[0,1,2].map(i=>`<input id="gex-${a.k}-${i}" data-gex="${a.k}" data-i="${i}" value="${esc(ex[i]||'')}" placeholder="Exercise ${i+1}">`).join('')}</div>`:''}</div>`; }).join('');
+  $('#gAreas').querySelectorAll('[data-gcycle]').forEach(b=>b.onclick=()=>{ const k=b.dataset.gcycle, a=GA.areas.find(x=>x.k===k); const o=['ok','train','treat']; const nx=o[(o.indexOf(a.status)+1)%3]; if(nx===a.auto) delete S.gait.overrides[k]; else S.gait.overrides[k]=nx; S.gait.summary=null; refreshAll(); });
+  $('#gAreas').querySelectorAll('[data-gex]').forEach(inp=>inp.onchange=()=>{ const k=inp.dataset.gex, a=GA.areas.find(x=>x.k===k); const cur=[...gaitExercises(a,GA.M)]; cur[+inp.dataset.i]=inp.value; S.gait.exercises[k]=cur; renderReport(); });
+  const rows=Object.keys(GM).filter(k=>GA.M[k]).map(k=>{ const m=GA.M[k], n=S.gaitNorms[GM[k].n]; return `<tr><td>${esc(GM[k].label||n.label)}</td><td class="num">${fmt(m.v,n.d??1)}${n.unit}</td><td class="num">${n.lo}–${n.hi}${n.unit}</td><td><span class="chip s-${m.sev}">${label(m.sev)}</span></td><td>${esc(gText(k,m))}</td></tr>`; }).join('');
+  $('#gTable').innerHTML=`<thead><tr><th>Measure</th><th>Value</th><th>Typical</th><th>Status</th><th>What it means</th></tr></thead><tbody>${rows||'<tr><td colspan="5">No gait measurements yet.</td></tr>'}</tbody>`;
+}
+function renderGaitNorms(){
+  $('#gNorms').innerHTML = `<div class="normrow" style="grid-template-columns:1fr 56px 56px 56px;font-weight:600"><span>Measure</span><span>From</span><span>To</span><span>Margin</span></div><span></span>` +
+    Object.entries(S.gaitNorms).map(([k,n])=>`<div class="normrow" style="grid-template-columns:1fr 56px 56px 56px"><span>${n.label} (${n.unit.trim()})</span>${['lo','hi','mild'].map(f=>`<input id="gn-${k}-${f}" type="number" step="any" value="${n[f]}" data-gk="${k}" data-f="${f}">`).join('')}</div>`).join('');
+  $('#gNorms').querySelectorAll('input').forEach(i=>i.onchange=()=>{ const v=parseFloat(i.value); if(isFinite(v)){ S.gaitNorms[i.dataset.gk][i.dataset.f]=v; store.set('mp.gaitNorms',S.gaitNorms); S.gait.summary=null; refreshAll(); } });
+}
+function gaitGrade(){
+  if (GA?.overall==null) return 'Awaiting video';
+  const st=GA.areas.map(a=>a.status);
+  if (st.includes('treat')) return GA.overall>=70?'Fair walking pattern':'Needs attention';
+  if (st.includes('train')) return 'Good walking pattern';
+  return 'Excellent walking pattern';
+}
+function gaitSummary(){
+  if (!GA || !Object.keys(GA.M).length) return '';
+  const fl=GA.areas.filter(a=>a.status==='treat'||a.status==='train');
+  let s=`Gait score ${GA.overall==null?'–':Math.round(GA.overall)}/100. `;
+  if (GA.M.cadence) s+=`Cadence ${fmt(GA.M.cadence.v,0)} steps/min${GA.M.speed?`, speed ${fmt(GA.M.speed.v,2)} m/s`:''}. `;
+  if (!fl.length) return s+'Walking pattern is within typical ranges.';
+  const f=GA.findings.filter(x=>x[0]!=='ok').map(x=>x[1].replace(/\s*\(.*\)/,'').toLowerCase());
+  if (f.length) s+=`Main findings: ${f.join(', ')}. `;
+  return s+`Focus: ${fl.map(a=>a.label.toLowerCase()).join(', ')}.`;
+}
+
 /* ---------------- report ---------------- */
 function autoSummary(){
   const flagged = A.regions.filter(r=>r.status==='treat'||r.status==='train');
@@ -965,7 +1492,8 @@ function renderReport(){
   const okCount = scored.filter(r=>r.status==='ok').length;
   const flagged = scored.filter(r=>r.status==='train'||r.status==='treat').sort((a,b)=>(b.status==='treat')-(a.status==='treat'));
   const date = p.date||today();
-  const nPages = 2 + (showClin?1:0);
+  const hasGait = GA && Object.keys(GA.M).length>0;
+  const nPages = 2 + (hasGait?1:0) + (showClin?1:0) + (showClin&&hasGait?1:0);
   const ref = `MP-${date.replace(/-/g,'')}-${(p.id||'').replace(/[^\w]/g,'').slice(0,8)||'NA'}`;
   const foot = n => `<div class="foot"><span>${esc(c.name||'MotionPlus')} · Posture Assessment · ${esc(p.name||'Patient')} ${p.id?'· '+esc(p.id):''}</span><span>Screening from 2D photographs. Supports, does not replace, clinical examination.</span><span>Page ${n} of ${nPages}</span></div><img class="sig" src="${SIG}" alt="">`;
   const slim = sub => `<div class="band slim"><div><div class="title">Posture Assessment Report</div></div><div class="refbox" style="text-align:right"><b>${sub}</b>${esc(p.name||'Patient')} · ${esc(date)}</div></div>`;
@@ -1017,9 +1545,33 @@ function renderReport(){
   const page3 = showClin ? `<section class="rpage">${slim('Clinical values')}
     <div class="body"><div class="sec"><h3>Measurements</h3><table><thead><tr><th>Measure</th><th>Value</th><th>Normal</th><th>Mild</th><th>Status</th></tr></thead><tbody>${
       Object.keys(METRICS).filter(k=>A.M[k]).map(k=>{const m=A.M[k],n=S.norms[METRICS[k].norm]; return `<tr><td>${esc(METRICS[k].label||n.label)}</td><td><b>${fmt(m.v)}${n.unit}</b></td><td>≤ ${n.n}${n.unit}</td><td>≤ ${n.m}${n.unit}</td><td><span class="pill" style="background:${hex(m.sev)};padding:3px 9px">${label(m.sev)}</span></td></tr>`;}).join('')
-    }</tbody></table><div class="small">Plumb-line values are % of ear-to-ankle height. Angles measured from 2D photographs with on-device landmark detection; screening values to be confirmed clinically. Norms follow Kendall plumb-line alignment and published photogrammetry ranges, adjustable by the clinic.</div></div></div>${foot(3)}</section>` : '';
+    }</tbody></table><div class="small">Plumb-line values are % of ear-to-ankle height. Angles measured from 2D photographs with on-device landmark detection; screening values to be confirmed clinically. Norms follow Kendall plumb-line alignment and published photogrammetry ranges, adjustable by the clinic.</div></div></div>${foot(showClin&&hasGait?nPages-1:nPages)}</section>` : '';
+  const page4 = showClin && hasGait ? `<section class="rpage">${slim('Gait values')}
+    <div class="body"><div class="sec"><h3>Gait measurements</h3><table><thead><tr><th>Measure</th><th>Value</th><th>Typical</th><th>Status</th></tr></thead><tbody>${
+      Object.keys(GM).filter(k=>GA.M[k]).map(k=>{const m=GA.M[k],n=S.gaitNorms[GM[k].n]; return `<tr><td>${esc(GM[k].label||n.label)}</td><td><b>${fmt(m.v,n.d??1)}${n.unit}</b></td><td>${n.lo} – ${n.hi}${n.unit}</td><td><span class="pill" style="background:${hex(m.sev)};padding:3px 9px">${label(m.sev)}</span></td></tr>`;}).join('')
+    }</tbody></table><div class="small">Measured from 2D video with on-device pose tracking. Heel strike and toe-off are found from foot position relative to the pelvis. Typical ranges are adult values, adjustable by the clinic.</div></div></div>${foot(nPages)}</section>` : '';
 
-  $('#report').innerHTML = page1 + page2 + page3;
+  if (hasGait && S.gait.summary==null) S.gait.summary = gaitSummary();
+  const gFlag = hasGait ? GA.areas.filter(a=>a.status==='train'||a.status==='treat').sort((a,b)=>(b.status==='treat')-(a.status==='treat')) : [];
+  const gRx = gFlag.slice(0,4).map(a=>{ const lines=a.ms.filter(k=>GA.M[k].sev!=='ok').map(k=>gText(k,GA.M[k])).join(' '); const ex=gaitExercises(a,GA.M).filter(Boolean);
+    return `<div class="rxc" style="border-top-color:${hex(a.status)}"><header><b>${a.label}</b><span class="pill" style="background:${hex(a.status)}">${label(a.status)} · ${Math.round(a.score)}</span></header><p>${esc(lines)}</p>${ex.length?`<ol>${ex.map(e=>`<li>${esc(e)}</li>`).join('')}</ol>`:''}</div>`; }).join('');
+  const gFind = hasGait ? (GA.findings.length? GA.findings : [['ok','Walking pattern within typical ranges']]).map(([s,t])=>`<li><span class="dot" style="background:${hex(s)}"></span><span>${esc(t)}</span></li>`).join('') : '';
+  const pageG = hasGait ? `<section class="rpage">${slim('Gait analysis')}
+    <div class="body">
+      <div class="cols" style="grid-template-columns:210px 1fr">
+        <div class="card" style="display:grid;justify-items:center;gap:4px;text-align:center">${svgImg(dialSVG(GA.overall,PAPER))}<div class="grade">${gaitGrade()}</div><div class="small">${[S.gait.side&&'Side view',S.gait.back&&'Back view'].filter(Boolean).join(' and ')} video</div></div>
+        <div class="sec"><h3>Gait summary</h3><div class="tiles4">${gaitTiles(GA.M).slice(0,4).map(([l,v,u,s])=>`<div class="tl" style="border-left:3px solid ${hex(s)}"><span>${l}</span><b>${v}</b><span style="letter-spacing:.04em;text-transform:none">${u}</span></div>`).join('')}</div>
+          <ul class="kf">${gFind}</ul><div class="summary" contenteditable="true" id="gSumEdit">${esc(S.gait.summary||'')}</div></div>
+      </div>
+      <div class="cols" style="grid-template-columns:1.15fr 1fr;align-items:start">
+        <div class="sec"><h3>Knee flexion through the stride</h3>${svgImg(kneeCycleSVG(GA,PAPER))}<div class="small">Green band: typical adult range. Stance 0–60%, swing 60–100%.</div></div>
+        <div class="sec"><h3>Left vs right</h3>${svgImg(gaitSymSVG(gaitSymRows(GA.M),PAPER))}</div>
+      </div>
+      <div class="sec"><h3>Gait training focus</h3>${gRx?`<div class="rx">${gRx}</div>`:'<div class="small">Walking pattern within typical ranges. Keep up regular walking and leg strength work.</div>'}</div>
+    </div>${foot(3)}</section>` : '';
+
+  $('#report').innerHTML = page1 + page2 + pageG + page3 + page4;
+  if ($('#gSumEdit')) $('#gSumEdit').oninput = e => { S.gait.summary = e.target.innerText; };
   $('#sumEdit').oninput = e => { S.summary = e.target.innerText; };
   $('#notesEdit').oninput = e => { S.notes = e.target.innerText; };
   fitReport();
@@ -1062,7 +1614,12 @@ function sessionData(){
   return {app:'MotionPlus',kind:'static-posture',version:1,savedAt:new Date().toISOString(),patient:S.patient,
     views:Object.fromEntries(Object.entries(S.views).filter(([,v])=>v?.pts).map(([k,v])=>[k,{w:v.w,h:v.h,pts:v.pts,manual:v.manual}])),
     overrides:S.overrides,exercises:S.exercises,summary:S.summary,notes:S.notes,norms:S.norms,
-    regionScores:Object.fromEntries(A.regions.map(r=>[r.k,r.score])),overall:A.overall};
+    regionScores:Object.fromEntries(A.regions.map(r=>[r.k,r.score])),overall:A.overall,
+    gait:{side:gaitPack(S.gait.side),back:gaitPack(S.gait.back),overrides:S.gait.overrides,exercises:S.gait.exercises,summary:S.gait.summary,
+      overall:GA?.overall??null,metrics:GA?Object.fromEntries(Object.entries(GA.M).map(([k,m])=>[k,+m.v.toFixed(3)])):{}}};
+}
+function gaitPack(G){ if(!G) return null; const r=v=>Math.round(v*10)/10;
+  return {kind:G.kind,fps:G.fps,w:G.w,h:G.h,synthetic:!!G.synthetic,t:G.t.map(v=>+v.toFixed(3)),frames:G.frames.map(P=>P&&Object.fromEntries(GK.map(k=>[k,{x:r(P[k].x),y:r(P[k].y),v:+(P[k].v??1).toFixed(2)}])))};
 }
 function rememberSession(d){
   const list=store.get('mp.sessions',[]); list.unshift(d); store.set('mp.sessions',list.slice(0,30)); fillPrevSelect();
@@ -1095,6 +1652,7 @@ function askLoad(d){
 function restoreSession(d){
   S.example=false; S.patient={...d.patient}; S.views={}; for(const [k,v] of Object.entries(d.views||{})) S.views[k]={...v,src:null,checks:[]};
   S.overrides=d.overrides||{}; S.exercises=d.exercises||{}; S.summary=d.summary??null; S.notes=d.notes||''; if(d.norms) S.norms=d.norms; S.previous=null;
+  S.gait={...emptyGait(), side:d.gait?.side||null, back:d.gait?.back||null, overrides:d.gait?.overrides||{}, exercises:d.gait?.exercises||{}, summary:d.gait?.summary??null};
   $('#exampleBanner').hidden=true; fillPatientForm(); renderCaptures(); refreshAll(); toast('Session reopened.');
 }
 
@@ -1104,6 +1662,7 @@ function showTab(t){
   document.querySelectorAll('[data-pane]').forEach(p=>p.hidden = p.dataset.pane!==t);
   if (t==='analysis'||t==='report') refreshAll();
   if (t==='capture') renderCaptures();
+  if (t==='gait'){ refreshAll(); }
   try{ sessionStorage.setItem('mp.tab',t); }catch{}
 }
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
@@ -1120,9 +1679,11 @@ $('#resetCancel').onclick=()=>{ $('#resetConfirm').hidden=true; };
 $('#resetGo').onclick=()=>{ $('#resetConfirm').hidden=true; exitExample(); renderCaptures(); refreshAll(); showTab('patient'); window.scrollTo({top:0}); toast('Ready for the next patient.'); };
 
 S.clinic = store.get('mp.clinic',{name:'',logo:''}); $('#c-name').value=S.clinic.name||''; showLogo();
+const savedG = store.get('mp.gaitNorms',null); if (savedG) S.gaitNorms = {...structuredClone(GAIT_NORMS), ...savedG};
+$('#gResetNorms').onclick=()=>{ S.gaitNorms=structuredClone(GAIT_NORMS); store.set('mp.gaitNorms',S.gaitNorms); renderGaitNorms(); refreshAll(); };
 const savedNorms = store.get('mp.norms',null); if (savedNorms) S.norms = {...structuredClone(DEFAULT_NORMS), ...savedNorms};
 loadExample(); $('#exampleBanner').hidden=false;
-fillPatientForm(); renderNorms(); fillPrevSelect(); renderCaptures(); refreshAll();
+fillPatientForm(); renderNorms(); renderGaitNorms(); fillPrevSelect(); renderCaptures(); refreshAll();
 let startTab='analysis'; try{ startTab = sessionStorage.getItem('mp.tab') || 'analysis'; }catch{}
 showTab(startTab);
 </script>
