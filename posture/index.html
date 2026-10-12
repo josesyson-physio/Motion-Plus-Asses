@@ -1,4 +1,7 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1d5fa8"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="../assets/motionplus-logo.jpg"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>MotionPlus Posture</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1d5fa8"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="../assets/motionplus-logo.jpg"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>MotionPlus Posture · Posture and gait assessment</title>
+<meta name="description" content="On-device posture and gait assessment for physiotherapists: plumb-line photo analysis, spine curves, walking video analysis, progress tracking and a printable PDF report. Photos and videos stay on the device.">
+<meta name="robots" content="noindex, nofollow">
+<meta property="og:title" content="MotionPlus Posture"><meta property="og:description" content="Posture and gait assessment with on-device analysis and a printable report.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
@@ -7,6 +10,7 @@
   --bg:#eef2f4; --surface:#ffffff; --surface-2:#f5f8f9; --ink:#14232b; --muted:#56666e; --line:#d3dce0;
   --grid:#c9dbe8; --plumb:#1d5fa8; --accent:#1d5fa8; --accent-ink:#ffffff; --figure:#c7d0d5; --bone:#33444d;
   --spine:#c2185b; --ok:#2c8a57; --train:#c98410; --treat:#c3352b; --ok-bg:#e3f2e9; --train-bg:#fbf0d9; --treat-bg:#f9e1de;
+  --ok-ink:#1e6b42; --train-ink:#7f5200; --treat-ink:#a32a20;
   --paper:#ffffff; --paper-ink:#14232b;
   --r-paper:#ffffff; --r-ink:#15222c; --r-muted:#5d6b74; --r-line:#dfe5e9; --r-wash:#f3f6f8; --r-navy:#0f2438; --r-blue:#1d5fa8; --r-teal:#2a9d8f; --r-mist:#a9bccb;
   --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
@@ -16,11 +20,11 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0f171b; --surface:#16222a; --surface-2:#1c2a33; --ink:#e3ecf0; --muted:#97a9b2; --line:#2c3d47;
   --grid:#24394a; --plumb:#6fa8e6; --accent:#6fa8e6; --accent-ink:#0b1620; --figure:#3a4c57; --bone:#c9d6dc;
-  --spine:#f06292; --ok:#5cc28a; --train:#e8ab45; --treat:#ef6f63; --ok-bg:#183326; --train-bg:#3a2c12; --treat-bg:#3d1c19; color-scheme:dark}}
+  --spine:#f06292; --ok:#5cc28a; --train:#e8ab45; --treat:#ef6f63; --ok-bg:#183326; --train-bg:#3a2c12; --treat-bg:#3d1c19; --ok-ink:#5cc28a; --train-ink:#e8ab45; --treat-ink:#ef6f63; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0f171b; --surface:#16222a; --surface-2:#1c2a33; --ink:#e3ecf0; --muted:#97a9b2; --line:#2c3d47;
   --grid:#24394a; --plumb:#6fa8e6; --accent:#6fa8e6; --accent-ink:#0b1620; --figure:#3a4c57; --bone:#c9d6dc;
-  --spine:#f06292; --ok:#5cc28a; --train:#e8ab45; --treat:#ef6f63; --ok-bg:#183326; --train-bg:#3a2c12; --treat-bg:#3d1c19; color-scheme:dark}
+  --spine:#f06292; --ok:#5cc28a; --train:#e8ab45; --treat:#ef6f63; --ok-bg:#183326; --train-bg:#3a2c12; --treat-bg:#3d1c19; --ok-ink:#5cc28a; --train-ink:#e8ab45; --treat-ink:#ef6f63; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45}
@@ -38,7 +42,7 @@ h3{font-size:1.2rem}
 .tabs{display:flex;gap:4px;overflow-x:auto}
 .tab{appearance:none;border:0;background:none;color:var(--muted);font:600 1rem var(--f-display);letter-spacing:.04em;text-transform:uppercase;padding:8px 12px 10px;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap}
 .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
-.tab:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tab:focus-visible,.btn:focus-visible,label.empty:focus-visible,summary:focus-visible,.tablewrap:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:12px;min-width:0}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .grid2{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))}
@@ -55,9 +59,9 @@ input,select,textarea{font:inherit;color:var(--ink);background:var(--surface-2);
 .banner p{margin:0}
 .chip{line-height:1.5;display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:2px 10px;font:600 .8rem var(--f-body);letter-spacing:.02em;border:1px solid transparent;white-space:nowrap}
 .chip::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:currentColor}
-.s-ok{color:var(--ok);background:var(--ok-bg)}
-.s-train{color:var(--train);background:var(--train-bg)}
-.s-treat{color:var(--treat);background:var(--treat-bg)}
+.s-ok{color:var(--ok-ink);background:var(--ok-bg)}
+.s-train{color:var(--train-ink);background:var(--train-bg)}
+.s-treat{color:var(--treat-ink);background:var(--treat-bg)}
 .s-na{color:var(--muted);background:var(--surface-2)}
 button.chip{cursor:pointer;border-color:currentColor}
 .checklist{margin:0;padding-left:1.1rem;display:grid;gap:3px;font-size:.9rem}
@@ -74,7 +78,9 @@ button.chip{cursor:pointer;border-color:currentColor}
 label.empty{cursor:pointer}
 .empty{aspect-ratio:3/4;max-height:300px;width:100%;max-width:100%;border:2px dashed var(--line);border-radius:8px;display:grid;place-items:center;text-align:center;color:var(--muted);padding:12px;font-size:.9rem}
 .warn{font-size:.82rem;color:var(--train);margin:0}
-.ok-line{font-size:.82rem;color:var(--ok);margin:0}
+.field-err{color:var(--treat-ink);font-size:.82rem;font-weight:600}
+input[aria-invalid=true]{border-color:var(--treat)}
+.ok-line{font-size:.82rem;color:var(--ok-ink);margin:0}
 .tablewrap{overflow-x:auto}
 table{border-collapse:collapse;width:100%;font-size:.88rem}
 th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
@@ -134,7 +140,7 @@ details summary{cursor:pointer;font-weight:600}
 .rpage .bar{height:8px;border-radius:999px;background:var(--r-line);overflow:hidden}
 .rpage .bar i{display:block;height:100%;border-radius:999px}
 .rpage .num{font:600 13px var(--f-mono);text-align:right}
-.rpage .pill{font:700 9.5px var(--f-body);letter-spacing:.1em;text-transform:uppercase;padding:3px 0;border-radius:999px;color:#fff !important;text-align:center}
+.rpage .pill{font:700 9.5px var(--f-body);letter-spacing:.1em;text-transform:uppercase;padding:3px 0;border-radius:999px;text-align:center}
 .rpage .figs4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;text-align:center}
 .rpage .figs4 img{height:250px;object-fit:contain}
 .rpage .figs4 span{font:600 10px var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--r-muted) !important}
@@ -149,6 +155,8 @@ details summary{cursor:pointer;font-weight:600}
 .rpage .sign .line{border-bottom:1px solid var(--r-ink);height:28px}
 .rpage .foot{margin-top:auto;padding:12px 36px 16px;display:flex;justify-content:space-between;gap:16px;font-size:9.5px;border-top:1px solid var(--r-line)}
 .rpage .foot *{color:var(--r-muted) !important}
+.rpage .foot{flex-wrap:wrap}
+.rpage .foot .fcon{flex-basis:100%;font-weight:600;color:var(--r-ink) !important;margin-bottom:-6px}
 .rpage .foot span:first-child{flex:1.2}
 .rpage .foot span:nth-child(2){flex:1.6;text-align:center}
 .rpage .foot span:last-child{white-space:nowrap}
@@ -203,12 +211,70 @@ details summary{cursor:pointer;font-weight:600}
 .prrow{display:grid;grid-template-columns:1fr auto auto auto;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
 .prrow:last-child{border-bottom:0}
 .prmore summary{cursor:pointer;font-weight:600;padding:6px 0}
+/* sign-in gate */
+.gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:16px;overflow:auto}
+.gate-card{width:min(420px,100%);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:14px;box-shadow:0 10px 30px rgba(0,0,0,.08)}
+.gate-card h1{font-size:2rem;font-weight:700}.gate-card h1 span{color:var(--accent)}
+.gate-card h2{font-size:1.2rem}
+.gate-list{display:grid;gap:8px}
+.gate-prof{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px}
+.gate-prof .av{flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--accent-ink);font-weight:700}
+.gate-prof small{display:block;color:var(--muted);font-weight:400}
+.gate form{display:grid;gap:10px}
+.gate .kinds{display:flex;gap:8px;flex-wrap:wrap}
+.gate .kinds label{flex:1;display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:9px 10px;cursor:pointer;min-width:140px}
+.gate .kinds input{width:auto}
+.gate .linkbtn{background:none;border:0;color:var(--accent);font:600 .9rem var(--f-body);cursor:pointer;padding:4px 0;justify-self:start;text-decoration:underline}
+.gate-note{font-size:.82rem;color:var(--muted)}
+.who{display:inline-flex;align-items:center;gap:6px;margin-left:auto;font-size:.85rem;color:var(--muted)}
+.who b{color:var(--ink)}
+.who{flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:600px){.who{margin-left:0;width:100%;justify-content:flex-start}.whotxt{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}.who > span{margin-right:auto}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
+<div class="gate" id="gate" hidden>
+  <div class="gate-card" role="dialog" aria-modal="true" aria-labelledby="gateTitle">
+    <h1>Motion<span>Plus</span></h1>
+    <h2 id="gateTitle">Sign in</h2>
+    <p class="field-err" id="gateFatal" hidden></p>
+    <div id="gatePick" hidden>
+      <div class="gate-list" id="gateList"></div>
+      <button class="btn" id="gateAdd" type="button" style="margin-top:10px;width:100%">Add a profile</button>
+    </div>
+    <form id="gatePin" hidden autocomplete="off">
+      <p id="gateWho"></p>
+      <input type="text" name="username" id="gateUser" autocomplete="username" hidden>
+      <label class="field">PIN<input id="gatePinIn" type="password" inputmode="numeric" autocomplete="current-password" maxlength="12" required></label>
+      <p class="field-err" id="gatePinErr" role="alert" hidden></p>
+      <button class="btn primary" type="submit" id="gateUnlock">Unlock</button>
+      <button class="linkbtn" type="button" id="gateOther">Use another profile</button>
+      <details id="gateForgot"><summary>Forgot the PIN?</summary>
+        <p class="gate-note">The PIN is the key that encrypts this profile, so it can't be reset or recovered. You can delete the profile and start again; its saved visits on this device will be lost.</p>
+        <label class="field">Type DELETE to remove this profile<input id="gateDelIn" autocomplete="off"></label>
+        <button class="btn small" type="button" id="gateDel">Delete profile</button>
+      </details>
+    </form>
+    <form id="gateNew" hidden autocomplete="off">
+      <fieldset class="kinds" style="border:0;padding:0;margin:0"><legend class="vh">Profile type</legend>
+        <label><input type="radio" name="gkind" value="individual" checked> Individual clinician</label>
+        <label><input type="radio" name="gkind" value="clinic"> Clinic</label>
+      </fieldset>
+      <label class="field"><span id="gateNameLbl">Your name</span><input id="gateName" maxlength="60" required autocomplete="off"></label>
+      <label class="field">Choose a PIN (4 to 12 digits)<input id="gateNewPin" type="password" inputmode="numeric" autocomplete="new-password" maxlength="12" required></label>
+      <label class="field">Repeat the PIN<input id="gateNewPin2" type="password" inputmode="numeric" autocomplete="new-password" maxlength="12" required></label>
+      <p class="gate-note" id="gateMigrate" hidden>Your visits, clinic details and norms already saved in this browser will move into this profile.</p>
+      <p class="field-err" id="gateNewErr" role="alert" hidden></p>
+      <button class="btn primary" type="submit" id="gateCreate">Create profile</button>
+      <button class="linkbtn" type="button" id="gateCancel" hidden>Cancel</button>
+    </form>
+    <p class="gate-note">Profiles live only on this device. Each profile's patients and settings are encrypted with its PIN, and nothing is uploaded.</p>
+  </div>
+</div>
+
 <header class="bar">
   <div class="bar-in">
-    <div class="brand"><h1>Motion<span>Plus</span></h1><small>Posture and gait assessment · plumb-line, photogrammetry and video</small><button class="btn small" id="newPatientBtn" style="margin-left:auto">New patient</button></div>
+    <div class="brand"><h1>Motion<span>Plus</span></h1><small>Posture and gait assessment · plumb-line, photogrammetry and video</small><span class="who" id="who" hidden><span><span class="whotxt">Signed in as </span><b id="whoName"></b></span><button class="btn small" id="lockBtn">Lock</button><button class="btn small" id="switchBtn">Switch profile</button><button class="btn small" id="newPatientBtn">New patient</button></span></div>
     <nav class="tabs" role="tablist">
       <button class="tab" role="tab" data-tab="patient" aria-selected="true" id="tab-patient">1 Patient</button>
       <button class="tab" role="tab" data-tab="capture" aria-selected="false" id="tab-capture">2 Capture</button>
@@ -251,9 +317,12 @@ details summary{cursor:pointer;font-weight:600}
       <div class="form">
         <label class="field">Clinic name<input id="c-name" autocomplete="off"></label>
         <label class="field">Clinic logo<input id="c-logo" type="file" accept="image/*"></label>
+        <label class="field">Phone<input id="c-phone" type="tel" autocomplete="off" data-ck="phone"></label>
+        <label class="field">Email<input id="c-email" type="email" autocomplete="off" data-ck="email"></label>
+        <label class="field">Address<input id="c-address" autocomplete="off" data-ck="address"></label>
       </div>
       <div class="row"><img id="c-logo-prev" alt="Clinic logo" style="max-height:48px" hidden><button class="btn small" id="c-logo-clear" hidden>Remove logo</button></div>
-      <p class="note">Clinic details stay in this browser and appear on every report.</p>
+      <p class="note">Clinic or practitioner details stay on this device. Name and logo head every report; phone, email and address go in the report footer only.</p>
       <h3>Records</h3>
       <div class="row">
         <button class="btn" id="saveSession">Save session file</button>
@@ -329,7 +398,7 @@ details summary{cursor:pointer;font-weight:600}
     </div>
     <div class="panel">
       <h3>Clinical measurements</h3>
-      <div class="tablewrap"><table id="mtable"></table></div>
+      <div class="tablewrap" tabindex="0" role="region" aria-label="Clinical measurements"><table id="mtable"></table></div>
       <details>
         <summary>Normal ranges (editable)</summary>
         <p class="note">Defaults follow Kendall plumb-line alignment and common photogrammetry ranges. Values up to "Normal" score green; up to "Mild" amber; beyond that red.</p>
@@ -380,7 +449,7 @@ details summary{cursor:pointer;font-weight:600}
     </div>
     <div class="panel">
       <h3>Gait measurements</h3>
-      <div class="tablewrap"><table id="gTable" class="gtable"></table></div>
+      <div class="tablewrap" tabindex="0" role="region" aria-label="Gait measurements"><table id="gTable" class="gtable"></table></div>
       <details>
         <summary>Normal ranges (editable)</summary>
         <p class="note">Values inside the range score green; within the margin outside it amber; beyond that red. Defaults are typical adult values; adjust for children, older adults or athletes.</p>
@@ -415,8 +484,8 @@ details summary{cursor:pointer;font-weight:600}
         <div class="row"><label class="field" style="flex:1 1 150px">Before<select id="prA"></select></label><label class="field" style="flex:1 1 150px">After<select id="prB"></select></label></div>
         <p class="note">Grey dashed: before. Blue: after. Both are scaled to the same height and lined up on the plumb line.</p>
         <div class="prfigs" id="prFigs"></div>
-        <div class="tablewrap"><table id="prTable"></table></div>
-        <details class="prmore"><summary id="prMetricsSum">All measures</summary><div class="tablewrap"><table id="prMetrics"></table></div></details>
+        <div class="tablewrap" tabindex="0" role="region" aria-label="Score changes"><table id="prTable"></table></div>
+        <details class="prmore"><summary id="prMetricsSum">All measures</summary><div class="tablewrap" tabindex="0" role="region" aria-label="All measures"><table id="prMetrics"></table></div></details>
       </div>
       <div class="panel"><h2>Visits</h2><div id="prList"></div></div>
     </div>
@@ -444,12 +513,21 @@ details summary{cursor:pointer;font-weight:600}
 </div>
 <div class="toast" id="toast" hidden></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script type="module">
 /* ---------------- constants ---------------- */
+// The PDF libraries (about 550 KB) load only when a PDF is first made, so the app opens faster.
+const PDF_LIBS=['https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js','https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'];
+let pdfLibsP=null;
+function loadPdfLibs(){
+  if (window.html2canvas && window.jspdf) return Promise.resolve();
+  if (!pdfLibsP) pdfLibsP = Promise.all(PDF_LIBS.map(src=>new Promise((res,rej)=>{ const sc=document.createElement('script'); sc.src=src; sc.onload=res; sc.onerror=rej; document.head.appendChild(sc); })))
+    .catch(e=>{ pdfLibsP=null; throw e; });
+  return pdfLibsP;
+}
 const $ = s => document.querySelector(s);
-const PAPER = {ink:'#14232b',muted:'#56666e',line:'#d3dce0',grid:'#dbe7ef',plumb:'#1d5fa8',figure:'#c7d0d5',bone:'#33444d',ok:'#2c8a57',train:'#c98410',treat:'#c3352b',bg:'#ffffff',font:'Arial,Helvetica,sans-serif'};
+// Gentle report palette: soft green, warm amber and coral rather than alarm red.
+const SOFT = {ok:{bg:'#dff1e6',ink:'#1e6b42',edge:'#b9e0c8'},train:{bg:'#fcefd6',ink:'#7a4f00',edge:'#f0d39b'},treat:{bg:'#fbe3dd',ink:'#9e3324',edge:'#f1c2b6'},none:{bg:'#eef1f3',ink:'#4a5960',edge:'#d6dde1'}};
+const PAPER = {ink:'#14232b',muted:'#56666e',line:'#d3dce0',grid:'#dbe7ef',plumb:'#1d5fa8',figure:'#c7d0d5',bone:'#33444d',ok:'#3a9a6a',train:'#d99a2b',treat:'#d4634e',bg:'#ffffff',font:'Arial,Helvetica,sans-serif'};
 const SCREEN = {ink:'var(--ink)',muted:'var(--muted)',line:'var(--line)',grid:'var(--grid)',plumb:'var(--plumb)',figure:'var(--figure)',bone:'var(--bone)',ok:'var(--ok)',train:'var(--train)',treat:'var(--treat)',bg:'var(--surface)',font:'Source Sans 3,Arial,sans-serif'};
 
 const VIEWS = [
@@ -567,11 +645,172 @@ const S = {
   patient:{}, clinic:{name:'',logo:''}, views:{}, overrides:{}, exercises:{},
   summary:null, notes:'', norms:structuredClone(DEFAULT_NORMS), example:false, previous:null,
 };
+// Saved data lives in the signed-in profile (see Gate), held in memory and written back encrypted.
 const store = {
-  get(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch{ return d; } },
-  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); return true; }catch{ return false; } },
+  get(k,d){ return Gate.get(k,d); },
+  set(k,v){ return Gate.put(k,v); },
 };
+
+/* ---------------- profiles: on-device sign-in, data encrypted with the PIN ---------------- */
+const Gate = (()=>{
+  const LEGACY = ['mp.sessions','mp.clinic','mp.norms','mp.gaitNorms'];
+  const ITER = 310000, LIMIT = 3.3e6;          // keeps the encrypted record inside the browser's ~5 MB storage
+  const AUTOLOCK_MS = 15*60*1000;
+  const te = new TextEncoder(), td = new TextDecoder();
+  let cur=null, key=null, data=null, chain=Promise.resolve(), pending=false, lastAct=Date.now(), resolveUnlock=null;
+  const ls = { get(k){ try{ return localStorage.getItem(k); }catch{ return null; } }, set(k,v){ localStorage.setItem(k,v); }, del(k){ try{ localStorage.removeItem(k); }catch{} } };
+  const profiles = () => { try{ const l=JSON.parse(ls.get('mp.profiles')); return Array.isArray(l)?l:[]; }catch{ return []; } };
+  const saveProfiles = l => ls.set('mp.profiles', JSON.stringify(l));
+  const b64 = u => { let s=''; for(let i=0;i<u.length;i+=0x8000) s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000)); return btoa(s); };
+  const unb64 = s => Uint8Array.from(atob(s), c=>c.charCodeAt(0));
+  async function derive(pin, salt){
+    const base = await crypto.subtle.importKey('raw', te.encode(pin), 'PBKDF2', false, ['deriveKey']);
+    return crypto.subtle.deriveKey({name:'PBKDF2', salt, iterations:ITER, hash:'SHA-256'}, base, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
+  }
+  // The profile id is bound in as additional data, so one profile's record can't be swapped into another.
+  async function seal(k, id, obj){
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM', iv, additionalData:te.encode(id)}, k, te.encode(JSON.stringify(obj))));
+    return JSON.stringify({v:1, iv:b64(iv), ct:b64(ct)});
+  }
+  async function unseal(k, id, str){
+    const o = JSON.parse(str);
+    const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv:unb64(o.iv), additionalData:te.encode(id)}, k, unb64(o.ct));
+    return JSON.parse(td.decode(pt));
+  }
+  const size = () => Object.values(data||{}).reduce((a,v)=>a+v.length,0);
+  function persist(){
+    if (pending) return; pending=true;
+    chain = chain.then(async()=>{ pending=false; const p=cur, k=key; if(!p||!k) return;
+      try{ ls.set('mp.p.'+p.id, await seal(k, p.id, data)); }
+      catch(e){ toast('Could not save on this device. Storage may be full: delete old visits in Progress.'); }
+    });
+  }
+  function get(k,d){ if(!data) return d; const v=data[k]; if(v==null) return d; try{ return JSON.parse(v); }catch{ return d; } }
+  function put(k,v){
+    if (!data) return false;
+    const str = JSON.stringify(v), old = data[k]||'';
+    if (size() - old.length + str.length > LIMIT) return false;
+    data[k] = str; persist(); return true;
+  }
+  const legacyData = () => { const o={}; for (const k of LEGACY){ const v=ls.get(k); if(v!=null) o[k]=v; } return o; };
+  const touch = () => { lastAct = Date.now(); };
+  const show = id => { for (const f of ['gatePick','gatePin','gateNew']) $('#'+f).hidden = f!==id; };
+  const err = (id,msg) => { const e=$('#'+id); e.textContent=msg||''; e.hidden=!msg; };
+  function setInert(on){ for (const el of document.body.children) if (el.id!=='gate' && el.id!=='toast' && el.tagName!=='SCRIPT') el.inert=on; $('#gate').hidden=!on; }
+
+  function renderPick(){
+    const l = profiles();
+    $('#gateTitle').textContent = 'Choose your profile';
+    $('#gateList').innerHTML = l.map(p=>`<button class="btn gate-prof" type="button" data-pid="${esc(p.id)}"><span class="av" aria-hidden="true">${esc((p.name||'?').trim()[0]?.toUpperCase()||'?')}</span><span>${esc(p.name)}<small>${p.kind==='clinic'?'Clinic':'Individual clinician'}</small></span></button>`).join('');
+    $('#gateList').querySelectorAll('[data-pid]').forEach(b=>b.onclick=()=>askPin(l.find(p=>p.id===b.dataset.pid)));
+    show('gatePick'); $('#gateList button')?.focus();
+  }
+  function askPin(p, locked=false){
+    cur = locked ? cur : p;
+    $('#gateTitle').textContent = locked ? 'Locked' : 'Enter your PIN';
+    $('#gateWho').innerHTML = `${locked?'Locked to keep patient data private. ':''}Profile: <b>${esc(p.name)}</b>`;
+    $('#gateUser').value = p.name; $('#gatePinIn').value=''; $('#gateDelIn').value=''; $('#gateForgot').open=false; err('gatePinErr');
+    $('#gateOther').textContent = locked ? 'Sign out' : 'Use another profile';
+    $('#gateForgot').hidden = locked;
+    show('gatePin'); $('#gatePinIn').focus();
+    $('#gatePin').onsubmit = async e => {
+      e.preventDefault();
+      const l = profiles(), rec = l.find(x=>x.id===p.id); if(!rec){ renderPick(); return; }
+      const wait = (rec.until||0) - Date.now();
+      if (wait>0){ err('gatePinErr',`Too many wrong tries. Try again in ${Math.ceil(wait/1000)} seconds.`); return; }
+      const pin = $('#gatePinIn').value; $('#gateUnlock').disabled=true; err('gatePinErr');
+      try{
+        await chain;
+        const k = await derive(pin, unb64(rec.salt));
+        const d = await unseal(k, rec.id, ls.get('mp.p.'+rec.id));
+        rec.fails=0; rec.until=0; saveProfiles(l);
+        if (!locked){ data=d; key=k; cur=rec; ls.set('mp.lastProfile', rec.id); }
+        unlocked();
+      }catch{
+        rec.fails=(rec.fails||0)+1; if (rec.fails>=5) rec.until = Date.now()+Math.min(300,30*(rec.fails-4))*1000; saveProfiles(l);
+        err('gatePinErr', rec.fails>=5 ? `Wrong PIN. Please wait ${Math.round((rec.until-Date.now())/1000)} seconds before trying again.` : 'That PIN is not right. Try again.');
+        $('#gatePinIn').select();
+      }finally{ $('#gateUnlock').disabled=false; }
+    };
+    $('#gateOther').onclick = () => locked ? signOut() : renderPick();
+    $('#gateDel').onclick = () => {
+      if ($('#gateDelIn').value.trim().toUpperCase()!=='DELETE'){ err('gatePinErr','Type DELETE to confirm.'); return; }
+      saveProfiles(profiles().filter(x=>x.id!==p.id)); ls.del('mp.p.'+p.id); cur=null; toast('Profile deleted.');
+      profiles().length ? renderPick() : renderNew();
+    };
+  }
+  function renderNew(){
+    const first = !profiles().length, legacy = Object.keys(legacyData()).length>0;
+    $('#gateTitle').textContent = first ? 'Create your profile' : 'Add a profile';
+    $('#gateMigrate').hidden = !(first && legacy);
+    $('#gateCancel').hidden = first;
+    for (const id of ['gateName','gateNewPin','gateNewPin2']) $('#'+id).value=''; err('gateNewErr');
+    show('gateNew'); $('#gateName').focus();
+  }
+  document.querySelectorAll('input[name=gkind]').forEach(r=>r.onchange=()=>{ $('#gateNameLbl').textContent = r.value==='clinic'&&r.checked ? 'Clinic name' : 'Your name'; });
+  $('#gateAdd').onclick = renderNew;
+  $('#gateCancel').onclick = renderPick;
+  $('#gateNew').onsubmit = async e => {
+    e.preventDefault();
+    const name=$('#gateName').value.trim(), pin=$('#gateNewPin').value, pin2=$('#gateNewPin2').value;
+    const kind=document.querySelector('input[name=gkind]:checked').value;
+    if (!name) return err('gateNewErr','Please enter a name.');
+    if (!/^\d{4,12}$/.test(pin)) return err('gateNewErr','The PIN must be 4 to 12 digits.');
+    if (/^(\d)\1+$/.test(pin) || '01234567890123'.includes(pin) || '98765432109876'.includes(pin)) return err('gateNewErr','Please choose a PIN that is harder to guess than a repeat or a run of numbers.');
+    if (pin!==pin2) return err('gateNewErr','The two PINs do not match.');
+    $('#gateCreate').disabled=true; err('gateNewErr');
+    try{
+      const first = !profiles().length;
+      const id = 'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+      const salt = crypto.getRandomValues(new Uint8Array(16));
+      const k = await derive(pin, salt);
+      const d = first ? legacyData() : {};
+      if (kind==='clinic' && !d['mp.clinic']) d['mp.clinic'] = JSON.stringify({name, logo:''});
+      ls.set('mp.p.'+id, await seal(k, id, d));
+      await unseal(k, id, ls.get('mp.p.'+id));          // read back before anything old is removed
+      const rec = {id, name, kind, salt:b64(salt), created:new Date().toISOString()};
+      saveProfiles([...profiles(), rec]);
+      if (first) for (const lk of Object.keys(d)) if (LEGACY.includes(lk)) ls.del(lk);
+      cur=rec; key=k; data=d; ls.set('mp.lastProfile', id);
+      unlocked();
+    }catch(e2){ err('gateNewErr', 'Could not create the profile on this device. Storage may be full or blocked in this browser.'); }
+    finally{ $('#gateCreate').disabled=false; }
+  };
+  function unlocked(){
+    setInert(false); touch();
+    $('#who').hidden=false; $('#whoName').textContent = cur.name;
+    const r = resolveUnlock; resolveUnlock=null; r?.();
+  }
+  function lock(){
+    if (!cur || !$('#gate').hidden) return;
+    // A screen lock: the open assessment stays in memory and keeps saving, and the PIN is needed to see it again.
+    setInert(true); askPin(cur, true);
+  }
+  async function signOut(){ await chain; key=null; data=null; cur=null; location.reload(); }
+  ['pointerdown','keydown','wheel','touchstart'].forEach(ev=>addEventListener(ev, touch, {passive:true, capture:true}));
+  setInterval(()=>{ if (cur && Date.now()-lastAct > AUTOLOCK_MS) lock(); }, 20000);
+  $('#lockBtn').onclick = lock;
+  $('#switchBtn').onclick = signOut;
+
+  return {
+    get, put,
+    get profile(){ return cur; },
+    start(){
+      return new Promise(res=>{
+        resolveUnlock = res; setInert(true);
+        if (!globalThis.crypto?.subtle){ $('#gateFatal').textContent='This browser cannot encrypt data here. Open MotionPlus from its https web address.'; $('#gateFatal').hidden=false; return; }
+        const l = profiles();
+        if (!l.length) return renderNew();
+        const last = l.find(p=>p.id===ls.get('mp.lastProfile'));
+        if (l.length===1 || last) askPin(last||l[0]); else renderPick();
+      });
+    },
+  };
+})();
 const toast = msg => { const t=$('#toast'); t.textContent=msg; t.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(()=>t.hidden=true,3200); };
+// Height feeds centimetre values and walking speed, so only a believable value is used.
+const heightCm = () => { const h=parseFloat(S.patient.height); return h>=80&&h<=230 ? h : null; };
 const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt = (v,d=1) => (v==null||!isFinite(v))?'–':(Math.round(v*10**d)/10**d).toFixed(d);
 const deg = r => r*180/Math.PI;
@@ -702,7 +941,7 @@ function patternsOf(M){
 }
 const cap = s => s.charAt(0).toUpperCase()+s.slice(1);
 function plainText(k, m, frH){
-  const v=fmt(m.v); const h=+S.patient.height;
+  const v=fmt(m.v); const h=heightCm();
   const cm = (m.cm!=null && h) ? ` (about ${fmt(m.cm*h*0.89,1)} cm)` : '';
   switch(k){
     case 'headTilt': return `Head tilts toward the ${m.side} by ${v}°.`;
@@ -1623,7 +1862,7 @@ function analyseSide(G){
   const tl=median(stepT.l), tr=median(stepT.r); if(tl&&tr) M.stepTimeAsym={v:Math.abs(tl-tr)/((tl+tr)/2)*100,l:tl,r:tr,unitLR:' s'};
   const sl=median(stepL.l), sr=median(stepL.r);
   if (sl||sr){ M.stepLen={v:mean([sl,sr]),l:sl,r:sr}; if(sl&&sr) M.stepLenAsym={v:Math.abs(sl-sr)/((sl+sr)/2)*100,l:sl,r:sr};
-    const h=+S.patient.height; if(h>0&&M.cadence){ const stepM=M.stepLen.v*0.48*h/100; M.speed={v:M.cadence.v/60*stepM,stepCm:stepM*100}; } }
+    const h=heightCm(); if(h&&M.cadence){ const stepM=M.stepLen.v*0.48*h/100; M.speed={v:M.cadence.v/60*stepM,stepCm:stepM*100}; } }
   const per=(s,f)=>median(strides[s].map(f));
   const stL=per('l',x=>x.stance), stR=per('r',x=>x.stance); if(stL!=null||stR!=null) M.stance={v:mean([stL,stR]),l:stL,r:stR};
   for (const s of ['l','r']){ const S_=s.toUpperCase(); if(!strides[s].length) continue;
@@ -1888,6 +2127,8 @@ function renderReport(){
   const p=S.patient, c=S.clinic;
   if (S.summary==null) S.summary = autoSummary();
   const hex = s => s==='treat'?PAPER.treat:s==='train'?PAPER.train:s==='ok'?PAPER.ok:'#9aa7af';
+  // Status pills are soft tints with dark text: readable, and calmer for a patient reading about pain.
+  const pillCss = s => { const c=SOFT[s]||SOFT.none; return `background:linear-gradient(180deg,#fff 0%,${c.bg} 55%);color:${c.ink} !important;border:1px solid ${c.edge}`; };
   const showFig = $('#optFigures').checked, showClin = $('#optClinical').checked;
   const scored = A.regions.filter(r=>r.ms.length);
   const okCount = scored.filter(r=>r.status==='ok').length;
@@ -1896,16 +2137,17 @@ function renderReport(){
   const hasGait = GA && Object.keys(GA.M).length>0;
   const progHist = historyFor(pKey(S.patient)); $('#optProgressWrap').hidden = progHist.length<2;
   const ref = `MP-${date.replace(/-/g,'')}-${(p.id||'').replace(/[^\w]/g,'').slice(0,8)||'NA'}`;
-  const foot = n => `<div class="foot"><span>${esc(c.name||'MotionPlus')} · Posture Assessment · ${esc(p.name||'Patient')} ${p.id?'· '+esc(p.id):''}</span><span>Screening from 2D photographs. Supports, does not replace, clinical examination.</span><span>Page {{PN}} of {{NP}}</span></div><img class="sig" src="${SIG}" alt="">`;
+  const contact = [c.name,c.phone,c.email,c.address].map(x=>String(x||'').trim()).filter(Boolean);
+  const foot = n => `<div class="foot">${contact.length>1?`<div class="fcon">${contact.map(esc).join(' · ')}</div>`:''}<span>${esc(c.name||'MotionPlus')} · Posture Assessment · ${esc(p.name||'Patient')} ${p.id?'· '+esc(p.id):''}</span><span>Screening from 2D photographs. Supports, does not replace, clinical examination.</span><span>Page {{PN}} of {{NP}}</span></div><img class="sig" src="${SIG}" alt="">`;
   const slim = sub => `<div class="band slim"><div><div class="title">Posture Assessment Report</div></div><div class="refbox" style="text-align:right"><b>${sub}</b>${esc(p.name||'Patient')} · ${esc(date)}</div></div>`;
   const prevScores = S.previous? REGIONS.map(r=>S.previous.regionScores?.[r.k] ?? null) : null;
   const keyFindings = A.patterns.length ? A.patterns.map(([s,t])=>`<li><span class="dot" style="background:${hex(s)}"></span><span>${esc(t)}</span></li>`).join('')
     : '<li><span class="dot" style="background:#9aa7af"></span><span>Add photos to see findings.</span></li>';
-  const regionRows = A.regions.map(r=>`<div class="rrow"><b>${r.label}</b><div class="bar"><i style="width:${r.score==null?0:Math.round(r.score)}%;background:${hex(r.status)}"></i></div><span class="num">${r.score==null?'–':Math.round(r.score)}</span><span class="pill" style="background:${hex(r.status)}">${label(r.status)}</span></div>`).join('');
+  const regionRows = A.regions.map(r=>`<div class="rrow"><b>${r.label}</b><div class="bar"><i style="width:${r.score==null?0:Math.round(r.score)}%;background:${hex(r.status)}"></i></div><span class="num">${r.score==null?'–':Math.round(r.score)}</span><span class="pill" style="${pillCss(r.status)}">${label(r.status)}</span></div>`).join('');
   const rx = flagged.map(r=>{
     const lines = r.ms.filter(k=>A.M[k].sev!=='ok').map(k=>plainText(k,A.M[k])).join(' ');
     const ex = exercisesFor(r,A.M).filter(Boolean);
-    return `<div class="rxc" style="border-top-color:${hex(r.status)}"><header><b>${r.label}</b><span class="pill" style="background:${hex(r.status)}">${label(r.status)} · ${Math.round(r.score)}</span></header><p>${esc(lines)}</p>${ex.length?`<ol>${ex.map(e=>`<li>${esc(e)}</li>`).join('')}</ol>`:''}</div>`; }).join('');
+    return `<div class="rxc" style="border-top-color:${hex(r.status)}"><header><b>${r.label}</b><span class="pill" style="${pillCss(r.status)}">${label(r.status)} · ${Math.round(r.score)}</span></header><p>${esc(lines)}</p>${ex.length?`<ol>${ex.map(e=>`<li>${esc(e)}</li>`).join('')}</ol>`:''}</div>`; }).join('');
 
   const page1 = `<section class="rpage">
     <div class="band"><div>
@@ -1925,7 +2167,7 @@ function renderReport(){
       <div class="cols" style="grid-template-columns:250px 1fr;align-items:start">
         <div class="sec"><h3>Body map</h3>${svgImg(bodyMapSVG(A,PAPER))}</div>
         <div class="sec"><h3>Regional overview</h3><div class="rtable">${regionRows}</div>
-          <div class="small" style="margin-top:4px"><b style="color:${PAPER.train} !important">Train</b>: mild deviation, strengthening and motor control. <b style="color:${PAPER.treat} !important">Treat</b>: marked deviation, hands-on care and mobility first, then load.</div></div>
+          <div class="small" style="margin-top:4px"><b style="color:${SOFT.train.ink} !important">Train</b>: mild deviation, strengthening and motor control. <b style="color:${SOFT.treat.ink} !important">Treat</b>: marked deviation, hands-on care and mobility first, then load.</div></div>
       </div>
       ${showFig?`<div class="sec"><h3>Alignment figures · dashed line = plumb line</h3><div class="figs4">${VIEWS.map(v=>`<div>${svgImg(figureSVG(v.k,A,PAPER))}<span>${v.label}</span></div>`).join('')}</div></div>`:''}
     </div>${foot(1)}</section>`;
@@ -1945,17 +2187,17 @@ function renderReport(){
 
   const page3 = showClin ? `<section class="rpage">${slim('Clinical values')}
     <div class="body"><div class="sec"><h3>Measurements</h3><table><thead><tr><th>Measure</th><th>Value</th><th>Normal</th><th>Mild</th><th>Status</th></tr></thead><tbody>${
-      Object.keys(METRICS).filter(k=>A.M[k]).map(k=>{const m=A.M[k],n=S.norms[METRICS[k].norm]; return `<tr><td>${esc(METRICS[k].label||n.label)}</td><td><b>${fmt(m.v)}${n.unit}</b></td><td>${n.lo!=null?`${n.lo} – ${n.hi}`:'≤ '+n.n}${n.unit}</td><td>${n.lo!=null?`± ${n.m}`:'≤ '+n.m}${n.unit}</td><td><span class="pill" style="background:${hex(m.sev)};padding:3px 9px">${label(m.sev)}</span></td></tr>`;}).join('')
+      Object.keys(METRICS).filter(k=>A.M[k]).map(k=>{const m=A.M[k],n=S.norms[METRICS[k].norm]; return `<tr><td>${esc(METRICS[k].label||n.label)}</td><td><b>${fmt(m.v)}${n.unit}</b></td><td>${n.lo!=null?`${n.lo} – ${n.hi}`:'≤ '+n.n}${n.unit}</td><td>${n.lo!=null?`± ${n.m}`:'≤ '+n.m}${n.unit}</td><td><span class="pill" style="${pillCss(m.sev)};padding:3px 9px">${label(m.sev)}</span></td></tr>`;}).join('')
     }</tbody></table><div class="small">Plumb-line values are % of ear-to-ankle height. Angles measured from 2D photographs with on-device landmark detection; screening values to be confirmed clinically. Norms follow Kendall plumb-line alignment and published photogrammetry ranges, adjustable by the clinic.</div></div></div>${foot()}</section>` : '';
   const page4 = showClin && hasGait ? `<section class="rpage">${slim('Gait values')}
     <div class="body"><div class="sec"><h3>Gait measurements</h3><table><thead><tr><th>Measure</th><th>Value</th><th>Typical</th><th>Status</th></tr></thead><tbody>${
-      Object.keys(GM).filter(k=>GA.M[k]).map(k=>{const m=GA.M[k],n=S.gaitNorms[GM[k].n]; return `<tr><td>${esc(GM[k].label||n.label)}</td><td><b>${fmt(m.v,n.d??1)}${n.unit}</b></td><td>${n.lo} – ${n.hi}${n.unit}</td><td><span class="pill" style="background:${hex(m.sev)};padding:3px 9px">${label(m.sev)}</span></td></tr>`;}).join('')
+      Object.keys(GM).filter(k=>GA.M[k]).map(k=>{const m=GA.M[k],n=S.gaitNorms[GM[k].n]; return `<tr><td>${esc(GM[k].label||n.label)}</td><td><b>${fmt(m.v,n.d??1)}${n.unit}</b></td><td>${n.lo} – ${n.hi}${n.unit}</td><td><span class="pill" style="${pillCss(m.sev)};padding:3px 9px">${label(m.sev)}</span></td></tr>`;}).join('')
     }</tbody></table><div class="small">Measured from 2D video with on-device pose tracking. Heel strike and toe-off are found from foot position relative to the pelvis. Typical ranges are adult values, adjustable by the clinic.</div></div></div>${foot()}</section>` : '';
 
   if (hasGait && S.gait.summary==null) S.gait.summary = gaitSummary();
   const gFlag = hasGait ? GA.areas.filter(a=>a.status==='train'||a.status==='treat').sort((a,b)=>(b.status==='treat')-(a.status==='treat')) : [];
   const gRx = gFlag.slice(0,4).map(a=>{ const lines=a.ms.filter(k=>GA.M[k].sev!=='ok').map(k=>gText(k,GA.M[k])).join(' '); const ex=gaitExercises(a,GA.M).filter(Boolean);
-    return `<div class="rxc" style="border-top-color:${hex(a.status)}"><header><b>${a.label}</b><span class="pill" style="background:${hex(a.status)}">${label(a.status)} · ${Math.round(a.score)}</span></header><p>${esc(lines)}</p>${ex.length?`<ol>${ex.map(e=>`<li>${esc(e)}</li>`).join('')}</ol>`:''}</div>`; }).join('');
+    return `<div class="rxc" style="border-top-color:${hex(a.status)}"><header><b>${a.label}</b><span class="pill" style="${pillCss(a.status)}">${label(a.status)} · ${Math.round(a.score)}</span></header><p>${esc(lines)}</p>${ex.length?`<ol>${ex.map(e=>`<li>${esc(e)}</li>`).join('')}</ol>`:''}</div>`; }).join('');
   const gFind = hasGait ? (GA.findings.length? GA.findings : [['ok','Walking pattern within typical ranges']]).map(([s,t])=>`<li><span class="dot" style="background:${hex(s)}"></span><span>${esc(t)}</span></li>`).join('') : '';
   const pageG = hasGait ? `<section class="rpage">${slim('Gait analysis')}
     <div class="body">
@@ -1999,6 +2241,8 @@ async function makePDF(){
   const btn=$('#pdfBtn'); btn.disabled=true; $('#pdfStatus').textContent='Building PDF…';
   const r=$('#report'); const prev=r.style.transform; r.style.transform='none';
   try{
+    $('#pdfStatus').textContent='Preparing the PDF…';
+    try{ await loadPdfLibs(); }catch{ throw new Error('libs'); }
     await document.fonts?.ready;
     const unraster = await rasterizeSVGs(r);
     const pages=[];
@@ -2010,7 +2254,9 @@ async function makePDF(){
     pages.forEach((c,i)=>{ if (i) pdf.addPage(); pdf.addImage(c.toDataURL('image/jpeg',0.93),'JPEG',0,0,210,297); });
     await saveFile(fileBase()+'.pdf', pdf.output('blob'));
     $('#pdfStatus').textContent='';
-  }catch(e){ r.style.transform=prev; $('#pdfStatus').textContent='Could not build the PDF: '+(e?.message||e); }
+  }catch(e){ r.style.transform=prev; console.error('PDF build failed', e);
+    $('#pdfStatus').textContent = e?.message==='libs' ? 'The PDF tools could not load. Check the internet connection and tap Save PDF report again.'
+      : 'The PDF could not be made on this device. Close other apps or tabs, then tap Save PDF report again.'; }
   btn.disabled=false; fitReport();
 }
 function sessionData(slim=false){
@@ -2042,6 +2288,7 @@ function fillPrevSelect(){
 const pKey = p => ((p?.id||'').trim() || (p?.name||'').trim()).toLowerCase();
 const pLabel = p => `${p?.name||'Unnamed'}${p?.id?' · '+p.id:''}`;
 const sDate = d => d.patient?.date || d.savedAt?.slice(0,10) || '';
+const INK = {ok:'var(--ok-ink)',train:'var(--train-ink)',treat:'var(--treat-ink)',figure:'var(--muted)'};
 const scoreHex = (pal,s) => s==null?pal.figure:s>=80?pal.ok:s>=60?pal.train:pal.treat;
 function slimSession(d){ return d?.gait ? {...d, gait:{...d.gait, side:null, back:null}} : d; }
 function hasData(){ return !!(A && (A.overall!=null || Object.keys(A.M).length)) || !!(GA && Object.keys(GA.M).length); }
@@ -2165,15 +2412,15 @@ function renderProgress(){
     + tile('Regions improved',regCount&&hist.length>1?`${regBetter} of ${regCount}`:'–','by 3 points or more','var(--line)');
   const tw=Math.max(320,Math.min(720,$('#prTrend').clientWidth||640)); $('#prTrend').innerHTML = trendSVG(hist,{...SCREEN,spine:'var(--spine)'},tw,tw<500?220:240);
   $('#prRegions').innerHTML = REGIONS.map(r=>{ const vals=hist.map(d=>d.regionScores?.[r.k]??null); const lv=vals[vals.length-1], fv=vals.find(v=>v!=null);
-    return `<div class="tile"><small>${r.short}</small><div class="row" style="justify-content:space-between;gap:6px"><b style="color:${scoreHex(SCREEN,lv)}">${lv==null?'–':Math.round(lv)}</b><span class="note">${hist.length>1&&lv!=null&&fv!=null?deltaTxt(fv,lv):''}</span></div>${sparkSVG(vals,SCREEN)}</div>`; }).join('');
+    return `<div class="tile"><small>${r.short}</small><div class="row" style="justify-content:space-between;gap:6px"><b style="color:${scoreHex(INK,lv)}">${lv==null?'–':Math.round(lv)}</b><span class="note">${hist.length>1&&lv!=null&&fv!=null?deltaTxt(fv,lv):''}</span></div>${sparkSVG(vals,SCREEN)}</div>`; }).join('');
   const opt = sel => hist.map((d,i)=>`<option value="${i}"${i===sel?' selected':''}>${d.live?'Today (on screen)':esc(sDate(d))}${d.overall!=null?` · ${Math.round(d.overall)}`:''}</option>`).join('');
   $('#prA').innerHTML=opt(prA); $('#prB').innerHTML=opt(prB);
   const figs = VIEWS.filter(v=>a.views?.[v.k]?.pts&&b.views?.[v.k]?.pts);
   $('#prFigs').innerHTML = figs.length ? figs.map(v=>`<figure class="prfig">${overlaySVG(v.k,a.views[v.k],b.views[v.k],SCREEN)}<figcaption>${v.label}</figcaption></figure>`).join('')
     : '<p class="note">Figures appear when both visits have photos of the same view.</p>';
   const {reg,mets}=compareRows(a,b);
-  const dcol=(x,y)=>x==null||y==null?'inherit':y-x>=1?'var(--ok)':y-x<=-1?'var(--treat)':'inherit';
-  const arrow = m => m.better>0?'<span style="color:var(--ok)">Better</span>':m.better<0?'<span style="color:var(--treat)">Worse</span>':'<span class="note">Same</span>';
+  const dcol=(x,y)=>x==null||y==null?'inherit':y-x>=1?'var(--ok-ink)':y-x<=-1?'var(--treat-ink)':'inherit';
+  const arrow = m => m.better>0?'<span style="color:var(--ok-ink)">Better</span>':m.better<0?'<span style="color:var(--treat-ink)">Worse</span>':'<span class="note">Same</span>';
   const hA = a.live?'Today':sDate(a), hB = b.live?'Today':sDate(b);
   $('#prTable').innerHTML = `<thead><tr><th>Score</th><th>${esc(hA)}</th><th>${esc(hB)}</th><th>Change</th></tr></thead><tbody>`
     + reg.map(r=>`<tr><td>${r.label}</td><td class="num">${r.a==null?'–':Math.round(r.a)}</td><td class="num">${r.b==null?'–':Math.round(r.b)}</td><td class="num" style="color:${dcol(r.a,r.b)}">${deltaTxt(r.a,r.b)}</td></tr>`).join('')
@@ -2191,7 +2438,7 @@ $('#prPatient').onchange=e=>{ prSel=e.target.value; prA=prB=null; renderProgress
 $('#prA').onchange=e=>{ prA=+e.target.value; renderProgress(); };
 $('#prB').onchange=e=>{ prB=+e.target.value; renderProgress(); };
 $('#prSave').onclick=()=>{ if(!hasData()||!pKey(S.patient)) return; rememberSession(sessionData()); toast(`Saved ${S.patient.date||today()} to ${S.patient.name||S.patient.id}'s history.`); renderProgress(); };
-$('#prImport').onchange=async e=>{ let n=0; for (const f of e.target.files){ try{ const d=JSON.parse(await f.text()); if(d.app==='MotionPlus'){ rememberSession(d); n++; if(!prSel) prSel=pKey(d.patient); } }catch{} }
+$('#prImport').onchange=async e=>{ let n=0; for (const f of e.target.files){ try{ const d=JSON.parse(await f.text()); if(d.app==='MotionPlus'){ rememberSession(cleanSession(d)); n++; if(!prSel) prSel=pKey(d.patient); } }catch{} }
   e.target.value=''; toast(n?`Added ${n} visit${n>1?'s':''} to the history.`:'Those files are not MotionPlus sessions.'); prA=prB=null; renderProgress(); renderReport(); };
 
 // Progress page for the PDF: first visit against today.
@@ -2202,7 +2449,7 @@ function progressPage(slim,foot){
   const figs = ['latL','latR','ant','post'].filter(k=>a.views?.[k]?.pts&&b.views?.[k]?.pts).slice(0,4);
   const t=(l,v,u,c)=>`<div class="tl" style="border-left:3px solid ${c}"><span>${l}</span><b>${v}</b><span style="letter-spacing:.04em;text-transform:none">${u}</span></div>`;
   const hA=sDate(a), hB=sDate(b)||today();
-  const dc=(x,y)=>x==null||y==null?PAPER.ink:y-x>=1?PAPER.ok:y-x<=-1?PAPER.treat:PAPER.ink;
+  const dc=(x,y)=>x==null||y==null?PAPER.ink:y-x>=1?SOFT.ok.ink:y-x<=-1?SOFT.treat.ink:PAPER.ink;
   const metRows = mets.filter(m=>m.better!==0).slice(0,8);
   return `<section class="rpage">${slim('Progress')}
     <div class="body">
@@ -2211,7 +2458,7 @@ function progressPage(slim,foot){
       ${figs.length?`<div class="sec"><h3>Before and after · grey dashed ${esc(hA)}, blue ${esc(hB)}</h3><div class="figs4">${figs.map(k=>`<div>${svgImg(overlaySVG(k,a.views[k],b.views[k],PAPER))}<span>${VIEWS.find(v=>v.k===k).label}</span></div>`).join('')}</div></div>`:''}
       <div class="cols" style="grid-template-columns:1fr 1fr;align-items:start">
         <div class="sec"><h3>Region scores</h3><table><thead><tr><th>Region</th><th>Before</th><th>Now</th><th>Change</th></tr></thead><tbody>${reg.map(r=>`<tr><td>${r.label}</td><td>${r.a==null?'–':Math.round(r.a)}</td><td><b>${r.b==null?'–':Math.round(r.b)}</b></td><td style="color:${dc(r.a,r.b)} !important;font-weight:700">${deltaTxt(r.a,r.b)}</td></tr>`).join('')}</tbody></table></div>
-        <div class="sec"><h3>Measures that changed</h3>${metRows.length?`<table><thead><tr><th>Measure</th><th>Before</th><th>Now</th><th></th></tr></thead><tbody>${metRows.map(m=>`<tr><td>${esc(m.label)}</td><td>${fmt(m.a,m.d)}${m.unit}</td><td><b>${fmt(m.b,m.d)}${m.unit}</b></td><td style="color:${m.better>0?PAPER.ok:PAPER.treat} !important;font-weight:700">${m.better>0?'Better':'Worse'}</td></tr>`).join('')}</tbody></table>`:'<div class="small">No measurement values to compare yet.</div>'}</div>
+        <div class="sec"><h3>Measures that changed</h3>${metRows.length?`<table><thead><tr><th>Measure</th><th>Before</th><th>Now</th><th><span class="vh">Result</span></th></tr></thead><tbody>${metRows.map(m=>`<tr><td>${esc(m.label)}</td><td>${fmt(m.a,m.d)}${m.unit}</td><td><b>${fmt(m.b,m.d)}${m.unit}</b></td><td style="color:${m.better>0?SOFT.ok.ink:SOFT.treat.ink} !important;font-weight:700">${m.better>0?'Better':'Worse'}</td></tr>`).join('')}</tbody></table>`:'<div class="small">No measurement values to compare yet.</div>'}</div>
       </div>
     </div>${foot()}</section>`;
 }
@@ -2219,16 +2466,45 @@ function progressPage(slim,foot){
 /* ---------------- patient form ---------------- */
 const PF = {name:'p-name',id:'p-id',age:'p-age',sex:'p-sex',height:'p-height',date:'p-date',cond:'p-cond',assessor:'p-assessor'};
 function fillPatientForm(){ for (const [k,id] of Object.entries(PF)) $('#'+id).value = S.patient[k]||''; if(!S.patient.date){ S.patient.date=today(); $('#p-date').value=S.patient.date; } }
-for (const [k,id] of Object.entries(PF)) $('#'+id).addEventListener('input',e=>{ S.patient[k]=e.target.value; if(k==='height') renderAnalysis(); renderReport(); renderProgress(); });
+function checkPatientField(k){
+  const el=$('#'+PF[k]); if(!el) return; const v=el.value.trim(); let msg='';
+  if (k==='height' && v && heightCm()==null) msg='Enter height in centimetres, between 80 and 230. It is left out of the results until then.';
+  if (k==='age' && v && !(+v>=1&&+v<=110)) msg='Enter an age between 1 and 110.';
+  el.setAttribute('aria-invalid', msg?'true':'false');
+  let n=document.getElementById('err-'+k); if(!n){ n=document.createElement('span'); n.id='err-'+k; n.className='field-err'; n.setAttribute('role','alert'); el.after(n); el.setAttribute('aria-describedby',n.id); }
+  n.textContent=msg; n.hidden=!msg;
+}
+for (const [k,id] of Object.entries(PF)) $('#'+id).addEventListener('input',e=>{ S.patient[k]=e.target.value; if(k==='height'||k==='age') checkPatientField(k); if(k==='height') renderAnalysis(); renderReport(); renderProgress(); });
 $('#c-name').addEventListener('input',e=>{ S.clinic.name=e.target.value; store.set('mp.clinic',S.clinic); renderReport(); });
-$('#c-logo').addEventListener('change',async e=>{ const f=e.target.files[0]; if(!f) return; const img=new Image(); img.src=URL.createObjectURL(f); await img.decode();
+document.querySelectorAll('[data-ck]').forEach(i=>i.addEventListener('input',()=>{ S.clinic[i.dataset.ck]=i.value.slice(0,160); store.set('mp.clinic',S.clinic); renderReport(); }));
+$('#c-logo').addEventListener('change',async e=>{ const f=e.target.files[0]; if(!f) return; const img=new Image(); img.src=URL.createObjectURL(f);
+  try{ await img.decode(); }catch{ toast('That logo could not be opened. Use a PNG or JPG image.'); e.target.value=''; return; }
   const sc=Math.min(1,320/img.naturalWidth); const c=document.createElement('canvas'); c.width=img.naturalWidth*sc; c.height=img.naturalHeight*sc; c.getContext('2d').drawImage(img,0,0,c.width,c.height);
   S.clinic.logo=c.toDataURL('image/png'); store.set('mp.clinic',S.clinic); showLogo(); renderReport(); });
 $('#c-logo-clear').onclick=()=>{ S.clinic.logo=''; store.set('mp.clinic',S.clinic); showLogo(); renderReport(); };
 function showLogo(){ $('#c-logo-prev').hidden=!S.clinic.logo; $('#c-logo-clear').hidden=!S.clinic.logo; if(S.clinic.logo) $('#c-logo-prev').src=S.clinic.logo; }
 $('#saveSession').onclick = async()=>{ const d=sessionData(); if(!S.example) rememberSession(d); await saveFile(fileBase()+'.json', JSON.stringify(d,null,1)); };
-$('#openSession').onchange = async e=>{ const f=e.target.files[0]; if(!f) return; try{ const d=JSON.parse(await f.text()); if(d.app!=='MotionPlus') throw 0; askLoad(d); }catch{ toast('That file is not a MotionPlus session.'); } e.target.value=''; };
+$('#openSession').onchange = async e=>{ const f=e.target.files[0]; if(!f) return; try{ const d=JSON.parse(await f.text()); if(d.app!=='MotionPlus') throw 0; askLoad(cleanSession(d)); }catch{ toast('That file is not a MotionPlus session.'); } e.target.value=''; };
 $('#prevSelect').onchange = e=>{ const i=e.target.value; S.previous = i===''?null:store.get('mp.sessions',[])[+i]; refreshAll(); if(S.previous) toast('Comparison added to Analysis.'); };
+// Session files can come from anywhere, so every field is coerced to the type the app expects.
+function cleanSession(d){
+  const num=v=>{ const n=Number(v); return isFinite(n)?n:null; }, str=v=>v==null?'':String(v).slice(0,2000);
+  const pt=q=>q&&typeof q==='object'?{x:num(q.x)??0,y:num(q.y)??0,...(q.v!=null?{v:num(q.v)??1}:{})}:null;
+  const pts=o=>o&&typeof o==='object'?Object.fromEntries(Object.entries(o).filter(([k])=>/^[A-Za-z0-9]+$/.test(k)).map(([k,q])=>[k,k==='confirmed'?!!q:pt(q)])):null;
+  const nums=o=>o&&typeof o==='object'?Object.fromEntries(Object.entries(o).filter(([k])=>/^\w+$/.test(k)).map(([k,v])=>[k,num(v)])):{};
+  const st=o=>o&&typeof o==='object'?Object.fromEntries(Object.entries(o).filter(([k])=>/^\w+$/.test(k)).map(([k,v])=>[k,['ok','train','treat','na'].includes(v)?v:'na'])):{};
+  const g=G=>G&&typeof G==='object'&&Array.isArray(G.frames)?{kind:str(G.kind),fps:num(G.fps)||25,w:num(G.w)||640,h:num(G.h)||480,synthetic:!!G.synthetic,t:(G.t||[]).map(v=>num(v)??0),frames:G.frames.map(P=>pts(P))}:null;
+  const out={...d, app:'MotionPlus', patient:Object.fromEntries(Object.entries(d.patient||{}).map(([k,v])=>[k,str(v)])),
+    // A view missing any landmark the analysis needs is dropped rather than crashing the page.
+    views:Object.fromEntries(Object.entries(d.views||{}).filter(([k,v])=>VIEWS.some(q=>q.k===k) && keysFor(k).every(q=>v?.pts?.[q])).map(([k,v])=>{ const sp=pts(v?.spine); return [k,{w:num(v?.w)||600,h:num(v?.h)||1000,pts:pts(v.pts),manual:!!v?.manual,spine:sp&&SPINE.every(q=>sp[q])?sp:null}]; })),
+    regionScores:nums(d.regionScores), regionStatus:st(d.regionStatus), overall:num(d.overall), metrics:nums(d.metrics),
+    overrides:st(d.overrides), exercises:Object.fromEntries(Object.entries(d.exercises||{}).map(([k,a])=>[k,Array.isArray(a)?a.map(str):[]])),
+    summary:d.summary==null?null:str(d.summary), notes:str(d.notes), savedAt:str(d.savedAt),
+    gait:d.gait?{side:g(d.gait.side),back:g(d.gait.back),overrides:st(d.gait.overrides),exercises:Object.fromEntries(Object.entries(d.gait.exercises||{}).map(([k,a])=>[k,Array.isArray(a)?a.map(str):[]])),summary:d.gait.summary==null?null:str(d.gait.summary),overall:num(d.gait.overall),metrics:nums(d.gait.metrics)}:null};
+  if (d.norms && typeof d.norms==='object') out.norms=Object.fromEntries(Object.entries(DEFAULT_NORMS).map(([k,n])=>[k,{...n,...Object.fromEntries(['n','m','lo','hi'].filter(f=>num(d.norms[k]?.[f])!=null).map(f=>[f,num(d.norms[k][f])]))}]));
+  else delete out.norms;
+  return out;
+}
 function askLoad(d){
   // A loaded file becomes the comparison baseline; its landmarks can also be restored for editing.
   S.previous = d; rememberSession(d);
@@ -2243,6 +2519,14 @@ function restoreSession(d){
   $('#exampleBanner').hidden=true; fillPatientForm(); renderCaptures(); refreshAll(); toast('Session reopened.');
 }
 
+/* ---------------- keyboard access ---------------- */
+// Upload buttons are labels for hidden file inputs; make them reachable and operable from the keyboard.
+function keyLabels(root=document){
+  root.querySelectorAll('label.btn,label.empty').forEach(l=>{ const inp=document.getElementById(l.htmlFor); if(inp?.type!=='file') return; l.tabIndex=0; inp.tabIndex=-1; });
+}
+document.addEventListener('keydown',e=>{ const l=e.target.closest?.('label.btn[tabindex="0"],label.empty[tabindex="0"]'); if(l && (e.key==='Enter'||e.key===' ')){ e.preventDefault(); l.click(); } });
+new MutationObserver(()=>keyLabels()).observe(document.body,{childList:true,subtree:true}); keyLabels();
+
 /* ---------------- tabs & boot ---------------- */
 function showTab(t){
   document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected', b.dataset.tab===t));
@@ -2250,6 +2534,8 @@ function showTab(t){
   if (t==='analysis'||t==='report') refreshAll();
   if (t==='capture') renderCaptures();
   if (t==='gait'||t==='progress'){ refreshAll(); }
+  const tl={patient:'Patient',capture:'Capture',analysis:'Posture analysis',gait:'Gait',progress:'Progress',report:'Report'}[t];
+  document.title = `${tl} · MotionPlus Posture`;
   try{ sessionStorage.setItem('mp.tab',t); }catch{}
 }
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
@@ -2265,7 +2551,9 @@ $('#newPatientBtn').onclick=()=>{ $('#resetConfirm').hidden=false; window.scroll
 $('#resetCancel').onclick=()=>{ $('#resetConfirm').hidden=true; };
 $('#resetGo').onclick=()=>{ $('#resetConfirm').hidden=true; exitExample(); renderCaptures(); refreshAll(); showTab('patient'); window.scrollTo({top:0}); toast('Ready for the next patient.'); };
 
+await Gate.start();
 S.clinic = store.get('mp.clinic',{name:'',logo:''}); $('#c-name').value=S.clinic.name||''; showLogo();
+document.querySelectorAll('[data-ck]').forEach(i=>i.value=S.clinic[i.dataset.ck]||'');
 const savedG = store.get('mp.gaitNorms',null); if (savedG) S.gaitNorms = {...structuredClone(GAIT_NORMS), ...savedG};
 $('#gResetNorms').onclick=()=>{ S.gaitNorms=structuredClone(GAIT_NORMS); store.set('mp.gaitNorms',S.gaitNorms); renderGaitNorms(); refreshAll(); };
 const savedNorms = store.get('mp.norms',null); if (savedNorms) S.norms = {...structuredClone(DEFAULT_NORMS), ...savedNorms};
