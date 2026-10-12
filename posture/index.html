@@ -1,5 +1,6 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1d5fa8"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="../assets/motionplus-logo.jpg"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>MotionPlus Posture · Posture and gait assessment</title>
 <meta name="description" content="On-device posture and gait assessment for physiotherapists: plumb-line photo analysis, spine curves, walking video analysis, progress tracking and a printable PDF report. Photos and videos stay on the device.">
+<meta name="robots" content="noindex, nofollow">
 <meta property="og:title" content="MotionPlus Posture"><meta property="og:description" content="Posture and gait assessment with on-device analysis and a printable report.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
@@ -139,7 +140,7 @@ details summary{cursor:pointer;font-weight:600}
 .rpage .bar{height:8px;border-radius:999px;background:var(--r-line);overflow:hidden}
 .rpage .bar i{display:block;height:100%;border-radius:999px}
 .rpage .num{font:600 13px var(--f-mono);text-align:right}
-.rpage .pill{font:700 9.5px var(--f-body);letter-spacing:.1em;text-transform:uppercase;padding:3px 0;border-radius:999px;color:#fff !important;text-align:center}
+.rpage .pill{font:700 9.5px var(--f-body);letter-spacing:.1em;text-transform:uppercase;padding:3px 0;border-radius:999px;text-align:center}
 .rpage .figs4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;text-align:center}
 .rpage .figs4 img{height:250px;object-fit:contain}
 .rpage .figs4 span{font:600 10px var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--r-muted) !important}
@@ -461,7 +462,9 @@ function loadPdfLibs(){
   return pdfLibsP;
 }
 const $ = s => document.querySelector(s);
-const PAPER = {ink:'#14232b',muted:'#56666e',line:'#d3dce0',grid:'#dbe7ef',plumb:'#1d5fa8',figure:'#c7d0d5',bone:'#33444d',ok:'#2c8a57',train:'#c98410',treat:'#c3352b',bg:'#ffffff',font:'Arial,Helvetica,sans-serif'};
+// Gentle report palette: soft green, warm amber and coral rather than alarm red.
+const SOFT = {ok:{bg:'#dff1e6',ink:'#1e6b42',edge:'#b9e0c8'},train:{bg:'#fcefd6',ink:'#7a4f00',edge:'#f0d39b'},treat:{bg:'#fbe3dd',ink:'#9e3324',edge:'#f1c2b6'},none:{bg:'#eef1f3',ink:'#4a5960',edge:'#d6dde1'}};
+const PAPER = {ink:'#14232b',muted:'#56666e',line:'#d3dce0',grid:'#dbe7ef',plumb:'#1d5fa8',figure:'#c7d0d5',bone:'#33444d',ok:'#3a9a6a',train:'#d99a2b',treat:'#d4634e',bg:'#ffffff',font:'Arial,Helvetica,sans-serif'};
 const SCREEN = {ink:'var(--ink)',muted:'var(--muted)',line:'var(--line)',grid:'var(--grid)',plumb:'var(--plumb)',figure:'var(--figure)',bone:'var(--bone)',ok:'var(--ok)',train:'var(--train)',treat:'var(--treat)',bg:'var(--surface)',font:'Source Sans 3,Arial,sans-serif'};
 
 const VIEWS = [
@@ -1902,6 +1905,8 @@ function renderReport(){
   const p=S.patient, c=S.clinic;
   if (S.summary==null) S.summary = autoSummary();
   const hex = s => s==='treat'?PAPER.treat:s==='train'?PAPER.train:s==='ok'?PAPER.ok:'#9aa7af';
+  // Status pills are soft tints with dark text: readable, and calmer for a patient reading about pain.
+  const pillCss = s => { const c=SOFT[s]||SOFT.none; return `background:linear-gradient(180deg,#fff 0%,${c.bg} 55%);color:${c.ink} !important;border:1px solid ${c.edge}`; };
   const showFig = $('#optFigures').checked, showClin = $('#optClinical').checked;
   const scored = A.regions.filter(r=>r.ms.length);
   const okCount = scored.filter(r=>r.status==='ok').length;
@@ -1915,11 +1920,11 @@ function renderReport(){
   const prevScores = S.previous? REGIONS.map(r=>S.previous.regionScores?.[r.k] ?? null) : null;
   const keyFindings = A.patterns.length ? A.patterns.map(([s,t])=>`<li><span class="dot" style="background:${hex(s)}"></span><span>${esc(t)}</span></li>`).join('')
     : '<li><span class="dot" style="background:#9aa7af"></span><span>Add photos to see findings.</span></li>';
-  const regionRows = A.regions.map(r=>`<div class="rrow"><b>${r.label}</b><div class="bar"><i style="width:${r.score==null?0:Math.round(r.score)}%;background:${hex(r.status)}"></i></div><span class="num">${r.score==null?'–':Math.round(r.score)}</span><span class="pill" style="background:${hex(r.status)}">${label(r.status)}</span></div>`).join('');
+  const regionRows = A.regions.map(r=>`<div class="rrow"><b>${r.label}</b><div class="bar"><i style="width:${r.score==null?0:Math.round(r.score)}%;background:${hex(r.status)}"></i></div><span class="num">${r.score==null?'–':Math.round(r.score)}</span><span class="pill" style="${pillCss(r.status)}">${label(r.status)}</span></div>`).join('');
   const rx = flagged.map(r=>{
     const lines = r.ms.filter(k=>A.M[k].sev!=='ok').map(k=>plainText(k,A.M[k])).join(' ');
     const ex = exercisesFor(r,A.M).filter(Boolean);
-    return `<div class="rxc" style="border-top-color:${hex(r.status)}"><header><b>${r.label}</b><span class="pill" style="background:${hex(r.status)}">${label(r.status)} · ${Math.round(r.score)}</span></header><p>${esc(lines)}</p>${ex.length?`<ol>${ex.map(e=>`<li>${esc(e)}</li>`).join('')}</ol>`:''}</div>`; }).join('');
+    return `<div class="rxc" style="border-top-color:${hex(r.status)}"><header><b>${r.label}</b><span class="pill" style="${pillCss(r.status)}">${label(r.status)} · ${Math.round(r.score)}</span></header><p>${esc(lines)}</p>${ex.length?`<ol>${ex.map(e=>`<li>${esc(e)}</li>`).join('')}</ol>`:''}</div>`; }).join('');
 
   const page1 = `<section class="rpage">
     <div class="band"><div>
@@ -1939,7 +1944,7 @@ function renderReport(){
       <div class="cols" style="grid-template-columns:250px 1fr;align-items:start">
         <div class="sec"><h3>Body map</h3>${svgImg(bodyMapSVG(A,PAPER))}</div>
         <div class="sec"><h3>Regional overview</h3><div class="rtable">${regionRows}</div>
-          <div class="small" style="margin-top:4px"><b style="color:${PAPER.train} !important">Train</b>: mild deviation, strengthening and motor control. <b style="color:${PAPER.treat} !important">Treat</b>: marked deviation, hands-on care and mobility first, then load.</div></div>
+          <div class="small" style="margin-top:4px"><b style="color:${SOFT.train.ink} !important">Train</b>: mild deviation, strengthening and motor control. <b style="color:${SOFT.treat.ink} !important">Treat</b>: marked deviation, hands-on care and mobility first, then load.</div></div>
       </div>
       ${showFig?`<div class="sec"><h3>Alignment figures · dashed line = plumb line</h3><div class="figs4">${VIEWS.map(v=>`<div>${svgImg(figureSVG(v.k,A,PAPER))}<span>${v.label}</span></div>`).join('')}</div></div>`:''}
     </div>${foot(1)}</section>`;
@@ -1959,17 +1964,17 @@ function renderReport(){
 
   const page3 = showClin ? `<section class="rpage">${slim('Clinical values')}
     <div class="body"><div class="sec"><h3>Measurements</h3><table><thead><tr><th>Measure</th><th>Value</th><th>Normal</th><th>Mild</th><th>Status</th></tr></thead><tbody>${
-      Object.keys(METRICS).filter(k=>A.M[k]).map(k=>{const m=A.M[k],n=S.norms[METRICS[k].norm]; return `<tr><td>${esc(METRICS[k].label||n.label)}</td><td><b>${fmt(m.v)}${n.unit}</b></td><td>${n.lo!=null?`${n.lo} – ${n.hi}`:'≤ '+n.n}${n.unit}</td><td>${n.lo!=null?`± ${n.m}`:'≤ '+n.m}${n.unit}</td><td><span class="pill" style="background:${hex(m.sev)};padding:3px 9px">${label(m.sev)}</span></td></tr>`;}).join('')
+      Object.keys(METRICS).filter(k=>A.M[k]).map(k=>{const m=A.M[k],n=S.norms[METRICS[k].norm]; return `<tr><td>${esc(METRICS[k].label||n.label)}</td><td><b>${fmt(m.v)}${n.unit}</b></td><td>${n.lo!=null?`${n.lo} – ${n.hi}`:'≤ '+n.n}${n.unit}</td><td>${n.lo!=null?`± ${n.m}`:'≤ '+n.m}${n.unit}</td><td><span class="pill" style="${pillCss(m.sev)};padding:3px 9px">${label(m.sev)}</span></td></tr>`;}).join('')
     }</tbody></table><div class="small">Plumb-line values are % of ear-to-ankle height. Angles measured from 2D photographs with on-device landmark detection; screening values to be confirmed clinically. Norms follow Kendall plumb-line alignment and published photogrammetry ranges, adjustable by the clinic.</div></div></div>${foot()}</section>` : '';
   const page4 = showClin && hasGait ? `<section class="rpage">${slim('Gait values')}
     <div class="body"><div class="sec"><h3>Gait measurements</h3><table><thead><tr><th>Measure</th><th>Value</th><th>Typical</th><th>Status</th></tr></thead><tbody>${
-      Object.keys(GM).filter(k=>GA.M[k]).map(k=>{const m=GA.M[k],n=S.gaitNorms[GM[k].n]; return `<tr><td>${esc(GM[k].label||n.label)}</td><td><b>${fmt(m.v,n.d??1)}${n.unit}</b></td><td>${n.lo} – ${n.hi}${n.unit}</td><td><span class="pill" style="background:${hex(m.sev)};padding:3px 9px">${label(m.sev)}</span></td></tr>`;}).join('')
+      Object.keys(GM).filter(k=>GA.M[k]).map(k=>{const m=GA.M[k],n=S.gaitNorms[GM[k].n]; return `<tr><td>${esc(GM[k].label||n.label)}</td><td><b>${fmt(m.v,n.d??1)}${n.unit}</b></td><td>${n.lo} – ${n.hi}${n.unit}</td><td><span class="pill" style="${pillCss(m.sev)};padding:3px 9px">${label(m.sev)}</span></td></tr>`;}).join('')
     }</tbody></table><div class="small">Measured from 2D video with on-device pose tracking. Heel strike and toe-off are found from foot position relative to the pelvis. Typical ranges are adult values, adjustable by the clinic.</div></div></div>${foot()}</section>` : '';
 
   if (hasGait && S.gait.summary==null) S.gait.summary = gaitSummary();
   const gFlag = hasGait ? GA.areas.filter(a=>a.status==='train'||a.status==='treat').sort((a,b)=>(b.status==='treat')-(a.status==='treat')) : [];
   const gRx = gFlag.slice(0,4).map(a=>{ const lines=a.ms.filter(k=>GA.M[k].sev!=='ok').map(k=>gText(k,GA.M[k])).join(' '); const ex=gaitExercises(a,GA.M).filter(Boolean);
-    return `<div class="rxc" style="border-top-color:${hex(a.status)}"><header><b>${a.label}</b><span class="pill" style="background:${hex(a.status)}">${label(a.status)} · ${Math.round(a.score)}</span></header><p>${esc(lines)}</p>${ex.length?`<ol>${ex.map(e=>`<li>${esc(e)}</li>`).join('')}</ol>`:''}</div>`; }).join('');
+    return `<div class="rxc" style="border-top-color:${hex(a.status)}"><header><b>${a.label}</b><span class="pill" style="${pillCss(a.status)}">${label(a.status)} · ${Math.round(a.score)}</span></header><p>${esc(lines)}</p>${ex.length?`<ol>${ex.map(e=>`<li>${esc(e)}</li>`).join('')}</ol>`:''}</div>`; }).join('');
   const gFind = hasGait ? (GA.findings.length? GA.findings : [['ok','Walking pattern within typical ranges']]).map(([s,t])=>`<li><span class="dot" style="background:${hex(s)}"></span><span>${esc(t)}</span></li>`).join('') : '';
   const pageG = hasGait ? `<section class="rpage">${slim('Gait analysis')}
     <div class="body">
@@ -2221,7 +2226,7 @@ function progressPage(slim,foot){
   const figs = ['latL','latR','ant','post'].filter(k=>a.views?.[k]?.pts&&b.views?.[k]?.pts).slice(0,4);
   const t=(l,v,u,c)=>`<div class="tl" style="border-left:3px solid ${c}"><span>${l}</span><b>${v}</b><span style="letter-spacing:.04em;text-transform:none">${u}</span></div>`;
   const hA=sDate(a), hB=sDate(b)||today();
-  const dc=(x,y)=>x==null||y==null?PAPER.ink:y-x>=1?PAPER.ok:y-x<=-1?PAPER.treat:PAPER.ink;
+  const dc=(x,y)=>x==null||y==null?PAPER.ink:y-x>=1?SOFT.ok.ink:y-x<=-1?SOFT.treat.ink:PAPER.ink;
   const metRows = mets.filter(m=>m.better!==0).slice(0,8);
   return `<section class="rpage">${slim('Progress')}
     <div class="body">
@@ -2230,7 +2235,7 @@ function progressPage(slim,foot){
       ${figs.length?`<div class="sec"><h3>Before and after · grey dashed ${esc(hA)}, blue ${esc(hB)}</h3><div class="figs4">${figs.map(k=>`<div>${svgImg(overlaySVG(k,a.views[k],b.views[k],PAPER))}<span>${VIEWS.find(v=>v.k===k).label}</span></div>`).join('')}</div></div>`:''}
       <div class="cols" style="grid-template-columns:1fr 1fr;align-items:start">
         <div class="sec"><h3>Region scores</h3><table><thead><tr><th>Region</th><th>Before</th><th>Now</th><th>Change</th></tr></thead><tbody>${reg.map(r=>`<tr><td>${r.label}</td><td>${r.a==null?'–':Math.round(r.a)}</td><td><b>${r.b==null?'–':Math.round(r.b)}</b></td><td style="color:${dc(r.a,r.b)} !important;font-weight:700">${deltaTxt(r.a,r.b)}</td></tr>`).join('')}</tbody></table></div>
-        <div class="sec"><h3>Measures that changed</h3>${metRows.length?`<table><thead><tr><th>Measure</th><th>Before</th><th>Now</th><th><span class="vh">Result</span></th></tr></thead><tbody>${metRows.map(m=>`<tr><td>${esc(m.label)}</td><td>${fmt(m.a,m.d)}${m.unit}</td><td><b>${fmt(m.b,m.d)}${m.unit}</b></td><td style="color:${m.better>0?PAPER.ok:PAPER.treat} !important;font-weight:700">${m.better>0?'Better':'Worse'}</td></tr>`).join('')}</tbody></table>`:'<div class="small">No measurement values to compare yet.</div>'}</div>
+        <div class="sec"><h3>Measures that changed</h3>${metRows.length?`<table><thead><tr><th>Measure</th><th>Before</th><th>Now</th><th><span class="vh">Result</span></th></tr></thead><tbody>${metRows.map(m=>`<tr><td>${esc(m.label)}</td><td>${fmt(m.a,m.d)}${m.unit}</td><td><b>${fmt(m.b,m.d)}${m.unit}</b></td><td style="color:${m.better>0?SOFT.ok.ink:SOFT.treat.ink} !important;font-weight:700">${m.better>0?'Better':'Worse'}</td></tr>`).join('')}</tbody></table>`:'<div class="small">No measurement values to compare yet.</div>'}</div>
       </div>
     </div>${foot()}</section>`;
 }
