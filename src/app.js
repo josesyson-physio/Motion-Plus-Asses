@@ -121,7 +121,7 @@ async function previewPdf(filename, blob) {
 
 /* ---------- Chrome ---------- */
 let view = {};
-function go(name, ...args) { view = { name, args }; render(); window.scrollTo(0, 0); }
+function go(name, ...args) { view = { name, args }; render(); window.scrollTo(0, 0); const h = $("#app h1")?.textContent.trim(); document.title = h && h !== "Home" ? `${h} · MotionPlus Assess` : "MotionPlus Assess"; }
 function render() { (VIEWS[view.name] || VIEWS.patients)(...(view.args || [])); }
 function chrome(tab, barHtml) {
   $("#tabs").hidden = !tab; $("#bar").hidden = !barHtml; $("#barIn").innerHTML = barHtml || "";
@@ -305,7 +305,7 @@ const isLR = f => f && (f.t === "lrnum" || f.t === "lrsel");
 function formFields(t, v) { return t.fields.map((f, i) => (isLR(f) && !isLR(t.fields[i - 1]) ? `<div class="lrrow lrhead" aria-hidden="true"><span></span><span>Left</span><span>Right</span></div>` : "") + fieldHTML(f, v[f.id])).join(""); }
 function updateLive() {
   const el = $("#live"); if (!el || !draft) return; const t = getTpl(draft), r = runScore(t, draft.values, P(draft.pid));
-  el.innerHTML = `<b>${esc(r.txt)}</b><span>${r.of ? `${r.done}/${r.of} scored · ` : ""}${esc(r.band[0])}</span>`;
+  el.innerHTML = `<b>${esc(r.txt)}</b><span>${r.of ? `${r.done}/${r.of} scored` : ""}${r.of && !r.done ? "" : `${r.of ? " · " : ""}${esc(r.band?.[0] || "")}`}</span>`;
 }
 function setVal(fid, k, val) {
   const v = draft.values;
@@ -458,7 +458,7 @@ function basicReport(rep) {
 function md(s) {
   return s.split("\n").map(l => {
     const e = esc(l).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
-    if (/^#{1,3}\s/.test(l)) return `<h3>${e.replace(/^#{1,3}\s/, "")}</h3>`;
+    if (/^#{1,3}\s/.test(l)) return `<h2>${e.replace(/^#{1,3}\s/, "")}</h2>`;
     if (/^\s*[-•]\s/.test(l)) return `<li>${e.replace(/^\s*[-•]\s/, "")}</li>`;
     return l.trim() ? `<p>${e}</p>` : "";
   }).join("").replace(/(<li>.*?<\/li>)+/g, m => `<ul>${m}</ul>`);
@@ -562,7 +562,7 @@ function fromAI(j) {
     bandsText: (Array.isArray(j.bands) ? j.bands : []).filter(b => b && b.label != null).map(b => `${b.min}-${b.max} = ${b.label}`).join("\n") };
 }
 let upFiles = [], tplStatus = null;
-const LIBS = { pdf: ["https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js", "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"], docx: ["https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"] };
+const LIBS = { pdf: ["https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js", "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"], docx: ["https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"], jspdf: ["https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"] };
 function loadScript(src) { return new Promise((res, rej) => { const ex = document.querySelector(`script[src="${src}"]`); if (ex?.dataset.ok) return res(); const s = ex || document.createElement("script"); s.addEventListener("load", () => { s.dataset.ok = 1; res(); }); s.addEventListener("error", () => rej(new Error("load"))); if (!ex) { s.src = src; document.head.appendChild(s); } }); }
 async function need(k) { for (const src of LIBS[k]) await loadScript(src); }
 const kindOf = f => /^image\//.test(f.type) || /\.(jpe?g|png|webp|gif|heic|heif)$/i.test(f.name) ? "image" : /pdf$/.test(f.type) || /\.pdf$/i.test(f.name) ? "pdf" : /\.docx$/i.test(f.name) ? "docx" : /^text\//.test(f.type) || /\.txt$/i.test(f.name) ? "text" : /\.doc$/i.test(f.name) ? "doc" : "other";
@@ -723,6 +723,7 @@ function setLogo(file) {
 /* ---------- PDF ---------- */
 function pdfSafe(s) { return String(s ?? "").replace(/≥/g, ">=").replace(/≤/g, "<=").replace(/→/g, "->").replace(/₂/g, "2").replace(/✦/g, "").replace(/[^\x00-\xFF–—‘’“”•…]/g, ""); }
 async function makePdf({ pid, aids, report, title }) {
+  if (!window.jspdf) await need("jspdf").catch(() => {});
   if (!window.jspdf) { toast("The PDF tool didn't load. Check the internet connection and reopen the app."); return; }
   const { jsPDF } = window.jspdf, doc = new jsPDF({ unit: "mm", format: "a4" }), p = P(pid), s = db.settings;
   const W = 210, M = 16, CW = W - 2 * M, INK = [22, 21, 15], MUTED = [104, 100, 88], ACC = [22, 21, 15], YEL = [255, 214, 10], GOLD = [168, 132, 0];
@@ -832,7 +833,7 @@ const ACT = {
     b.parentNode.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", !same && x === b)); },
   toggle: (d, b) => { const cur = draft.values[d.f] || [], on = cur.includes(d.v); const nx = on ? cur.filter(x => x !== d.v) : [...cur, d.v]; setVal(d.f, null, nx.length ? nx : ""); b.setAttribute("aria-pressed", !on); },
   saveA: () => { draft.date = $("#adate").value || today(); draft.notes = $("#anotes").value.trim();
-    if (!Object.keys(draft.values).length && !draft.notes) { toast("Record at least one item before saving."); return; }
+    if (!Object.keys(draft.values).some(k => { const f = getTpl(draft).fields.find(x => x.id === k); return f?.def == null || String(draft.values[k]) !== String(f.def); }) && !draft.notes) { toast("Record at least one item before saving."); return; }
     const i = db.assessments.findIndex(a => a.id === draft.id); if (i >= 0) db.assessments[i] = draft; else db.assessments.push(draft);
     if (!save()) return; toast("Assessment saved"); const id = draft.id; draft = null; go("result", id); },
   result: d => go("result", d.id),
@@ -907,4 +908,7 @@ document.addEventListener("change", e => {
   if (el.id === "sprefix") render();
 });
 
+document.documentElement.lang = "en";
 go("patients");
+// Load the PDF tool once the first screen is up, so reports still work if the connection drops later.
+setTimeout(() => need("jspdf").catch(() => {}), 1500);
