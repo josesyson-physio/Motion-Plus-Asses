@@ -99,7 +99,7 @@ function compare(t, a, p) {
   const d = Math.round((r.val - q.val) * 100) / 100, better = t.hb === undefined ? null : (t.hb ? d > 0 : d < 0);
   return { prev, d, better, meaningful: t.mcid ? Math.abs(d) >= t.mcid : null };
 }
-function series(pid, tid) { const p = P(pid); return db.assessments.filter(a => a.pid === pid && a.tid === tid).sort(byDate).map(a => ({ date: a.date, val: runScore(getTpl(a), a.values, p).val })).filter(x => x.val != null); }
+function series(pid, tid) { const p = P(pid); return db.assessments.filter(a => a.pid === pid && a.tid === tid).sort(byDate).map(a => { const r = runScore(getTpl(a), a.values, p); return { date: a.date, val: r.val, max: r.max }; }).filter(x => x.val != null); }
 function chip(b) { return `<span class="chip ${b[1]}">${esc(b[0])}</span>`; }
 function nextCode() { const s = db.settings; let c; do { c = `${s.prefix || "MP"}-${String(s.next++).padStart(4, "0")}`; } while (db.patients.some(p => p.code === c)); return c; }
 
@@ -228,10 +228,15 @@ VIEWS.patient = id => {
   </div>`;
 };
 
+// Chart scale: the test's real maximum (e.g. Berg 56) when its definition gives one, otherwise the old automatic range.
+function chartRange(s, t) {
+  const vs = s.map(x => x.val), ms = s.map(x => x.max).filter(m => typeof m === "number" && isFinite(m)), top = t.max ?? (ms.length ? Math.max(...ms) : null);
+  if (top != null) { const lo = t.id === "gcs" ? 3 : 0; if (top > lo && vs.every(v => v >= lo && v <= top)) return [lo, top]; }
+  const hi = Math.max(...vs) * 1.15, lo = Math.min(0, ...vs); return [lo, hi === lo ? lo + 1 : hi];
+}
 function chartSVG(s, t) {
   const W = 320, H = 150, L = 34, R = 14, Tp = 14, B = 26, vs = s.map(x => x.val);
-  let hi = t.max ?? Math.max(...vs) * 1.15, lo = t.max != null ? (t.id === "gcs" ? 3 : 0) : Math.min(0, Math.min(...vs));
-  if (hi === lo) hi = lo + 1;
+  const [lo, hi] = chartRange(s, t);
   const x = i => L + (s.length === 1 ? 0 : i * (W - L - R) / (s.length - 1)), y = v => Tp + (hi - v) * (H - Tp - B) / (hi - lo);
   const nice = v => Math.round(v * 10) / 10;
   const grid = [lo, (lo + hi) / 2, hi].map(v => `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L - 6}" y="${y(v) + 4}" text-anchor="end" class="ax">${nice(v)}</text>`).join("");
@@ -682,13 +687,17 @@ VIEWS.settings = () => {
     <div class="logo-row">${s.logo ? `<img src="${s.logo}" alt="Clinic logo" class="logo-prev">` : `<div class="logo-prev empty-logo">No logo</div>`}
       <div class="stack tight"><label class="filebtn"><input id="slogo" type="file" accept="image/png,image/jpeg,image/webp"><span>${s.logo ? "Change logo" : "Upload clinic logo"}</span></label>${s.logo ? `<button class="ghost" data-act="rmLogo">Remove logo</button>` : ""}</div></div>
     <p class="note">Reports always carry the MotionPlus Physio watermark. Your logo appears in the report header.</p>
+    <div class="row2"><div class="field"><label class="label" for="sphone">Contact phone</label><input id="sphone" data-s="phone" type="tel" autocomplete="off" value="${esc(s.phone)}"></div>
+      <div class="field"><label class="label" for="semail">Contact email</label><input id="semail" data-s="email" type="email" autocomplete="off" value="${esc(s.email)}"></div></div>
+    <div class="field"><label class="label" for="saddr">Clinic address</label><input id="saddr" data-s="address" autocomplete="off" value="${esc(s.address)}"></div>
+    <p class="note">Phone, email and address are printed in the footer of every PDF report page. Leave them empty to keep them off.</p>
     <div class="field"><label class="label" for="sprefix">Patient code prefix</label><input id="sprefix" data-s="prefix" value="${esc(s.prefix)}" maxlength="10"><span class="note">Next code: ${esc(nextCodePreview())}. Use a branch prefix like MP-B2 to keep codes unique across branches.</span></div>
 
     <h2 class="sec">PIN lock</h2>
     <p class="note">${pinKey ? "On. Records on this device are encrypted and the app asks for the PIN when it opens, after 5 minutes in the background, or after 10 minutes without use." : "Off. Anyone holding this device can open the records. Turn on a PIN to encrypt them on this device."} If the PIN is forgotten, records can only come back from a backup file.</p>
-    ${pinKey ? `<div class="field"><label class="label" for="pin0">Current PIN</label><input id="pin0" type="password" inputmode="numeric" autocomplete="off" maxlength="12"></div>` : ""}
-    <div class="row2"><div class="field"><label class="label" for="pin1">${pinKey ? "New PIN" : "PIN (6 to 12 digits)"}</label><input id="pin1" type="password" inputmode="numeric" autocomplete="new-password" maxlength="12"></div>
-      <div class="field"><label class="label" for="pin2">Repeat ${pinKey ? "new " : ""}PIN</label><input id="pin2" type="password" inputmode="numeric" autocomplete="new-password" maxlength="12"></div></div>
+    ${pinKey ? `<div class="field"><label class="label" for="pin0">Current PIN</label><input id="pin0" type="password" inputmode="numeric" autocomplete="off" maxlength="16"></div>` : ""}
+    <div class="row2"><div class="field"><label class="label" for="pin1">${pinKey ? "New PIN" : "PIN (6 to 16 digits)"}</label><input id="pin1" type="password" inputmode="numeric" autocomplete="new-password" maxlength="16"></div>
+      <div class="field"><label class="label" for="pin2">Repeat ${pinKey ? "new " : ""}PIN</label><input id="pin2" type="password" inputmode="numeric" autocomplete="new-password" maxlength="16"></div></div>
     <div class="actions"><button data-act="setPin">${pinKey ? "Change PIN" : "Turn on PIN lock"}</button>${pinKey ? `<button data-act="removePin">Turn off</button><button data-act="lockNow">Lock now</button>` : ""}</div>
 
     <h2 class="sec">Backup and transfer</h2>
@@ -711,6 +720,11 @@ let transferPid = "";
 const b64 = u8 => { let s = ""; for (let i = 0; i < u8.length; i += 32768) s += String.fromCharCode.apply(null, u8.subarray(i, i + 32768)); return btoa(s); };
 const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
 async function keyFrom(pw, salt) { const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]); return crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: 210000, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]); }
+function downloadFile(filename, data, type) {
+  try { const url = URL.createObjectURL(new Blob([data], { type })), a = document.createElement("a"); a.href = url; a.download = filename; a.hidden = true;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 60000); toast("Downloaded " + filename); return true; }
+  catch (e) { toast("This browser doesn't allow saving files from the app. Open the link in Chrome or the Claude app."); return false; }
+}
 async function doBackup() {
   const pw = $("#bpw").value, pid = $("#bscope").value; if (pw.length < 6) { toast("Choose a password of at least 6 characters."); return; }
   const pids = pid ? [pid] : db.patients.map(p => p.id);
@@ -720,7 +734,8 @@ async function doBackup() {
   const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, await keyFrom(pw, salt), new TextEncoder().encode(JSON.stringify(data))));
   const file = JSON.stringify({ app: "MotionPlus Assess", format: 1, created: new Date().toISOString(), salt: b64(salt), iv: b64(iv), data: b64(ct) });
   const name = pid ? `motionplus-${P(pid).code}-${today()}.json` : `motionplus-backup-${today()}.json`;
-  if (await saveFile(name, file)) $("#bpw").value = "";
+  // Inside Claude the viewer saves the file; in a normal browser it downloads directly.
+  if (await (window.claude?.use ? saveFile(name, file) : downloadFile(name, file, "application/json"))) $("#bpw").value = "";
 }
 async function doRestore() {
   const f = $("#rfile").files?.[0], pw = $("#rpw").value; if (!f) { toast("Choose a backup file first."); return; }
@@ -819,15 +834,21 @@ async function makePdf({ pid, aids, report, title }) {
   }
   // Footer
   const n = doc.getNumberOfPages();
+  // Clinic contact line above the footer rule, only when at least one contact field is filled; shrinks, then shortens, to fit one line.
+  const contact = pdfSafe([s.phone && "Tel " + s.phone, s.email, s.address].map(x => String(x || "").replace(/\s+/g, " ").trim()).filter(x => x && x !== "Tel").join("  ·  "));
+  let cSize = 7, cLine = contact;
+  if (contact) { doc.setFont("helvetica", "normal"); doc.setFontSize(cSize); while (cSize > 5.5 && doc.getTextWidth(contact) > CW) doc.setFontSize(cSize -= 0.5);
+    if (doc.getTextWidth(contact) > CW) { while (cLine.length > 1 && doc.getTextWidth(cLine + "...") > CW) cLine = cLine.slice(0, -1); cLine = cLine.trimEnd() + "..."; } }
   for (let i = 1; i <= n; i++) { doc.setPage(i); doc.setDrawColor(217, 226, 223); doc.line(M, 287, W - M, 287); try { doc.addImage(JC_SIG, "PNG", W - 13, 289.5, 9, 5.96); } catch (e) {} doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); doc.setTextColor(...MUTED);
-    doc.text(pdfSafe(`MotionPlus Physio  ·  ${p.code}  ·  Confidential clinical record`), M, 291); doc.text(`Page ${i} of ${n}`, W - M, 291, { align: "right" }); }
+    doc.text(pdfSafe(`MotionPlus Physio  ·  ${p.code}  ·  Confidential clinical record`), M, 291); doc.text(`Page ${i} of ${n}`, W - M, 291, { align: "right" });
+    if (contact) { doc.setFontSize(cSize); doc.text(cLine, W / 2, 285, { align: "center" }); } }
   // Carry the results inside the PDF so this report can be uploaded again later for comparison (see importReport).
   const { notes, ...pd } = p, payload = { app: "MotionPlus Assess", format: 1, patient: pd, assessments: aids.map(A).filter(Boolean) };
   doc.setProperties({ title: pdfSafe(`${title} ${p.code}`), subject: "MotionPlus Assess report", creator: "MotionPlus Assess", keywords: "MPA1:" + b64(new TextEncoder().encode(JSON.stringify(payload))) });
   await saveFile(`${p.code}-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${today()}.pdf`, doc.output("blob"));
 }
 function pdfChart(doc, x, y, w, h, s, t, C) {
-  const vs = s.map(p => p.val); let hi = t.max ?? Math.max(...vs) * 1.15, lo = t.max != null ? (t.id === "gcs" ? 3 : 0) : Math.min(0, ...vs); if (hi === lo) hi = lo + 1;
+  const [lo, hi] = chartRange(s, t);
   const L = x + 10, R = x + w - 4, T = y + 3, B = y + h - 6;
   const px = i => L + (s.length === 1 ? 0 : i * (R - L) / (s.length - 1)), py = v => T + (hi - v) * (B - T) / (hi - lo);
   doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(...C.MUTED); doc.setDrawColor(225, 232, 230); doc.setLineWidth(0.2);
@@ -893,7 +914,7 @@ function cleanReport(r) {
 }
 function cleanSettings(s) {
   if (!s || typeof s !== "object") return null;
-  const o = {}; for (const k of ["clinic", "branch", "therapist", "prefix"]) if (s[k] != null) o[k] = txt(s[k]);
+  const o = {}; for (const k of ["clinic", "branch", "therapist", "prefix", "phone", "email", "address"]) if (s[k] != null) o[k] = txt(s[k]);
   if ("logo" in s) { o.logo = typeof s.logo === "string" && /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+=*$/.test(s.logo) ? s.logo : null; const ar = numOr(s.logoAR); o.logoAR = ar > 0 ? ar : 1; }
   o.next = Math.max(1, Math.floor(numOr(s.next) || 1));
   return o;
@@ -926,7 +947,7 @@ let lockMsg = "";
 VIEWS.lock = () => {
   chrome(null);
   $("#app").innerHTML = `<div class="lock"><img src="${MP_LOGO}" alt="MotionPlus Physio"><h1>MotionPlus Assess</h1><p class="note">Enter your PIN to open the patient records on this device.</p>
-    <form id="lockform"><label class="label" for="pinin">PIN</label><input id="pinin" type="password" inputmode="numeric" autocomplete="off" maxlength="12" required>
+    <form id="lockform"><label class="label" for="pinin">PIN</label><input id="pinin" type="password" inputmode="numeric" autocomplete="off" maxlength="16" required>
     <p class="err" role="alert">${esc(lockMsg)}</p><button class="primary" type="submit">Unlock</button></form>
     <button class="link-danger" data-act="forgotPin">Forgot PIN?</button></div>`;
   setTimeout(() => $("#pinin")?.focus(), 50);
@@ -952,10 +973,17 @@ let lastUse = Date.now(), hiddenAt = 0;
 ["pointerdown", "keydown"].forEach(ev => document.addEventListener(ev, () => { lastUse = Date.now(); }, true));
 document.addEventListener("visibilitychange", () => { if (document.hidden) hiddenAt = Date.now(); else if (hiddenAt && Date.now() - hiddenAt > 5 * 60000) lockNow(); });
 setInterval(() => { if (pinKey && Date.now() - lastUse > 10 * 60000) lockNow(); }, 30000);
+// New PINs only (existing PINs still unlock): refuse one repeated digit, a short repeated block (121212, 123123) and runs up or down (123456, 987654).
+function weakPin(pin) {
+  if (/^(\d{1,3})\1+$/.test(pin)) return true;
+  const d = [...pin].map(Number), up = d.every((x, i) => !i || x === (d[i - 1] + 1) % 10), down = d.every((x, i) => !i || x === (d[i - 1] + 9) % 10);
+  return up || down;
+}
 async function setPin() {
   const cur = $("#pin0")?.value, a = $("#pin1").value, b = $("#pin2").value;
   if (pinKey) { try { await openLock(cur); } catch (e) { toast("The current PIN isn't right."); return; } }
-  if (!/^\d{6,12}$/.test(a)) { toast("Use 6 to 12 digits for the PIN."); return; }
+  if (!/^\d{6,16}$/.test(a)) { toast("Use 6 to 16 digits for the PIN."); return; }
+  if (weakPin(a)) { toast("That PIN is too easy to guess. Avoid repeated digits and runs like 123456."); return; }
   if (a !== b) { toast("The two PINs don't match."); return; }
   pinSalt = crypto.getRandomValues(new Uint8Array(16)); pinKey = await keyFrom(a, pinSalt);
   await encWrite(JSON.stringify(db)); if (localStorage.getItem(LOCK)) localStorage.removeItem(STORE);
