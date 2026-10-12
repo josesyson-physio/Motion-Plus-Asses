@@ -1326,6 +1326,9 @@ VIEWS.settings = () => {
     <p class="note">${db.patients.length} patients, ${db.assessments.length} assessments, ${db.reports.length} reports, ${db.templates.length} custom templates.</p>
     ${ex ? `<button data-act="clearEx">Remove ${ex} example patients</button>` : ""}
     <button class="link-danger" data-act="wipe">Delete all data on this device</button>
+
+    <h2 class="sec">About</h2>
+    <p class="note">MotionPlus is part of Inclusive.Si, a project from MotionPlus Physio Pvt. Ltd. <a href="https://josesyson-physio.github.io/Motion-Plus-Asses/about/" target="_blank" rel="noopener noreferrer">Read about Inclusive.Si</a></p>
   </div>`;
 };
 let transferPid = "";
