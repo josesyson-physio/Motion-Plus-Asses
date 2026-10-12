@@ -1,3 +1,6 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>MotionPlus Assess</title>
 <meta name="description" content="MotionPlus Assess: digital rehab assessments, progress charts and professional reports for physiotherapy, occupational therapy, speech, sensory and behavioural care.">
 <meta name="robots" content="noindex, nofollow">
@@ -961,7 +964,7 @@ VIEWS.result = aid => {
     ${s.length > 1 ? `<div class="chart">${chartSVG(s, t)}</div>` : ""}
     ${rep ? `<button class="hist" data-act="report" data-id="${rep.id}"><span class="grow"><b>AI report</b><span class="psub">Written ${fmt(rep.date)}${rep.edited ? " · edited" : ""}</span></span><span class="chip neutral">Open</span></button>` : ""}
     <h2 class="sec">Item scores</h2>
-    <div class="tablewrap"><table><thead><tr><th>Item</th><th class="n">${c ? fmtShort(a.date) : "Score"}</th>${c ? `<th class="n">${fmtShort(c.prev.date)}</th>` : ""}</tr></thead><tbody>
+    <div class="tablewrap" tabindex="0" role="region" aria-label="Item scores table"><table><thead><tr><th>Item</th><th class="n">${c ? fmtShort(a.date) : "Score"}</th>${c ? `<th class="n">${fmtShort(c.prev.date)}</th>` : ""}</tr></thead><tbody>
     ${t.fields.map(f => f.t === "head" ? `<tr class="trh"><td colspan="${c ? 3 : 2}">${esc(f.label)}</td></tr>` : (has(a.values[f.id]) || has(pv[f.id])) ? `<tr><td>${esc(f.label)}</td><td class="n">${esc(fmtVal(f, a.values[f.id]))}</td>${c ? `<td class="n muted">${esc(fmtVal(f, pv[f.id]))}</td>` : ""}</tr>` : "").join("")}
     </tbody></table></div>
     ${a.notes ? `<h2 class="sec">Clinical notes</h2><p class="notes">${esc(a.notes)}</p>` : ""}
@@ -1337,14 +1340,17 @@ async function doRestore() {
   try { const j = JSON.parse(await f.text()); if (j.app !== "MotionPlus Assess") throw 0;
     const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(j.iv) }, await keyFrom(pw, unb64(j.salt)), unb64(j.data)); data = JSON.parse(new TextDecoder().decode(pt)); }
   catch (e) { toast("That password doesn't open this file, or it isn't a MotionPlus backup."); return; }
+  if (!data || typeof data !== "object") { toast("That password doesn't open this file, or it isn't a MotionPlus backup."); return; }
   const ids = k => new Set(db[k].map(x => x.id)); let np = 0, na = 0;
   const pIds = ids("patients"), aIds = ids("assessments"), rIds = ids("reports"), tIds = ids("templates");
-  for (const p of data.patients || []) if (!pIds.has(p.id)) { db.patients.push(p); np++; }
-  for (const a of data.assessments || []) if (!aIds.has(a.id)) { db.assessments.push(a); na++; }
-  for (const r of data.reports || []) if (!rIds.has(r.id)) db.reports.push(r);
-  for (const t of data.templates || []) if (!tIds.has(t.id)) db.templates.push(t);
-  if (data.settings && !db.settings.clinic) Object.assign(db.settings, { ...data.settings, next: Math.max(db.settings.next, data.settings.next || 0) });
-  if (save()) { toast(`Imported ${np} patients and ${na} assessments.`); render(); }
+  const P2 = cleanList(data.patients, cleanPatient), A2 = cleanList(data.assessments, cleanAssessment), R2 = cleanList(data.reports, cleanReport), T2 = cleanList(data.templates, cleanTpl), S2 = cleanSettings(data.settings);
+  for (const p of P2.out) if (!pIds.has(p.id)) { db.patients.push(p); np++; }
+  for (const a of A2.out) if (!aIds.has(a.id)) { db.assessments.push(a); na++; }
+  for (const r of R2.out) if (!rIds.has(r.id)) db.reports.push(r);
+  for (const t of T2.out) if (!tIds.has(t.id)) db.templates.push(t);
+  if (S2 && !db.settings.clinic) Object.assign(db.settings, { ...S2, next: Math.max(db.settings.next, S2.next) });
+  const skipped = P2.skipped + A2.skipped + R2.skipped + T2.skipped;
+  if (save()) { toast(`Imported ${np} patients and ${na} assessments.${skipped ? ` ${skipped} damaged record${skipped > 1 ? "s were" : " was"} left out.` : ""}`); render(); }
 }
 function setLogo(file) {
   const img = new Image(), url = URL.createObjectURL(file);
@@ -1448,6 +1454,65 @@ function pdfChart(doc, x, y, w, h, s, t, C) {
 /* ---------- Events ---------- */
 const confirmArm = {};
 function armed(key, btn, label) { if (confirmArm[key] && Date.now() - confirmArm[key] < 4000) return true; confirmArm[key] = Date.now(); btn.textContent = label; return false; }
+/* ---------- Checking imported records ---------- */
+// Backup files and uploaded PDF reports can come from anywhere, so each record is checked before it is stored:
+// ids and dates must be plain, text stays text, numbers stay numbers, and anything else is left out.
+// This stops a doctored file from slipping page code into the app through an id, date, template field or logo.
+const okId = x => typeof x === "string" && /^[\w-]{1,64}$/.test(x);
+const okDate = x => typeof x === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x);
+const txt = x => typeof x === "string" ? x : typeof x === "number" && isFinite(x) ? String(x) : "";
+const numOr = x => typeof x === "number" ? (isFinite(x) ? x : undefined) : typeof x === "string" && x.trim() !== "" && isFinite(x) ? +x : undefined;
+const FIELD_TYPES = ["head", "scale", "sel", "check", "num", "lrnum", "lrsel", "text", "area"], ITEM_KINDS = ITEM_TYPES.map(x => x[0]);
+function cleanVal(x) {
+  if (typeof x === "string" || (typeof x === "number" && isFinite(x))) return x;
+  if (Array.isArray(x)) return x.filter(v => typeof v === "string" || (typeof v === "number" && isFinite(v)));
+  if (x && typeof x === "object") { const o = {}; for (const k of ["L", "R"]) if (typeof x[k] === "string" || (typeof x[k] === "number" && isFinite(x[k]))) o[k] = x[k]; return o; }
+}
+function cleanTpl(t) {
+  if (!t || typeof t !== "object" || !okId(t.id) || !Array.isArray(t.fields)) return null;
+  const fields = t.fields.filter(f => f && FIELD_TYPES.includes(f.t) && (f.id == null || okId(f.id))).map(f => {
+    const o = { t: f.t, label: txt(f.label) }; if (f.id != null) o.id = f.id; if (f.noscore) o.noscore = true;
+    for (const k of ["unit", "hint", "g"]) if (f[k] != null) o[k] = txt(f[k]);
+    for (const k of ["normal", "max", "step", "def", "base"]) { const n = numOr(f[k]); if (n !== undefined) o[k] = n; }
+    if (Array.isArray(f.opts)) o.opts = f.t === "scale" ? f.opts.map(x => Array.isArray(x) ? [numOr(x[0]) ?? 0, txt(x[1])] : txt(x)) : f.opts.map(txt);
+    return o;
+  }).filter(f => !["scale", "sel", "check", "lrsel"].includes(f.t) || f.opts?.length);
+  const o = { id: t.id, custom: true, v: numOr(t.v) ?? 0, name: txt(t.name) || "Untitled template", short: txt(t.short), disc: (Array.isArray(t.disc) ? t.disc : []).map(txt).filter(Boolean),
+    cat: txt(t.cat) || "Custom", desc: txt(t.desc), fields, bands: (Array.isArray(t.bands) ? t.bands : []).filter(b => b && numOr(b.min) !== undefined && numOr(b.max) !== undefined).map(b => ({ min: numOr(b.min), max: numOr(b.max), label: txt(b.label) })),
+    items: (Array.isArray(t.items) ? t.items : []).filter(it => it && ITEM_KINDS.includes(it.type)).map(it => ({ type: it.type, label: txt(it.label), opts: txt(it.opts), unit: txt(it.unit) })), bandsText: txt(t.bandsText) };
+  if (!o.disc.length) o.disc = ["General"];
+  if (typeof t.hb === "boolean") o.hb = t.hb;
+  for (const k of ["mcid", "max"]) { const n = numOr(t[k]); if (n !== undefined) o[k] = n; }
+  for (const k of ["unit", "lic", "mcidNote"]) if (t[k] != null) o[k] = txt(t[k]);
+  return fields.length ? o : null;
+}
+function cleanPatient(p, needId = true) {
+  if (!p || typeof p !== "object" || (needId && !okId(p.id)) || !txt(p.code).trim()) return null;
+  const o = { code: txt(p.code).trim(), age: typeof p.age === "number" && isFinite(p.age) ? p.age : txt(p.age), sex: txt(p.sex), dx: txt(p.dx), ref: txt(p.ref), branch: txt(p.branch), notes: txt(p.notes), created: numOr(p.created) ?? Date.now() };
+  if (needId) o.id = p.id; if (p.ex === true) o.ex = true;
+  return o;
+}
+function cleanAssessment(a) {
+  if (!a || typeof a !== "object" || !okId(a.id) || !okId(a.pid) || !okId(a.tid) || !okDate(a.date)) return null;
+  const values = {}; if (a.values && typeof a.values === "object") for (const [k, v] of Object.entries(a.values)) { const c = okId(k) ? cleanVal(v) : undefined; if (c !== undefined) values[k] = c; }
+  const o = { id: a.id, pid: a.pid, tid: a.tid, date: a.date, values, notes: txt(a.notes), created: numOr(a.created) ?? Date.now() };
+  if (a.tpl != null) { o.tpl = cleanTpl(a.tpl); if (!o.tpl) return null; }
+  return o;
+}
+function cleanReport(r) {
+  if (!r || typeof r !== "object" || !okId(r.id) || !okId(r.pid) || !Array.isArray(r.aids) || !r.aids.length || !r.aids.every(okId) || !okDate(r.date)) return null;
+  return { id: r.id, pid: r.pid, aids: r.aids.slice(), kind: r.kind === "progress" ? "progress" : "single", date: r.date, text: txt(r.text), basic: r.basic === true, edited: r.edited === true };
+}
+function cleanSettings(s) {
+  if (!s || typeof s !== "object") return null;
+  const o = {}; for (const k of ["clinic", "branch", "therapist", "prefix"]) if (s[k] != null) o[k] = txt(s[k]);
+  if ("logo" in s) { o.logo = typeof s.logo === "string" && /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+=*$/.test(s.logo) ? s.logo : null; const ar = numOr(s.logoAR); o.logoAR = ar > 0 ? ar : 1; }
+  o.next = Math.max(1, Math.floor(numOr(s.next) || 1));
+  return o;
+}
+// Cleans a list, counting what had to be left out.
+function cleanList(list, fn) { const arr = Array.isArray(list) ? list : [], out = arr.map(x => fn(x)).filter(Boolean); return { out, skipped: arr.length - out.length }; }
+
 /* ---------- Upload an old report ---------- */
 const NO_DATA = "This PDF has no MotionPlus results inside. Only reports saved from the app from 12 Oct 2026 onwards can be uploaded.";
 async function importReport(file) {
@@ -1457,10 +1522,13 @@ async function importReport(file) {
   try { const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise, kw = (await pdf.getMetadata()).info?.Keywords || "";
     if (!kw.startsWith("MPA1:")) throw 0; data = JSON.parse(new TextDecoder().decode(unb64(kw.slice(5)))); if (data.app !== "MotionPlus Assess" || !data.patient?.code) throw 0; }
   catch (e) { toast(NO_DATA); return; }
-  let p = db.patients.find(x => x.code === data.patient.code), added = 0;
-  if (!p) { p = { ...data.patient, id: uid(), created: Date.now(), ex: false }; db.patients.unshift(p); }
+  const cp = cleanPatient(data.patient, false); if (!cp) { toast(NO_DATA); return; }
+  let p = db.patients.find(x => x.code === cp.code), added = 0;
+  if (!p) { p = { ...cp, id: uid(), created: Date.now(), ex: false }; db.patients.unshift(p); }
   const have = new Set(db.assessments.map(a => a.id));
-  for (const a of data.assessments || []) if (a?.id && !have.has(a.id) && (a.tpl || TPLMAP[a.tid])) { db.assessments.push({ ...a, pid: p.id }); added++; }
+  // The pid check is skipped (records are moved onto this device's patient), so a missing pid is filled before cleaning.
+  for (const raw of Array.isArray(data.assessments) ? data.assessments : []) { const a = cleanAssessment(raw && { ...raw, pid: p.id });
+    if (a && !have.has(a.id) && (a.tpl || TPLMAP[a.tid])) { db.assessments.push(a); added++; } }
   save(); go("patient", p.id);
   toast(added ? `Added ${added} assessment${added > 1 ? "s" : ""} for ${p.code} from the old report. New results will be compared with them.` : `Everything in this report is already on this device for ${p.code}.`);
 }
@@ -1524,6 +1592,8 @@ const ACT = {
   savePatient: d => {
     const code = $("#pcode").value.trim(); if (!code) { toast("Enter a patient code."); return; }
     if (db.patients.some(p => p.code === code && p.id !== d.id)) { toast("That code is already in use."); return; }
+    const age = $("#page").value; if (age !== "" && !(+age >= 0 && +age <= 120)) { toast("Enter an age between 0 and 120 years."); $("#page").focus(); return; }
+    if ($("#page").validity.badInput) { toast("Enter the age as a number."); $("#page").focus(); return; }
     const vals = { code, age: $("#page").value, sex: $("#psex").value, dx: $("#pdx").value.trim(), ref: $("#pref").value.trim(), branch: $("#pbr").value.trim(), notes: $("#pnotes").value.trim() };
     let p; if (d.id) { p = P(d.id); Object.assign(p, vals); } else { p = { id: uid(), created: Date.now(), ...vals }; if (code === nextCodePreview()) nextCode(); db.patients.unshift(p); }
     if (!save()) return; toast(d.id ? "Changes saved" : "Patient added"); d.then ? startForm(p.id, d.then) : go("patient", p.id);
