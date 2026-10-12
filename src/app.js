@@ -157,7 +157,7 @@ let q = "", libQ = "", libDisc = "All";
 VIEWS.patients = () => {
   chrome("patients");
   $("#app").innerHTML = `
-  ${topHead("Home")}
+  ${topHead("Home", `<button class="ghost" data-act="about">About</button>`)}
   <div class="stack">
     <section class="hero"><div><div class="label">${esc(db.settings.branch || "MotionPlus Assess")}</div><h2>Assess. Track. <em>Report.</em></h2><p class="note">${db.settings.therapist ? `Signed in as ${esc(db.settings.therapist)}` : "Digital rehab assessments for every discipline."}</p></div><img src="${MP_LOGO}" alt=""></section>
     <div class="stats"><div class="stat"><b>${db.patients.length}</b><span>Patients</span></div><div class="stat"><b>${db.assessments.filter(a => a.date >= daysAgo(30)).length}</b><span>Tests, 30 days</span></div><div class="stat"><b>${db.reports.length}</b><span>AI reports</span></div></div>
@@ -710,6 +710,9 @@ VIEWS.settings = () => {
     <button data-act="restore">Import records</button>
     <p class="note">Importing adds patients and assessments. It never deletes what's already here.</p>
 
+    <h2 class="sec">About</h2>
+    <button data-act="about">About Inclusive.Si and MotionPlus Physio</button>
+
     <h2 class="sec">Data on this device</h2>
     <p class="note">${db.patients.length} patients, ${db.assessments.length} assessments, ${db.reports.length} reports, ${db.templates.length} custom templates.</p>
     ${ex ? `<button data-act="clearEx">Remove ${ex} example patients</button>` : ""}
@@ -996,6 +999,7 @@ async function removePin() {
 }
 
 const ACT = {
+  about: () => go("about"),
   lockNow: () => lockNow(),
   setPin: () => setPin(),
   removePin: () => removePin(),
@@ -1065,6 +1069,12 @@ const ACT = {
   wipe: (d, b) => { if (!armed("wipe", b, "Tap again to erase everything on this device")) return; pinKey = null; localStorage.removeItem(LOCK); db = { ...seed(), patients: [], assessments: [] }; db.settings.next = 1; save(); toast("All data deleted"); go("patients"); },
 };
 let previewTpl = null;
+VIEWS.about = () => {
+  chrome(null);
+  if (!document.getElementById("isiFonts")) document.head.insertAdjacentHTML("beforeend", '<link id="isiFonts" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap">');
+  $("#app").innerHTML = `<header>${back("tab", 'data-tab="patients"')}<h1>About</h1></header>`;
+  $("#app").append($("#aboutTpl").content.cloneNode(true));
+};
 VIEWS.pdfview = () => {
   const v = pdfPreview; chrome(null, `<button class="primary wide" data-act="pdfBack">Done</button>`);
   $("#app").innerHTML = `<header>${back("pdfBack")}<h1>Report pages</h1></header>
