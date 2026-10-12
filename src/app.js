@@ -36,9 +36,25 @@ function seed() {
     templates: [], reports: [],
   };
 }
-function load() { try { const d = JSON.parse(localStorage.getItem(STORE)); if (d && d.patients) return d; } catch (e) {} return seed(); }
+/* PIN lock: when a PIN is set, records are stored only encrypted (AES-GCM, key derived from the PIN) under LOCK, and the
+   decrypted copy lives in memory until the app locks. Without a PIN, records are stored as plain JSON under STORE. */
+const LOCK = STORE + "-lock", TRIES = STORE + "-tries";
+let pinKey = null, pinSalt = null, locked = !!localStorage.getItem(LOCK), encQueue = Promise.resolve();
+const emptyDb = () => ({ ...seed(), patients: [], assessments: [] });
+function load() { if (locked) return emptyDb(); try { const d = JSON.parse(localStorage.getItem(STORE)); if (d && d.patients) return d; } catch (e) {} return seed(); }
 let db = load();
-function save() { try { localStorage.setItem(STORE, JSON.stringify(db)); return true; } catch (e) { toast("This device's storage is full. Save a backup, then delete old records."); return false; } }
+const FULL = "This device's storage is full. Save a backup, then delete old records.";
+function save() {
+  if (locked) return false;
+  if (pinKey) { const json = JSON.stringify(db); encQueue = encQueue.then(() => encWrite(json)); return true; }
+  try { localStorage.setItem(STORE, JSON.stringify(db)); return true; } catch (e) { toast(FULL); return false; }
+}
+async function encWrite(json) {
+  const iv = crypto.getRandomValues(new Uint8Array(12)), ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, pinKey, new TextEncoder().encode(json)));
+  try { localStorage.setItem(LOCK, JSON.stringify({ v: 1, salt: b64(pinSalt), iv: b64(iv), data: b64(ct) })); } catch (e) { toast(FULL); }
+}
+async function openLock(pin) { const j = JSON.parse(localStorage.getItem(LOCK)), salt = unb64(j.salt), key = await keyFrom(pin, salt);
+  const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(j.iv) }, key, unb64(j.data)); return { key, salt, data: JSON.parse(new TextDecoder().decode(pt)) }; }
 
 /* ---------- Helpers ---------- */
 const $ = s => document.querySelector(s);
@@ -130,8 +146,9 @@ function chrome(tab, barHtml) {
 }
 const back = (act, extra = "") => `<button class="back" data-act="${act}" ${extra} aria-label="Back">‹</button>`;
 const brand = () => `<div class="brand">MOTIONPLUS PHYSIO${db.settings.clinic ? " · " + esc(db.settings.clinic).toUpperCase() : ""}</div>`;
-const topHead = (title, right = "") => `<header><img class="mark" src="${MP_LOGO}" alt="MotionPlus Physio"><div class="grow">${brand()}<h1>${title}</h1></div>${right}</header>`;
-const IC = { user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.6-3.6 3.2-5.5 6.5-5.5 1.6 0 3 .4 4.1 1.2M18 14v6M15 17h6"/></svg>', clip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 3.5V2.5h6v1M8.5 9h7M8.5 12.5h7M8.5 16h4"/></svg>', cam: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>' };
+const LOCK_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+const topHead = (title, right = "") => `<header><img class="mark" src="${MP_LOGO}" alt="MotionPlus Physio"><div class="grow">${brand()}<h1>${title}</h1></div>${right}${pinKey ? `<button class="ghost headlock" data-act="lockNow" aria-label="Lock the app">${LOCK_IC}</button>` : ""}</header>`;
+const IC = { up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 18v-6M9 15l3-3 3 3"/></svg>', user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.6-3.6 3.2-5.5 6.5-5.5 1.6 0 3 .4 4.1 1.2M18 14v6M15 17h6"/></svg>', clip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 3.5V2.5h6v1M8.5 9h7M8.5 12.5h7M8.5 16h4"/></svg>', cam: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>' };
 
 /* ---------- Views ---------- */
 const VIEWS = {};
@@ -144,7 +161,7 @@ VIEWS.patients = () => {
   <div class="stack">
     <section class="hero"><div><div class="label">${esc(db.settings.branch || "MotionPlus Assess")}</div><h2>Assess. Track. <em>Report.</em></h2><p class="note">${db.settings.therapist ? `Signed in as ${esc(db.settings.therapist)}` : "Digital rehab assessments for every discipline."}</p></div><img src="${MP_LOGO}" alt=""></section>
     <div class="stats"><div class="stat"><b>${db.patients.length}</b><span>Patients</span></div><div class="stat"><b>${db.assessments.filter(a => a.date >= daysAgo(30)).length}</b><span>Tests, 30 days</span></div><div class="stat"><b>${db.reports.length}</b><span>AI reports</span></div></div>
-    <div class="quick"><button class="primary" data-act="newPatient">${IC.user}New patient</button><button data-act="tab" data-tab="library">${IC.clip}Start a test</button><button data-act="builder" data-pid="">${IC.cam}Form from photo</button></div>
+    <div class="quick"><button class="primary" data-act="newPatient">${IC.user}New patient</button><button data-act="tab" data-tab="library">${IC.clip}Start a test</button><button data-act="builder" data-pid="">${IC.cam}Form from photo</button><label class="qfile">${IC.up}<span>Upload old report</span><input type="file" class="oldrep" accept="application/pdf,.pdf" aria-label="Upload an old MotionPlus PDF report"></label></div>
     <h2 class="sec">Patients</h2>
     <input id="q" type="search" placeholder="Search by code or diagnosis" value="${esc(q)}" aria-label="Search patients">
     <div class="stack" id="plist"></div>
@@ -201,6 +218,7 @@ VIEWS.patient = id => {
       <button data-act="pdfPatient" data-id="${id}" ${as.length ? "" : "disabled"}>PDF summary</button>
       <button data-act="transfer" data-id="${id}">Transfer</button>
     </div>
+    <label class="filebtn">${IC.up}<span>Upload old report to compare</span><input type="file" class="oldrep" accept="application/pdf,.pdf" aria-label="Upload an old MotionPlus PDF report"></label>
     ${charts ? `<h2 class="sec">Progress</h2>${charts}` : ""}
     <h2 class="sec">Assessments</h2>
     <div>${as.map(a => { const t = getTpl(a), r = runScore(t, a.values, p); return `<button class="hist" data-act="result" data-id="${a.id}">
@@ -666,6 +684,13 @@ VIEWS.settings = () => {
     <p class="note">Reports always carry the MotionPlus Physio watermark. Your logo appears in the report header.</p>
     <div class="field"><label class="label" for="sprefix">Patient code prefix</label><input id="sprefix" data-s="prefix" value="${esc(s.prefix)}" maxlength="10"><span class="note">Next code: ${esc(nextCodePreview())}. Use a branch prefix like MP-B2 to keep codes unique across branches.</span></div>
 
+    <h2 class="sec">PIN lock</h2>
+    <p class="note">${pinKey ? "On. Records on this device are encrypted and the app asks for the PIN when it opens, after 5 minutes in the background, or after 10 minutes without use." : "Off. Anyone holding this device can open the records. Turn on a PIN to encrypt them on this device."} If the PIN is forgotten, records can only come back from a backup file.</p>
+    ${pinKey ? `<div class="field"><label class="label" for="pin0">Current PIN</label><input id="pin0" type="password" inputmode="numeric" autocomplete="off" maxlength="12"></div>` : ""}
+    <div class="row2"><div class="field"><label class="label" for="pin1">${pinKey ? "New PIN" : "PIN (6 to 12 digits)"}</label><input id="pin1" type="password" inputmode="numeric" autocomplete="new-password" maxlength="12"></div>
+      <div class="field"><label class="label" for="pin2">Repeat ${pinKey ? "new " : ""}PIN</label><input id="pin2" type="password" inputmode="numeric" autocomplete="new-password" maxlength="12"></div></div>
+    <div class="actions"><button data-act="setPin">${pinKey ? "Change PIN" : "Turn on PIN lock"}</button>${pinKey ? `<button data-act="removePin">Turn off</button><button data-act="lockNow">Lock now</button>` : ""}</div>
+
     <h2 class="sec">Backup and transfer</h2>
     <p class="note">Records stay on this device only. Save an encrypted backup file to keep a copy or move patients to another branch's device.</p>
     <div class="field"><label class="label" for="bscope">What to include</label><select id="bscope"><option value="">All patients (${db.patients.length})</option>${db.patients.map(p => `<option value="${p.id}" ${transferPid === p.id ? "selected" : ""}>${esc(p.code)} only</option>`).join("")}</select></div>
@@ -793,6 +818,9 @@ async function makePdf({ pid, aids, report, title }) {
   const n = doc.getNumberOfPages();
   for (let i = 1; i <= n; i++) { doc.setPage(i); doc.setDrawColor(217, 226, 223); doc.line(M, 287, W - M, 287); try { doc.addImage(JC_SIG, "PNG", W - 13, 289.5, 9, 5.96); } catch (e) {} doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); doc.setTextColor(...MUTED);
     doc.text(pdfSafe(`MotionPlus Physio  ·  ${p.code}  ·  Confidential clinical record`), M, 291); doc.text(`Page ${i} of ${n}`, W - M, 291, { align: "right" }); }
+  // Carry the results inside the PDF so this report can be uploaded again later for comparison (see importReport).
+  const { notes, ...pd } = p, payload = { app: "MotionPlus Assess", format: 1, patient: pd, assessments: aids.map(A).filter(Boolean) };
+  doc.setProperties({ title: pdfSafe(`${title} ${p.code}`), subject: "MotionPlus Assess report", creator: "MotionPlus Assess", keywords: "MPA1:" + b64(new TextEncoder().encode(JSON.stringify(payload))) });
   await saveFile(`${p.code}-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${today()}.pdf`, doc.output("blob"));
 }
 function pdfChart(doc, x, y, w, h, s, t, C) {
@@ -811,7 +839,75 @@ function pdfChart(doc, x, y, w, h, s, t, C) {
 /* ---------- Events ---------- */
 const confirmArm = {};
 function armed(key, btn, label) { if (confirmArm[key] && Date.now() - confirmArm[key] < 4000) return true; confirmArm[key] = Date.now(); btn.textContent = label; return false; }
+/* ---------- Upload an old report ---------- */
+const NO_DATA = "This PDF has no MotionPlus results inside. Only reports saved from the app from 12 Oct 2026 onwards can be uploaded.";
+async function importReport(file) {
+  if (!/pdf$/i.test(file.type) && !/\.pdf$/i.test(file.name)) { toast("Choose a PDF report saved from MotionPlus Assess."); return; }
+  try { await need("pdf"); } catch (e) { toast("The PDF reader didn't load. Check the internet connection and try again."); return; }
+  let data;
+  try { const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise, kw = (await pdf.getMetadata()).info?.Keywords || "";
+    if (!kw.startsWith("MPA1:")) throw 0; data = JSON.parse(new TextDecoder().decode(unb64(kw.slice(5)))); if (data.app !== "MotionPlus Assess" || !data.patient?.code) throw 0; }
+  catch (e) { toast(NO_DATA); return; }
+  let p = db.patients.find(x => x.code === data.patient.code), added = 0;
+  if (!p) { p = { ...data.patient, id: uid(), created: Date.now(), ex: false }; db.patients.unshift(p); }
+  const have = new Set(db.assessments.map(a => a.id));
+  for (const a of data.assessments || []) if (a?.id && !have.has(a.id) && (a.tpl || TPLMAP[a.tid])) { db.assessments.push({ ...a, pid: p.id }); added++; }
+  save(); go("patient", p.id);
+  toast(added ? `Added ${added} assessment${added > 1 ? "s" : ""} for ${p.code} from the old report. New results will be compared with them.` : `Everything in this report is already on this device for ${p.code}.`);
+}
+
+/* ---------- PIN lock screen ---------- */
+let lockMsg = "";
+VIEWS.lock = () => {
+  chrome(null);
+  $("#app").innerHTML = `<div class="lock"><img src="${MP_LOGO}" alt="MotionPlus Physio"><h1>MotionPlus Assess</h1><p class="note">Enter your PIN to open the patient records on this device.</p>
+    <form id="lockform"><label class="label" for="pinin">PIN</label><input id="pinin" type="password" inputmode="numeric" autocomplete="off" maxlength="12" required>
+    <p class="err" role="alert">${esc(lockMsg)}</p><button class="primary" type="submit">Unlock</button></form>
+    <button class="link-danger" data-act="forgotPin">Forgot PIN?</button></div>`;
+  setTimeout(() => $("#pinin")?.focus(), 50);
+};
+async function tryUnlock() {
+  const t = JSON.parse(localStorage.getItem(TRIES) || "{}"), wait = Math.ceil(((t.until || 0) - Date.now()) / 1000);
+  if (wait > 0) { lockMsg = `Too many wrong tries. Wait ${wait} seconds.`; render(); return; }
+  const pin = $("#pinin").value; if (!pin) return;
+  $("#lockform button").disabled = true;
+  try { const o = await openLock(pin); pinKey = o.key; pinSalt = o.salt; db = o.data; locked = false; lockMsg = ""; localStorage.removeItem(TRIES);
+    const pd = db.pendingDraft; delete db.pendingDraft;
+    if (pd) { draft = pd; go("form"); } else go("patients"); }
+  catch (e) { const n = (t.n || 0) + 1; localStorage.setItem(TRIES, JSON.stringify({ n, until: n >= 5 ? Date.now() + 30000 * 2 ** (n - 5) : 0 }));
+    lockMsg = n >= 5 ? "Wrong PIN. Too many tries, wait 30 seconds." : `Wrong PIN. ${5 - n} tr${5 - n === 1 ? "y" : "ies"} left before a short wait.`; render(); }
+}
+async function lockNow() {
+  if (!pinKey || locked) return;
+  if (view.name === "form" && draft) { db.pendingDraft = draft; save(); }
+  await encQueue; db = emptyDb(); draft = null; pinKey = null; locked = true; lockMsg = ""; go("lock");
+}
+// Lock after 5 minutes in the background or 10 minutes without a tap. An open form is kept and reopened after unlocking.
+let lastUse = Date.now(), hiddenAt = 0;
+["pointerdown", "keydown"].forEach(ev => document.addEventListener(ev, () => { lastUse = Date.now(); }, true));
+document.addEventListener("visibilitychange", () => { if (document.hidden) hiddenAt = Date.now(); else if (hiddenAt && Date.now() - hiddenAt > 5 * 60000) lockNow(); });
+setInterval(() => { if (pinKey && Date.now() - lastUse > 10 * 60000) lockNow(); }, 30000);
+async function setPin() {
+  const cur = $("#pin0")?.value, a = $("#pin1").value, b = $("#pin2").value;
+  if (pinKey) { try { await openLock(cur); } catch (e) { toast("The current PIN isn't right."); return; } }
+  if (!/^\d{6,12}$/.test(a)) { toast("Use 6 to 12 digits for the PIN."); return; }
+  if (a !== b) { toast("The two PINs don't match."); return; }
+  pinSalt = crypto.getRandomValues(new Uint8Array(16)); pinKey = await keyFrom(a, pinSalt);
+  await encWrite(JSON.stringify(db)); if (localStorage.getItem(LOCK)) localStorage.removeItem(STORE);
+  toast(cur ? "PIN changed." : "PIN lock is on. The app asks for it each time it opens."); render();
+}
+async function removePin() {
+  try { await openLock($("#pin0").value); } catch (e) { toast("The current PIN isn't right."); return; }
+  await encQueue; pinKey = null; pinSalt = null;
+  if (save()) localStorage.removeItem(LOCK); toast("PIN lock is off."); render();
+}
+
 const ACT = {
+  lockNow: () => lockNow(),
+  setPin: () => setPin(),
+  removePin: () => removePin(),
+  forgotPin: (d, b) => { if (!armed("fp", b, "Tap again to erase this device's records and start again")) return;
+    localStorage.removeItem(LOCK); localStorage.removeItem(STORE); localStorage.removeItem(TRIES); locked = false; pinKey = null; db = emptyDb(); db.settings.next = 1; save(); toast("Records erased. Restore a backup file in Settings to bring them back."); go("patients"); },
   tab: d => go(d.tab),
   patient: d => go("patient", d.id),
   newPatient: d => go("editPatient", null, d.then),
@@ -871,7 +967,7 @@ const ACT = {
   restore: () => doRestore(),
   clearEx: (d, b) => { if (!armed("cx", b, "Tap again to remove examples")) return; const ids = new Set(db.patients.filter(p => p.ex).map(p => p.id));
     db.patients = db.patients.filter(p => !ids.has(p.id)); db.assessments = db.assessments.filter(a => !ids.has(a.pid)); db.reports = db.reports.filter(r => !ids.has(r.pid)); save(); toast("Examples removed"); render(); },
-  wipe: (d, b) => { if (!armed("wipe", b, "Tap again to erase everything on this device")) return; db = { ...seed(), patients: [], assessments: [] }; db.settings.next = 1; save(); toast("All data deleted"); go("patients"); },
+  wipe: (d, b) => { if (!armed("wipe", b, "Tap again to erase everything on this device")) return; pinKey = null; localStorage.removeItem(LOCK); db = { ...seed(), patients: [], assessments: [] }; db.settings.next = 1; save(); toast("All data deleted"); go("patients"); },
 };
 let previewTpl = null;
 VIEWS.pdfview = () => {
@@ -903,12 +999,14 @@ document.addEventListener("change", e => {
   const el = e.target;
   if (el.dataset.f && draft && view.name === "form") setVal(el.dataset.f, el.dataset.k, el.value);
   if (el.id === "slogo" && el.files[0]) setLogo(el.files[0]);
+  if (el.classList.contains("oldrep") && el.files[0]) { const f = el.files[0]; el.value = ""; importReport(f); }
   if (el.id === "tplfile" && el.files.length) { syncBuilder(); upFiles.push(...el.files); tplStatus = null; render(); }
   if (el.dataset.tk === "type") { syncBuilder(); render(); }
   if (el.id === "sprefix") render();
 });
 
+document.addEventListener("submit", e => { if (e.target.id === "lockform") { e.preventDefault(); tryUnlock(); } });
 document.documentElement.lang = "en";
-go("patients");
+go(locked ? "lock" : "patients");
 // Load the PDF tool once the first screen is up, so reports still work if the connection drops later.
 setTimeout(() => need("jspdf").catch(() => {}), 1500);
