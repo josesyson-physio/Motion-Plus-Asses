@@ -1,4 +1,6 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1d5fa8"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="../assets/motionplus-logo.jpg"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>MotionPlus Posture</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1d5fa8"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="../assets/motionplus-logo.jpg"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>MotionPlus Posture · Posture and gait assessment</title>
+<meta name="description" content="On-device posture and gait assessment for physiotherapists: plumb-line photo analysis, spine curves, walking video analysis, progress tracking and a printable PDF report. Photos and videos stay on the device.">
+<meta property="og:title" content="MotionPlus Posture"><meta property="og:description" content="Posture and gait assessment with on-device analysis and a printable report.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
@@ -7,6 +9,7 @@
   --bg:#eef2f4; --surface:#ffffff; --surface-2:#f5f8f9; --ink:#14232b; --muted:#56666e; --line:#d3dce0;
   --grid:#c9dbe8; --plumb:#1d5fa8; --accent:#1d5fa8; --accent-ink:#ffffff; --figure:#c7d0d5; --bone:#33444d;
   --spine:#c2185b; --ok:#2c8a57; --train:#c98410; --treat:#c3352b; --ok-bg:#e3f2e9; --train-bg:#fbf0d9; --treat-bg:#f9e1de;
+  --ok-ink:#1e6b42; --train-ink:#7f5200; --treat-ink:#a32a20;
   --paper:#ffffff; --paper-ink:#14232b;
   --r-paper:#ffffff; --r-ink:#15222c; --r-muted:#5d6b74; --r-line:#dfe5e9; --r-wash:#f3f6f8; --r-navy:#0f2438; --r-blue:#1d5fa8; --r-teal:#2a9d8f; --r-mist:#a9bccb;
   --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
@@ -16,11 +19,11 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0f171b; --surface:#16222a; --surface-2:#1c2a33; --ink:#e3ecf0; --muted:#97a9b2; --line:#2c3d47;
   --grid:#24394a; --plumb:#6fa8e6; --accent:#6fa8e6; --accent-ink:#0b1620; --figure:#3a4c57; --bone:#c9d6dc;
-  --spine:#f06292; --ok:#5cc28a; --train:#e8ab45; --treat:#ef6f63; --ok-bg:#183326; --train-bg:#3a2c12; --treat-bg:#3d1c19; color-scheme:dark}}
+  --spine:#f06292; --ok:#5cc28a; --train:#e8ab45; --treat:#ef6f63; --ok-bg:#183326; --train-bg:#3a2c12; --treat-bg:#3d1c19; --ok-ink:#5cc28a; --train-ink:#e8ab45; --treat-ink:#ef6f63; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0f171b; --surface:#16222a; --surface-2:#1c2a33; --ink:#e3ecf0; --muted:#97a9b2; --line:#2c3d47;
   --grid:#24394a; --plumb:#6fa8e6; --accent:#6fa8e6; --accent-ink:#0b1620; --figure:#3a4c57; --bone:#c9d6dc;
-  --spine:#f06292; --ok:#5cc28a; --train:#e8ab45; --treat:#ef6f63; --ok-bg:#183326; --train-bg:#3a2c12; --treat-bg:#3d1c19; color-scheme:dark}
+  --spine:#f06292; --ok:#5cc28a; --train:#e8ab45; --treat:#ef6f63; --ok-bg:#183326; --train-bg:#3a2c12; --treat-bg:#3d1c19; --ok-ink:#5cc28a; --train-ink:#e8ab45; --treat-ink:#ef6f63; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45}
@@ -38,7 +41,7 @@ h3{font-size:1.2rem}
 .tabs{display:flex;gap:4px;overflow-x:auto}
 .tab{appearance:none;border:0;background:none;color:var(--muted);font:600 1rem var(--f-display);letter-spacing:.04em;text-transform:uppercase;padding:8px 12px 10px;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap}
 .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
-.tab:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tab:focus-visible,.btn:focus-visible,label.empty:focus-visible,summary:focus-visible,.tablewrap:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[contenteditable]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:12px;min-width:0}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .grid2{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))}
@@ -55,9 +58,9 @@ input,select,textarea{font:inherit;color:var(--ink);background:var(--surface-2);
 .banner p{margin:0}
 .chip{line-height:1.5;display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:2px 10px;font:600 .8rem var(--f-body);letter-spacing:.02em;border:1px solid transparent;white-space:nowrap}
 .chip::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:currentColor}
-.s-ok{color:var(--ok);background:var(--ok-bg)}
-.s-train{color:var(--train);background:var(--train-bg)}
-.s-treat{color:var(--treat);background:var(--treat-bg)}
+.s-ok{color:var(--ok-ink);background:var(--ok-bg)}
+.s-train{color:var(--train-ink);background:var(--train-bg)}
+.s-treat{color:var(--treat-ink);background:var(--treat-bg)}
 .s-na{color:var(--muted);background:var(--surface-2)}
 button.chip{cursor:pointer;border-color:currentColor}
 .checklist{margin:0;padding-left:1.1rem;display:grid;gap:3px;font-size:.9rem}
@@ -74,7 +77,9 @@ button.chip{cursor:pointer;border-color:currentColor}
 label.empty{cursor:pointer}
 .empty{aspect-ratio:3/4;max-height:300px;width:100%;max-width:100%;border:2px dashed var(--line);border-radius:8px;display:grid;place-items:center;text-align:center;color:var(--muted);padding:12px;font-size:.9rem}
 .warn{font-size:.82rem;color:var(--train);margin:0}
-.ok-line{font-size:.82rem;color:var(--ok);margin:0}
+.field-err{color:var(--treat-ink);font-size:.82rem;font-weight:600}
+input[aria-invalid=true]{border-color:var(--treat)}
+.ok-line{font-size:.82rem;color:var(--ok-ink);margin:0}
 .tablewrap{overflow-x:auto}
 table{border-collapse:collapse;width:100%;font-size:.88rem}
 th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
@@ -329,7 +334,7 @@ details summary{cursor:pointer;font-weight:600}
     </div>
     <div class="panel">
       <h3>Clinical measurements</h3>
-      <div class="tablewrap"><table id="mtable"></table></div>
+      <div class="tablewrap" tabindex="0" role="region" aria-label="Clinical measurements"><table id="mtable"></table></div>
       <details>
         <summary>Normal ranges (editable)</summary>
         <p class="note">Defaults follow Kendall plumb-line alignment and common photogrammetry ranges. Values up to "Normal" score green; up to "Mild" amber; beyond that red.</p>
@@ -380,7 +385,7 @@ details summary{cursor:pointer;font-weight:600}
     </div>
     <div class="panel">
       <h3>Gait measurements</h3>
-      <div class="tablewrap"><table id="gTable" class="gtable"></table></div>
+      <div class="tablewrap" tabindex="0" role="region" aria-label="Gait measurements"><table id="gTable" class="gtable"></table></div>
       <details>
         <summary>Normal ranges (editable)</summary>
         <p class="note">Values inside the range score green; within the margin outside it amber; beyond that red. Defaults are typical adult values; adjust for children, older adults or athletes.</p>
@@ -415,8 +420,8 @@ details summary{cursor:pointer;font-weight:600}
         <div class="row"><label class="field" style="flex:1 1 150px">Before<select id="prA"></select></label><label class="field" style="flex:1 1 150px">After<select id="prB"></select></label></div>
         <p class="note">Grey dashed: before. Blue: after. Both are scaled to the same height and lined up on the plumb line.</p>
         <div class="prfigs" id="prFigs"></div>
-        <div class="tablewrap"><table id="prTable"></table></div>
-        <details class="prmore"><summary id="prMetricsSum">All measures</summary><div class="tablewrap"><table id="prMetrics"></table></div></details>
+        <div class="tablewrap" tabindex="0" role="region" aria-label="Score changes"><table id="prTable"></table></div>
+        <details class="prmore"><summary id="prMetricsSum">All measures</summary><div class="tablewrap" tabindex="0" role="region" aria-label="All measures"><table id="prMetrics"></table></div></details>
       </div>
       <div class="panel"><h2>Visits</h2><div id="prList"></div></div>
     </div>
@@ -444,10 +449,17 @@ details summary{cursor:pointer;font-weight:600}
 </div>
 <div class="toast" id="toast" hidden></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script type="module">
 /* ---------------- constants ---------------- */
+// The PDF libraries (about 550 KB) load only when a PDF is first made, so the app opens faster.
+const PDF_LIBS=['https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js','https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'];
+let pdfLibsP=null;
+function loadPdfLibs(){
+  if (window.html2canvas && window.jspdf) return Promise.resolve();
+  if (!pdfLibsP) pdfLibsP = Promise.all(PDF_LIBS.map(src=>new Promise((res,rej)=>{ const sc=document.createElement('script'); sc.src=src; sc.onload=res; sc.onerror=rej; document.head.appendChild(sc); })))
+    .catch(e=>{ pdfLibsP=null; throw e; });
+  return pdfLibsP;
+}
 const $ = s => document.querySelector(s);
 const PAPER = {ink:'#14232b',muted:'#56666e',line:'#d3dce0',grid:'#dbe7ef',plumb:'#1d5fa8',figure:'#c7d0d5',bone:'#33444d',ok:'#2c8a57',train:'#c98410',treat:'#c3352b',bg:'#ffffff',font:'Arial,Helvetica,sans-serif'};
 const SCREEN = {ink:'var(--ink)',muted:'var(--muted)',line:'var(--line)',grid:'var(--grid)',plumb:'var(--plumb)',figure:'var(--figure)',bone:'var(--bone)',ok:'var(--ok)',train:'var(--train)',treat:'var(--treat)',bg:'var(--surface)',font:'Source Sans 3,Arial,sans-serif'};
@@ -572,6 +584,8 @@ const store = {
   set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); return true; }catch{ return false; } },
 };
 const toast = msg => { const t=$('#toast'); t.textContent=msg; t.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(()=>t.hidden=true,3200); };
+// Height feeds centimetre values and walking speed, so only a believable value is used.
+const heightCm = () => { const h=parseFloat(S.patient.height); return h>=80&&h<=230 ? h : null; };
 const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt = (v,d=1) => (v==null||!isFinite(v))?'–':(Math.round(v*10**d)/10**d).toFixed(d);
 const deg = r => r*180/Math.PI;
@@ -702,7 +716,7 @@ function patternsOf(M){
 }
 const cap = s => s.charAt(0).toUpperCase()+s.slice(1);
 function plainText(k, m, frH){
-  const v=fmt(m.v); const h=+S.patient.height;
+  const v=fmt(m.v); const h=heightCm();
   const cm = (m.cm!=null && h) ? ` (about ${fmt(m.cm*h*0.89,1)} cm)` : '';
   switch(k){
     case 'headTilt': return `Head tilts toward the ${m.side} by ${v}°.`;
@@ -1623,7 +1637,7 @@ function analyseSide(G){
   const tl=median(stepT.l), tr=median(stepT.r); if(tl&&tr) M.stepTimeAsym={v:Math.abs(tl-tr)/((tl+tr)/2)*100,l:tl,r:tr,unitLR:' s'};
   const sl=median(stepL.l), sr=median(stepL.r);
   if (sl||sr){ M.stepLen={v:mean([sl,sr]),l:sl,r:sr}; if(sl&&sr) M.stepLenAsym={v:Math.abs(sl-sr)/((sl+sr)/2)*100,l:sl,r:sr};
-    const h=+S.patient.height; if(h>0&&M.cadence){ const stepM=M.stepLen.v*0.48*h/100; M.speed={v:M.cadence.v/60*stepM,stepCm:stepM*100}; } }
+    const h=heightCm(); if(h&&M.cadence){ const stepM=M.stepLen.v*0.48*h/100; M.speed={v:M.cadence.v/60*stepM,stepCm:stepM*100}; } }
   const per=(s,f)=>median(strides[s].map(f));
   const stL=per('l',x=>x.stance), stR=per('r',x=>x.stance); if(stL!=null||stR!=null) M.stance={v:mean([stL,stR]),l:stL,r:stR};
   for (const s of ['l','r']){ const S_=s.toUpperCase(); if(!strides[s].length) continue;
@@ -1999,6 +2013,8 @@ async function makePDF(){
   const btn=$('#pdfBtn'); btn.disabled=true; $('#pdfStatus').textContent='Building PDF…';
   const r=$('#report'); const prev=r.style.transform; r.style.transform='none';
   try{
+    $('#pdfStatus').textContent='Preparing the PDF…';
+    try{ await loadPdfLibs(); }catch{ throw new Error('libs'); }
     await document.fonts?.ready;
     const unraster = await rasterizeSVGs(r);
     const pages=[];
@@ -2010,7 +2026,9 @@ async function makePDF(){
     pages.forEach((c,i)=>{ if (i) pdf.addPage(); pdf.addImage(c.toDataURL('image/jpeg',0.93),'JPEG',0,0,210,297); });
     await saveFile(fileBase()+'.pdf', pdf.output('blob'));
     $('#pdfStatus').textContent='';
-  }catch(e){ r.style.transform=prev; $('#pdfStatus').textContent='Could not build the PDF: '+(e?.message||e); }
+  }catch(e){ r.style.transform=prev; console.error('PDF build failed', e);
+    $('#pdfStatus').textContent = e?.message==='libs' ? 'The PDF tools could not load. Check the internet connection and tap Save PDF report again.'
+      : 'The PDF could not be made on this device. Close other apps or tabs, then tap Save PDF report again.'; }
   btn.disabled=false; fitReport();
 }
 function sessionData(slim=false){
@@ -2042,6 +2060,7 @@ function fillPrevSelect(){
 const pKey = p => ((p?.id||'').trim() || (p?.name||'').trim()).toLowerCase();
 const pLabel = p => `${p?.name||'Unnamed'}${p?.id?' · '+p.id:''}`;
 const sDate = d => d.patient?.date || d.savedAt?.slice(0,10) || '';
+const INK = {ok:'var(--ok-ink)',train:'var(--train-ink)',treat:'var(--treat-ink)',figure:'var(--muted)'};
 const scoreHex = (pal,s) => s==null?pal.figure:s>=80?pal.ok:s>=60?pal.train:pal.treat;
 function slimSession(d){ return d?.gait ? {...d, gait:{...d.gait, side:null, back:null}} : d; }
 function hasData(){ return !!(A && (A.overall!=null || Object.keys(A.M).length)) || !!(GA && Object.keys(GA.M).length); }
@@ -2165,15 +2184,15 @@ function renderProgress(){
     + tile('Regions improved',regCount&&hist.length>1?`${regBetter} of ${regCount}`:'–','by 3 points or more','var(--line)');
   const tw=Math.max(320,Math.min(720,$('#prTrend').clientWidth||640)); $('#prTrend').innerHTML = trendSVG(hist,{...SCREEN,spine:'var(--spine)'},tw,tw<500?220:240);
   $('#prRegions').innerHTML = REGIONS.map(r=>{ const vals=hist.map(d=>d.regionScores?.[r.k]??null); const lv=vals[vals.length-1], fv=vals.find(v=>v!=null);
-    return `<div class="tile"><small>${r.short}</small><div class="row" style="justify-content:space-between;gap:6px"><b style="color:${scoreHex(SCREEN,lv)}">${lv==null?'–':Math.round(lv)}</b><span class="note">${hist.length>1&&lv!=null&&fv!=null?deltaTxt(fv,lv):''}</span></div>${sparkSVG(vals,SCREEN)}</div>`; }).join('');
+    return `<div class="tile"><small>${r.short}</small><div class="row" style="justify-content:space-between;gap:6px"><b style="color:${scoreHex(INK,lv)}">${lv==null?'–':Math.round(lv)}</b><span class="note">${hist.length>1&&lv!=null&&fv!=null?deltaTxt(fv,lv):''}</span></div>${sparkSVG(vals,SCREEN)}</div>`; }).join('');
   const opt = sel => hist.map((d,i)=>`<option value="${i}"${i===sel?' selected':''}>${d.live?'Today (on screen)':esc(sDate(d))}${d.overall!=null?` · ${Math.round(d.overall)}`:''}</option>`).join('');
   $('#prA').innerHTML=opt(prA); $('#prB').innerHTML=opt(prB);
   const figs = VIEWS.filter(v=>a.views?.[v.k]?.pts&&b.views?.[v.k]?.pts);
   $('#prFigs').innerHTML = figs.length ? figs.map(v=>`<figure class="prfig">${overlaySVG(v.k,a.views[v.k],b.views[v.k],SCREEN)}<figcaption>${v.label}</figcaption></figure>`).join('')
     : '<p class="note">Figures appear when both visits have photos of the same view.</p>';
   const {reg,mets}=compareRows(a,b);
-  const dcol=(x,y)=>x==null||y==null?'inherit':y-x>=1?'var(--ok)':y-x<=-1?'var(--treat)':'inherit';
-  const arrow = m => m.better>0?'<span style="color:var(--ok)">Better</span>':m.better<0?'<span style="color:var(--treat)">Worse</span>':'<span class="note">Same</span>';
+  const dcol=(x,y)=>x==null||y==null?'inherit':y-x>=1?'var(--ok-ink)':y-x<=-1?'var(--treat-ink)':'inherit';
+  const arrow = m => m.better>0?'<span style="color:var(--ok-ink)">Better</span>':m.better<0?'<span style="color:var(--treat-ink)">Worse</span>':'<span class="note">Same</span>';
   const hA = a.live?'Today':sDate(a), hB = b.live?'Today':sDate(b);
   $('#prTable').innerHTML = `<thead><tr><th>Score</th><th>${esc(hA)}</th><th>${esc(hB)}</th><th>Change</th></tr></thead><tbody>`
     + reg.map(r=>`<tr><td>${r.label}</td><td class="num">${r.a==null?'–':Math.round(r.a)}</td><td class="num">${r.b==null?'–':Math.round(r.b)}</td><td class="num" style="color:${dcol(r.a,r.b)}">${deltaTxt(r.a,r.b)}</td></tr>`).join('')
@@ -2191,7 +2210,7 @@ $('#prPatient').onchange=e=>{ prSel=e.target.value; prA=prB=null; renderProgress
 $('#prA').onchange=e=>{ prA=+e.target.value; renderProgress(); };
 $('#prB').onchange=e=>{ prB=+e.target.value; renderProgress(); };
 $('#prSave').onclick=()=>{ if(!hasData()||!pKey(S.patient)) return; rememberSession(sessionData()); toast(`Saved ${S.patient.date||today()} to ${S.patient.name||S.patient.id}'s history.`); renderProgress(); };
-$('#prImport').onchange=async e=>{ let n=0; for (const f of e.target.files){ try{ const d=JSON.parse(await f.text()); if(d.app==='MotionPlus'){ rememberSession(d); n++; if(!prSel) prSel=pKey(d.patient); } }catch{} }
+$('#prImport').onchange=async e=>{ let n=0; for (const f of e.target.files){ try{ const d=JSON.parse(await f.text()); if(d.app==='MotionPlus'){ rememberSession(cleanSession(d)); n++; if(!prSel) prSel=pKey(d.patient); } }catch{} }
   e.target.value=''; toast(n?`Added ${n} visit${n>1?'s':''} to the history.`:'Those files are not MotionPlus sessions.'); prA=prB=null; renderProgress(); renderReport(); };
 
 // Progress page for the PDF: first visit against today.
@@ -2211,7 +2230,7 @@ function progressPage(slim,foot){
       ${figs.length?`<div class="sec"><h3>Before and after · grey dashed ${esc(hA)}, blue ${esc(hB)}</h3><div class="figs4">${figs.map(k=>`<div>${svgImg(overlaySVG(k,a.views[k],b.views[k],PAPER))}<span>${VIEWS.find(v=>v.k===k).label}</span></div>`).join('')}</div></div>`:''}
       <div class="cols" style="grid-template-columns:1fr 1fr;align-items:start">
         <div class="sec"><h3>Region scores</h3><table><thead><tr><th>Region</th><th>Before</th><th>Now</th><th>Change</th></tr></thead><tbody>${reg.map(r=>`<tr><td>${r.label}</td><td>${r.a==null?'–':Math.round(r.a)}</td><td><b>${r.b==null?'–':Math.round(r.b)}</b></td><td style="color:${dc(r.a,r.b)} !important;font-weight:700">${deltaTxt(r.a,r.b)}</td></tr>`).join('')}</tbody></table></div>
-        <div class="sec"><h3>Measures that changed</h3>${metRows.length?`<table><thead><tr><th>Measure</th><th>Before</th><th>Now</th><th></th></tr></thead><tbody>${metRows.map(m=>`<tr><td>${esc(m.label)}</td><td>${fmt(m.a,m.d)}${m.unit}</td><td><b>${fmt(m.b,m.d)}${m.unit}</b></td><td style="color:${m.better>0?PAPER.ok:PAPER.treat} !important;font-weight:700">${m.better>0?'Better':'Worse'}</td></tr>`).join('')}</tbody></table>`:'<div class="small">No measurement values to compare yet.</div>'}</div>
+        <div class="sec"><h3>Measures that changed</h3>${metRows.length?`<table><thead><tr><th>Measure</th><th>Before</th><th>Now</th><th><span class="vh">Result</span></th></tr></thead><tbody>${metRows.map(m=>`<tr><td>${esc(m.label)}</td><td>${fmt(m.a,m.d)}${m.unit}</td><td><b>${fmt(m.b,m.d)}${m.unit}</b></td><td style="color:${m.better>0?PAPER.ok:PAPER.treat} !important;font-weight:700">${m.better>0?'Better':'Worse'}</td></tr>`).join('')}</tbody></table>`:'<div class="small">No measurement values to compare yet.</div>'}</div>
       </div>
     </div>${foot()}</section>`;
 }
@@ -2219,16 +2238,44 @@ function progressPage(slim,foot){
 /* ---------------- patient form ---------------- */
 const PF = {name:'p-name',id:'p-id',age:'p-age',sex:'p-sex',height:'p-height',date:'p-date',cond:'p-cond',assessor:'p-assessor'};
 function fillPatientForm(){ for (const [k,id] of Object.entries(PF)) $('#'+id).value = S.patient[k]||''; if(!S.patient.date){ S.patient.date=today(); $('#p-date').value=S.patient.date; } }
-for (const [k,id] of Object.entries(PF)) $('#'+id).addEventListener('input',e=>{ S.patient[k]=e.target.value; if(k==='height') renderAnalysis(); renderReport(); renderProgress(); });
+function checkPatientField(k){
+  const el=$('#'+PF[k]); if(!el) return; const v=el.value.trim(); let msg='';
+  if (k==='height' && v && heightCm()==null) msg='Enter height in centimetres, between 80 and 230. It is left out of the results until then.';
+  if (k==='age' && v && !(+v>=1&&+v<=110)) msg='Enter an age between 1 and 110.';
+  el.setAttribute('aria-invalid', msg?'true':'false');
+  let n=document.getElementById('err-'+k); if(!n){ n=document.createElement('span'); n.id='err-'+k; n.className='field-err'; n.setAttribute('role','alert'); el.after(n); el.setAttribute('aria-describedby',n.id); }
+  n.textContent=msg; n.hidden=!msg;
+}
+for (const [k,id] of Object.entries(PF)) $('#'+id).addEventListener('input',e=>{ S.patient[k]=e.target.value; if(k==='height'||k==='age') checkPatientField(k); if(k==='height') renderAnalysis(); renderReport(); renderProgress(); });
 $('#c-name').addEventListener('input',e=>{ S.clinic.name=e.target.value; store.set('mp.clinic',S.clinic); renderReport(); });
-$('#c-logo').addEventListener('change',async e=>{ const f=e.target.files[0]; if(!f) return; const img=new Image(); img.src=URL.createObjectURL(f); await img.decode();
+$('#c-logo').addEventListener('change',async e=>{ const f=e.target.files[0]; if(!f) return; const img=new Image(); img.src=URL.createObjectURL(f);
+  try{ await img.decode(); }catch{ toast('That logo could not be opened. Use a PNG or JPG image.'); e.target.value=''; return; }
   const sc=Math.min(1,320/img.naturalWidth); const c=document.createElement('canvas'); c.width=img.naturalWidth*sc; c.height=img.naturalHeight*sc; c.getContext('2d').drawImage(img,0,0,c.width,c.height);
   S.clinic.logo=c.toDataURL('image/png'); store.set('mp.clinic',S.clinic); showLogo(); renderReport(); });
 $('#c-logo-clear').onclick=()=>{ S.clinic.logo=''; store.set('mp.clinic',S.clinic); showLogo(); renderReport(); };
 function showLogo(){ $('#c-logo-prev').hidden=!S.clinic.logo; $('#c-logo-clear').hidden=!S.clinic.logo; if(S.clinic.logo) $('#c-logo-prev').src=S.clinic.logo; }
 $('#saveSession').onclick = async()=>{ const d=sessionData(); if(!S.example) rememberSession(d); await saveFile(fileBase()+'.json', JSON.stringify(d,null,1)); };
-$('#openSession').onchange = async e=>{ const f=e.target.files[0]; if(!f) return; try{ const d=JSON.parse(await f.text()); if(d.app!=='MotionPlus') throw 0; askLoad(d); }catch{ toast('That file is not a MotionPlus session.'); } e.target.value=''; };
+$('#openSession').onchange = async e=>{ const f=e.target.files[0]; if(!f) return; try{ const d=JSON.parse(await f.text()); if(d.app!=='MotionPlus') throw 0; askLoad(cleanSession(d)); }catch{ toast('That file is not a MotionPlus session.'); } e.target.value=''; };
 $('#prevSelect').onchange = e=>{ const i=e.target.value; S.previous = i===''?null:store.get('mp.sessions',[])[+i]; refreshAll(); if(S.previous) toast('Comparison added to Analysis.'); };
+// Session files can come from anywhere, so every field is coerced to the type the app expects.
+function cleanSession(d){
+  const num=v=>{ const n=Number(v); return isFinite(n)?n:null; }, str=v=>v==null?'':String(v).slice(0,2000);
+  const pt=q=>q&&typeof q==='object'?{x:num(q.x)??0,y:num(q.y)??0,...(q.v!=null?{v:num(q.v)??1}:{})}:null;
+  const pts=o=>o&&typeof o==='object'?Object.fromEntries(Object.entries(o).filter(([k])=>/^[A-Za-z0-9]+$/.test(k)).map(([k,q])=>[k,k==='confirmed'?!!q:pt(q)])):null;
+  const nums=o=>o&&typeof o==='object'?Object.fromEntries(Object.entries(o).filter(([k])=>/^\w+$/.test(k)).map(([k,v])=>[k,num(v)])):{};
+  const st=o=>o&&typeof o==='object'?Object.fromEntries(Object.entries(o).filter(([k])=>/^\w+$/.test(k)).map(([k,v])=>[k,['ok','train','treat','na'].includes(v)?v:'na'])):{};
+  const g=G=>G&&typeof G==='object'&&Array.isArray(G.frames)?{kind:str(G.kind),fps:num(G.fps)||25,w:num(G.w)||640,h:num(G.h)||480,synthetic:!!G.synthetic,t:(G.t||[]).map(v=>num(v)??0),frames:G.frames.map(P=>pts(P))}:null;
+  const out={...d, app:'MotionPlus', patient:Object.fromEntries(Object.entries(d.patient||{}).map(([k,v])=>[k,str(v)])),
+    // A view missing any landmark the analysis needs is dropped rather than crashing the page.
+    views:Object.fromEntries(Object.entries(d.views||{}).filter(([k,v])=>VIEWS.some(q=>q.k===k) && keysFor(k).every(q=>v?.pts?.[q])).map(([k,v])=>{ const sp=pts(v?.spine); return [k,{w:num(v?.w)||600,h:num(v?.h)||1000,pts:pts(v.pts),manual:!!v?.manual,spine:sp&&SPINE.every(q=>sp[q])?sp:null}]; })),
+    regionScores:nums(d.regionScores), regionStatus:st(d.regionStatus), overall:num(d.overall), metrics:nums(d.metrics),
+    overrides:st(d.overrides), exercises:Object.fromEntries(Object.entries(d.exercises||{}).map(([k,a])=>[k,Array.isArray(a)?a.map(str):[]])),
+    summary:d.summary==null?null:str(d.summary), notes:str(d.notes), savedAt:str(d.savedAt),
+    gait:d.gait?{side:g(d.gait.side),back:g(d.gait.back),overrides:st(d.gait.overrides),exercises:Object.fromEntries(Object.entries(d.gait.exercises||{}).map(([k,a])=>[k,Array.isArray(a)?a.map(str):[]])),summary:d.gait.summary==null?null:str(d.gait.summary),overall:num(d.gait.overall),metrics:nums(d.gait.metrics)}:null};
+  if (d.norms && typeof d.norms==='object') out.norms=Object.fromEntries(Object.entries(DEFAULT_NORMS).map(([k,n])=>[k,{...n,...Object.fromEntries(['n','m','lo','hi'].filter(f=>num(d.norms[k]?.[f])!=null).map(f=>[f,num(d.norms[k][f])]))}]));
+  else delete out.norms;
+  return out;
+}
 function askLoad(d){
   // A loaded file becomes the comparison baseline; its landmarks can also be restored for editing.
   S.previous = d; rememberSession(d);
@@ -2243,6 +2290,14 @@ function restoreSession(d){
   $('#exampleBanner').hidden=true; fillPatientForm(); renderCaptures(); refreshAll(); toast('Session reopened.');
 }
 
+/* ---------------- keyboard access ---------------- */
+// Upload buttons are labels for hidden file inputs; make them reachable and operable from the keyboard.
+function keyLabels(root=document){
+  root.querySelectorAll('label.btn,label.empty').forEach(l=>{ const inp=document.getElementById(l.htmlFor); if(inp?.type!=='file') return; l.tabIndex=0; inp.tabIndex=-1; });
+}
+document.addEventListener('keydown',e=>{ const l=e.target.closest?.('label.btn[tabindex="0"],label.empty[tabindex="0"]'); if(l && (e.key==='Enter'||e.key===' ')){ e.preventDefault(); l.click(); } });
+new MutationObserver(()=>keyLabels()).observe(document.body,{childList:true,subtree:true}); keyLabels();
+
 /* ---------------- tabs & boot ---------------- */
 function showTab(t){
   document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected', b.dataset.tab===t));
@@ -2250,6 +2305,8 @@ function showTab(t){
   if (t==='analysis'||t==='report') refreshAll();
   if (t==='capture') renderCaptures();
   if (t==='gait'||t==='progress'){ refreshAll(); }
+  const tl={patient:'Patient',capture:'Capture',analysis:'Posture analysis',gait:'Gait',progress:'Progress',report:'Report'}[t];
+  document.title = `${tl} · MotionPlus Posture`;
   try{ sessionStorage.setItem('mp.tab',t); }catch{}
 }
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
