@@ -1077,6 +1077,7 @@ VIEWS.about = () => {
   if (!document.getElementById("isiFonts")) document.head.insertAdjacentHTML("beforeend", '<link id="isiFonts" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap">');
   $("#app").innerHTML = `<header>${back("tab", 'data-tab="patients"')}<h1>About</h1></header>`;
   $("#app").append($("#aboutTpl").content.cloneNode(true));
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) document.querySelectorAll("#isi-about svg").forEach(s => s.pauseAnimations?.());
 };
 VIEWS.pdfview = () => {
   const v = pdfPreview; chrome(null, `<button class="primary wide" data-act="pdfBack">Done</button>`);

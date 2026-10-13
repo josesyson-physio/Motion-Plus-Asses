@@ -8,50 +8,80 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap">
 <style>
-/* Layout concept: one scoped column. Dark ripple-ring hero built from the logo, then plain sections that read like a report.
-   Everything lives under .isi and every token is prefixed --isi-, so it can be dropped into any app without touching its styles. */
+/* Layout concept: a dark navy brand stage (the logo screenshot, alive) with concentric rings radiating from the eye.
+   One scoped column below it: statement, origin, five animated app screens in a swipe rail, the pod loop, inclusion orbit, bloom radar, network.
+   Everything is scoped under .isi with --isi- tokens so the block can be dropped into any app without touching that app's styles. */
 :root {
-  --isi-bg: #0a1020;
-  --isi-surface: #111a33;
-  --isi-raise: #17223f;
-  --isi-line: rgba(160, 175, 255, 0.18);
-  --isi-fg: #f3f5ff;
-  --isi-muted: #a9b2cf;
-  --isi-accent: #7482ff;
-  --isi-accent-ink: #0a1020;
-  --isi-glow: rgba(116, 130, 255, 0.35);
+  --isi-bg: #0c1220;
+  --isi-surface: #111a31;
+  --isi-raise: #172046;
+  --isi-line: rgba(170, 182, 255, 0.16);
+  --isi-fg: #f5f6ff;
+  --isi-muted: #a4acc8;
+  --isi-accent: #7a87ff;
+  --isi-accent-ink: #0c1220;
+  --isi-glow: rgba(38, 50, 170, 0.55);
+  --isi-pupil-hi: #c3c9ff;
+  --isi-pupil-lo: #5560ff;
+  --isi-teal: #34d6c0;
+  --isi-amber: #ffb547;
+  --isi-rose: #ff7ea8;
+  --isi-phone: #060912;
+  --isi-scr: #f6f7ff;
+  --isi-scr-card: #ffffff;
+  --isi-scr-ink: #0c1220;
+  --isi-scr-mute: #6a7290;
+  --isi-scr-line: #dfe3f8;
+  --isi-s-indigo: #3b45ff;
+  --isi-s-teal: #0f9d8f;
+  --isi-s-rose: #d63b73;
+  --isi-s-amber: #e08a00;
+  --isi-cine: #0b0f1f;
+  --isi-cine-2: #151b36;
   --isi-display: "Poppins", "Helvetica Neue", Arial, sans-serif;
   --isi-mono: "DM Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
   color-scheme: dark;
 }
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
-    --isi-bg: #f6f7ff;
+    --isi-bg: #fcfcff;
     --isi-surface: #ffffff;
-    --isi-raise: #eceeff;
+    --isi-raise: #f1f2fd;
     --isi-line: rgba(20, 30, 90, 0.14);
-    --isi-fg: #0b1220;
-    --isi-muted: #4a5372;
-    --isi-accent: #3443f0;
+    --isi-fg: #0c1220;
+    --isi-muted: #565e7a;
+    --isi-accent: #3b45ff;
     --isi-accent-ink: #ffffff;
-    --isi-glow: rgba(52, 67, 240, 0.22);
+    --isi-glow: rgba(120, 130, 255, 0.2);
+    --isi-pupil-hi: #8f99ff;
+    --isi-pupil-lo: #3b45ff;
+    --isi-teal: #0f9d8f;
+    --isi-amber: #d98200;
+    --isi-rose: #d63b73;
+    --isi-phone: #0c1220;
     color-scheme: light;
   }
 }
 :root[data-theme="light"] {
-  --isi-bg: #f6f7ff;
+  --isi-bg: #fcfcff;
   --isi-surface: #ffffff;
-  --isi-raise: #eceeff;
+  --isi-raise: #f1f2fd;
   --isi-line: rgba(20, 30, 90, 0.14);
-  --isi-fg: #0b1220;
-  --isi-muted: #4a5372;
-  --isi-accent: #3443f0;
+  --isi-fg: #0c1220;
+  --isi-muted: #565e7a;
+  --isi-accent: #3b45ff;
   --isi-accent-ink: #ffffff;
-  --isi-glow: rgba(52, 67, 240, 0.22);
+  --isi-glow: rgba(120, 130, 255, 0.2);
+  --isi-pupil-hi: #8f99ff;
+  --isi-pupil-lo: #3b45ff;
+  --isi-teal: #0f9d8f;
+  --isi-amber: #d98200;
+  --isi-rose: #d63b73;
+  --isi-phone: #0c1220;
   color-scheme: light;
 }
 
-/* Preview only. Delete this one rule when the page sits inside an app. */
+/* Preview only. Delete this one rule when the block sits inside an app. */
 body { background: var(--isi-bg); color: var(--isi-fg); }
 
 .isi, .isi * { box-sizing: border-box; }
@@ -61,313 +91,804 @@ body { background: var(--isi-bg); color: var(--isi-fg); }
   font-family: var(--isi-display);
   font-size: 16px;
   line-height: 1.6;
-  padding-inline: clamp(16px, 5vw, 48px);
-  padding-block: 0 56px;
+  padding-block: 0 64px;
   overflow-x: clip;
   -webkit-text-size-adjust: 100%;
 }
-.isi h1, .isi h2, .isi h3, .isi p, .isi ul, .isi figure { margin: 0; padding: 0; }
-.isi ul { list-style: none; }
+.isi h1, .isi h2, .isi h3, .isi p, .isi ul, .isi ol, .isi figure { margin: 0; padding: 0; }
+.isi ul, .isi ol { list-style: none; }
 .isi a { color: inherit; }
-.isi-wrap { width: 100%; max-width: 1040px; margin-inline: auto; }
-.isi-label {
-  font-family: var(--isi-mono);
-  font-size: 12px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--isi-accent);
-}
-.isi h2 {
-  font-size: clamp(26px, 5.2vw, 40px);
-  font-weight: 600;
-  line-height: 1.15;
-  letter-spacing: -0.01em;
-  text-wrap: balance;
-}
+.isi svg { display: block; }
+.isi-wrap { width: 100%; max-width: 1080px; margin-inline: auto; padding-inline: clamp(16px, 5vw, 48px); }
+.isi-label { font-family: var(--isi-mono); font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--isi-accent); }
+.isi h2 { font-size: clamp(28px, 5.6vw, 46px); font-weight: 600; line-height: 1.12; letter-spacing: -0.015em; text-wrap: balance; }
 .isi h3 { font-size: 18px; font-weight: 600; line-height: 1.3; }
 .isi-lede { color: var(--isi-muted); max-width: 62ch; font-size: 17px; }
-.isi-section { padding-block: 64px 0; display: grid; gap: 20px; }
-.isi-section > header { display: grid; gap: 12px; }
+.isi-sec { padding-block: clamp(64px, 10vw, 112px) 0; display: grid; gap: 32px; }
+.isi-head { display: grid; gap: 14px; max-width: 780px; }
+.isi-small { font-family: var(--isi-mono); font-size: 12px; color: var(--isi-muted); }
 
-/* Hero */
-.isi-hero {
-  position: relative;
-  display: grid;
-  justify-items: center;
-  text-align: center;
-  gap: 20px;
-  padding-block: 56px 48px;
-  isolation: isolate;
-}
-.isi-rings {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  width: min(1100px, 190vw);
-  aspect-ratio: 1;
-  transform: translate(-50%, -22%);
-  z-index: -1;
-  pointer-events: none;
-  background: radial-gradient(circle at center, var(--isi-glow), transparent 55%);
-}
-.isi-rings svg { width: 100%; height: 100%; display: block; overflow: visible; }
-.isi-ring {
-  fill: none;
-  stroke: var(--isi-accent);
-  stroke-width: 1;
-  opacity: 0.28;
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: isi-ripple 9s linear infinite;
-}
-.isi-ring:nth-child(2) { animation-delay: -1.8s; }
-.isi-ring:nth-child(3) { animation-delay: -3.6s; }
-.isi-ring:nth-child(4) { animation-delay: -5.4s; }
-.isi-ring:nth-child(5) { animation-delay: -7.2s; }
-@keyframes isi-ripple {
-  0% { transform: scale(0.28); opacity: 0; }
-  12% { opacity: 0.55; }
-  100% { transform: scale(1); opacity: 0; }
-}
-.isi-mark { width: min(260px, 62vw); color: var(--isi-fg); }
-.isi-mark svg { display: block; width: 100%; height: auto; overflow: visible; }
-.isi-iris {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: isi-spin 14s linear infinite;
-}
-.isi-pupil { transform-box: fill-box; transform-origin: center; animation: isi-pulse 3.6s ease-in-out infinite; }
+/* ---------- Hero: the brand screenshot, alive ---------- */
+.isi-hero { position: relative; isolation: isolate; padding-block: clamp(40px, 8vw, 88px) clamp(48px, 8vw, 80px); }
+.isi-stage { position: relative; display: grid; justify-items: center; text-align: center; gap: 22px; }
+.isi-eyewrap { position: relative; width: min(300px, 64vw); display: grid; place-items: center; animation: isi-rise 1.1s cubic-bezier(.2,.7,.2,1) both; }
+.isi-rings { position: absolute; left: 50%; top: 50%; width: min(1180px, 240vw); aspect-ratio: 1; transform: translate(-50%, -50%); z-index: -1; pointer-events: none; background: radial-gradient(circle at center, var(--isi-glow), transparent 46%); }
+.isi-rings svg { width: 100%; height: 100%; overflow: visible; }
+.isi-ring { fill: none; stroke: var(--isi-line); stroke-width: 1.2; }
+.isi-wave { fill: none; stroke: var(--isi-accent); stroke-width: 1.4; opacity: 0; transform-box: fill-box; transform-origin: center; animation: isi-ripple 9s linear infinite; }
+.isi-wave:nth-of-type(2) { animation-delay: -3s; }
+.isi-wave:nth-of-type(3) { animation-delay: -6s; }
+@keyframes isi-ripple { 0% { transform: scale(0.2); opacity: 0; } 14% { opacity: 0.6; } 100% { transform: scale(1); opacity: 0; } }
+.isi-eye-svg { width: 100%; height: auto; overflow: visible; color: var(--isi-fg); }
+.isi-blink { transform-box: fill-box; transform-origin: center; animation: isi-blink 7s ease-in-out infinite; }
+@keyframes isi-blink { 0%, 91%, 100% { transform: scaleY(1); } 94.5% { transform: scaleY(0.07); } }
+.isi-iris { transform-origin: 0 0; animation: isi-spin 22s linear infinite; }
 @keyframes isi-spin { to { transform: rotate(360deg); } }
-@keyframes isi-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18); } }
-.isi-word {
-  font-size: clamp(38px, 10vw, 68px);
-  font-weight: 300;
-  letter-spacing: -0.02em;
-  line-height: 1.05;
-}
+.isi-pupil { transform-box: fill-box; transform-origin: center; animation: isi-pulse 3.6s ease-in-out infinite; filter: drop-shadow(0 0 9px var(--isi-pupil-lo)); }
+@keyframes isi-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+.isi-word { font-size: clamp(40px, 11vw, 76px); font-weight: 300; letter-spacing: -0.02em; line-height: 1.05; animation: isi-rise 1.1s .15s cubic-bezier(.2,.7,.2,1) both; }
 .isi-word b { font-weight: 700; }
-.isi-word i { font-style: normal; color: var(--isi-accent); font-weight: 700; }
-.isi-tag {
-  font-size: 12px;
-  letter-spacing: 0.42em;
-  text-transform: uppercase;
-  color: var(--isi-muted);
-  padding-left: 0.42em;
-}
-.isi-quote {
-  max-width: 34ch;
-  font-size: clamp(18px, 3.6vw, 24px);
-  font-weight: 300;
-  line-height: 1.4;
-  text-wrap: balance;
-}
-.isi-cta { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; width: 100%; margin-top: 8px; }
-.isi-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  min-height: 56px;
-  padding: 14px 26px;
-  border-radius: 999px;
-  font-weight: 600;
-  font-size: 16px;
-  text-decoration: none;
-  border: 1.5px solid var(--isi-accent);
-  flex: 1 1 220px;
-  max-width: 320px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-  -webkit-tap-highlight-color: transparent;
-}
+.isi-word i { font-style: normal; color: var(--isi-pupil-lo); font-weight: 700; }
+.isi-tag { font-size: 12px; font-weight: 500; letter-spacing: 0.5em; text-transform: uppercase; color: var(--isi-muted); padding-left: 0.5em; animation: isi-rise 1.1s .3s cubic-bezier(.2,.7,.2,1) both; }
+.isi-quote { max-width: 26ch; font-size: clamp(22px, 4.6vw, 34px); font-weight: 300; line-height: 1.3; text-wrap: balance; animation: isi-rise 1.1s .45s cubic-bezier(.2,.7,.2,1) both; }
+.isi-quote b { font-weight: 600; background: linear-gradient(100deg, var(--isi-fg) 20%, var(--isi-accent) 50%, var(--isi-fg) 80%); background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; animation: isi-shimmer 6s ease-in-out infinite; }
+@keyframes isi-shimmer { 0%, 100% { background-position: 100% 0; } 50% { background-position: 0 0; } }
+@keyframes isi-rise { from { transform: translateY(18px); opacity: 0.001; } to { transform: none; opacity: 1; } }
+
+.isi-cta { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; width: 100%; margin-top: 6px; }
+.isi-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; padding: 14px 26px; border-radius: 999px; font-weight: 600; font-size: 16px; text-decoration: none; border: 1.5px solid var(--isi-accent); flex: 1 1 210px; max-width: 300px; transition: transform .2s ease, box-shadow .2s ease, background .2s ease; -webkit-tap-highlight-color: transparent; }
 .isi-btn svg { width: 20px; height: 20px; flex: none; }
-.isi .isi-btn--solid { background: var(--isi-accent); color: var(--isi-accent-ink); }
+.isi-btn--solid { background: var(--isi-accent); color: var(--isi-accent-ink); }
 .isi-btn--ghost { background: transparent; color: var(--isi-fg); }
-.isi-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px var(--isi-glow); }
+.isi-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 34px var(--isi-glow); }
 .isi-btn--ghost:hover { background: var(--isi-raise); }
 .isi-btn:focus-visible { outline: 3px solid var(--isi-fg); outline-offset: 3px; }
 
-/* Equation */
-.isi-eq { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: stretch; gap: 12px; }
-.isi-eq-op { align-self: center; font-size: 28px; font-weight: 300; color: var(--isi-accent); }
-.isi-eq-card {
-  background: var(--isi-surface);
-  border: 1px solid var(--isi-line);
-  border-radius: 14px;
-  padding: 18px;
-  display: grid;
-  gap: 6px;
-  align-content: start;
-  min-width: 0;
-}
-.isi-eq-card--end { background: var(--isi-accent); border-color: var(--isi-accent); color: var(--isi-accent-ink); }
-.isi-eq-card--end .isi-label { color: inherit; opacity: 0.92; }
-.isi-eq-card p { font-size: 14px; color: var(--isi-muted); line-height: 1.5; }
-.isi-eq-card--end p { color: inherit; opacity: 0.9; }
-@media (max-width: 640px) {
-  .isi-eq { grid-template-columns: 1fr; }
-  .isi-eq-op { justify-self: center; }
-}
-.isi-by { font-size: 14px; color: var(--isi-muted); }
-.isi-by strong { color: var(--isi-fg); font-weight: 600; }
+/* ---------- Marquee ---------- */
+.isi-marq { overflow: hidden; border-block: 1px solid var(--isi-line); padding-block: 18px; }
+.isi-marq-track { display: flex; width: max-content; animation: isi-marq 46s linear infinite; }
+.isi-marq:hover .isi-marq-track { animation-play-state: paused; }
+.isi-marq-set { display: flex; align-items: center; gap: 28px; padding-right: 28px; }
+.isi-marq-set span { font-size: clamp(18px, 3vw, 26px); font-weight: 300; color: var(--isi-muted); white-space: nowrap; }
+.isi-marq-set span b { color: var(--isi-fg); font-weight: 500; }
+.isi-sep { flex: none; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--isi-accent); position: relative; }
+.isi-sep::after { content: ""; position: absolute; inset: 2px; border-radius: 50%; background: var(--isi-accent); }
+@keyframes isi-marq { to { transform: translateX(-50%); } }
 
-/* Cards */
-.isi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 14px; }
-.isi-card {
-  background: var(--isi-surface);
-  border: 1px solid var(--isi-line);
-  border-radius: 14px;
-  padding: 20px;
-  display: grid;
-  gap: 8px;
-  align-content: start;
-  min-width: 0;
-}
-.isi-card p { color: var(--isi-muted); font-size: 15px; }
-.isi-card .isi-label { color: var(--isi-muted); }
-.isi-card--solve { border-style: dashed; background: transparent; }
+/* ---------- About statement ---------- */
+.isi-about { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: clamp(24px, 5vw, 56px); align-items: center; }
+.isi-statement { font-size: clamp(22px, 4.2vw, 36px); font-weight: 300; line-height: 1.35; text-wrap: pretty; }
+.isi-statement b { font-weight: 600; }
+.isi-statement em { font-style: normal; font-weight: 600; background: linear-gradient(100deg, var(--isi-accent) 25%, var(--isi-fg) 50%, var(--isi-accent) 75%); background-size: 240% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; animation: isi-shimmer 7s ease-in-out infinite; }
+.isi-brandcard { position: relative; display: grid; justify-items: center; gap: 14px; text-align: center; padding: 32px 22px; border-radius: 24px; background: radial-gradient(circle at 50% 28%, var(--isi-glow), transparent 68%), var(--isi-surface); border: 1px solid var(--isi-line); overflow: hidden; }
+.isi-brandcard .isi-eye-svg { width: 150px; }
+.isi-brandcard p { font-size: 14px; color: var(--isi-muted); max-width: 30ch; }
+.isi-brandcard .isi-miniword { font-size: 26px; font-weight: 300; letter-spacing: -0.01em; }
+.isi-miniword b { font-weight: 700; }
+.isi-miniword i { font-style: normal; color: var(--isi-pupil-lo); font-weight: 700; }
+@media (max-width: 760px) { .isi-about { grid-template-columns: minmax(0, 1fr); } }
 
-/* Process */
-.isi-steps { display: grid; gap: 0; counter-reset: s; border-top: 1px solid var(--isi-line); }
-.isi-steps li {
-  display: grid;
-  grid-template-columns: 56px 1fr;
-  gap: 4px 12px;
-  padding-block: 16px;
-  border-bottom: 1px solid var(--isi-line);
-  align-items: baseline;
-}
-.isi-steps li::before {
-  counter-increment: s;
-  content: counter(s, decimal-leading-zero);
-  font-family: var(--isi-mono);
-  color: var(--isi-accent);
-  grid-row: span 2;
-}
-.isi-steps b { font-weight: 600; font-size: 17px; }
-.isi-steps span { color: var(--isi-muted); font-size: 15px; }
+/* ---------- Origin ---------- */
+.isi-origin { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+.isi-panel { background: var(--isi-surface); border: 1px solid var(--isi-line); border-radius: 22px; padding: clamp(18px, 3vw, 28px); display: grid; gap: 14px; align-content: start; min-width: 0; }
+.isi-people svg { width: 100%; height: auto; }
+.isi-person { fill: var(--isi-muted); opacity: 0.55; animation: isi-awake 9s ease-in-out infinite; animation-delay: calc(var(--i) * 0.55s - 6.2s); }
+@keyframes isi-awake { 0%, 12% { fill: var(--isi-muted); opacity: 0.55; } 24%, 82% { fill: var(--isi-accent); opacity: 1; } 94%, 100% { fill: var(--isi-muted); opacity: 0.55; } }
+.isi-spark { font-family: var(--isi-mono); font-size: 11px; fill: var(--isi-accent); opacity: 0; animation: isi-sparkin 9s ease-in-out infinite; animation-delay: calc(var(--i) * 0.55s - 6.2s); }
+@keyframes isi-sparkin { 0%, 14% { opacity: 0; transform: translateY(4px); } 28%, 80% { opacity: 1; transform: none; } 92%, 100% { opacity: 0; } }
+.isi-tl { font-size: 13px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; fill: var(--isi-fg); }
+.isi-tl-a { animation: isi-tla 9s ease-in-out infinite; animation-delay: -6.2s; }
+.isi-tl-b { animation: isi-tlb 9s ease-in-out infinite; animation-delay: -6.2s; }
+@keyframes isi-tla { 0%, 36% { opacity: 1; } 46%, 90% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes isi-tlb { 0%, 38% { opacity: 0; } 48%, 88% { opacity: 1; } 98%, 100% { opacity: 0; } }
+.isi-term { background: var(--isi-cine); border-color: rgba(170, 182, 255, 0.16); color: #e9ecff; gap: 10px; font-family: var(--isi-mono); font-size: 12px; line-height: 1.7; align-content: center; }
+.isi-term-bar { display: flex; gap: 6px; padding-bottom: 6px; }
+.isi-term-bar i { width: 10px; height: 10px; border-radius: 50%; background: #2b345e; }
+.isi-line { display: block; overflow: hidden; white-space: nowrap; width: 0; max-width: 100%; }
+.isi-line.l1 { animation: isi-t1 15s steps(34, end) infinite -12s; }
+.isi-line.l2 { animation: isi-t2 15s steps(30, end) infinite -12s; }
+.isi-line.l3 { animation: isi-t3 15s steps(36, end) infinite -12s; }
+.isi-line.l4 { animation: isi-t4 15s steps(32, end) infinite -12s; }
+@keyframes isi-t1 { 0% { width: 0; } 12%, 94% { width: 34ch; } 96%, 100% { width: 0; } }
+@keyframes isi-t2 { 0%, 16% { width: 0; } 29%, 94% { width: 30ch; } 96%, 100% { width: 0; } }
+@keyframes isi-t3 { 0%, 33% { width: 0; } 46%, 94% { width: 36ch; } 96%, 100% { width: 0; } }
+@keyframes isi-t4 { 0%, 50% { width: 0; } 62%, 94% { width: 32ch; } 96%, 100% { width: 0; } }
+.isi-term .k { color: #8f99ff; } .isi-term .g { color: #34d6c0; } .isi-term .a { color: #ffb547; }
+.isi-cursor { display: inline-block; width: 8px; height: 15px; background: #ffb547; vertical-align: -2px; animation: isi-blinkc 1s steps(2, start) infinite; }
+@keyframes isi-blinkc { to { visibility: hidden; } }
+.isi-pull { grid-column: 1 / -1; font-size: clamp(20px, 3.6vw, 30px); font-weight: 300; line-height: 1.3; padding-block: 8px; text-wrap: balance; }
+.isi-pull b { font-weight: 600; color: var(--isi-accent); }
+@media (max-width: 760px) { .isi-origin { grid-template-columns: minmax(0, 1fr); } }
 
-/* Pod layers */
-.isi-layers { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 14px; }
+/* ---------- Apps rail ---------- */
+.isi-rail { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(172px, 1fr); gap: 22px; overflow-x: auto; scroll-snap-type: x proximity; padding-block: 18px 24px; padding-inline: 4px; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: var(--isi-line) transparent; }
+.isi-rail:focus-visible { outline: 2px solid var(--isi-accent); outline-offset: 4px; border-radius: 12px; }
+.isi-app { scroll-snap-align: center; display: grid; gap: 16px; justify-items: center; text-align: center; align-content: start; min-width: 0; }
+.isi-phone { position: relative; width: min(100%, 212px); padding: 7px; border-radius: 34px; background: var(--isi-phone); border: 1px solid var(--isi-line); box-shadow: 0 30px 60px -22px var(--isi-glow), 0 0 0 1px rgba(255,255,255,0.04) inset; animation: isi-float 6s ease-in-out infinite; animation-delay: calc(var(--i) * -1.2s); }
+.isi-phone::before { content: ""; position: absolute; top: 14px; left: 50%; width: 38px; height: 10px; border-radius: 999px; background: var(--isi-phone); transform: translateX(-50%); z-index: 2; }
+.isi-scr { width: 100%; height: auto; border-radius: 27px; overflow: hidden; }
+@keyframes isi-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+.isi-app h3 { font-size: 17px; }
+.isi-app p { font-size: 14px; color: var(--isi-muted); max-width: 26ch; }
+.isi-app .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; vertical-align: 1px; }
 
-/* Stats */
-.isi-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 14px; }
-.isi-stat { border-left: 3px solid var(--isi-accent); padding-left: 16px; display: grid; gap: 4px; }
-.isi-stat strong { font-size: clamp(40px, 8vw, 56px); font-weight: 600; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
-.isi-stat span { color: var(--isi-muted); font-size: 15px; max-width: 32ch; }
-.isi-src { font-family: var(--isi-mono); font-size: 12px; color: var(--isi-muted); }
+/* screen vocabulary (screens stay light inside both themes) */
+.isi .s-bg { fill: var(--isi-scr); }
+.isi .s-card { fill: var(--isi-scr-card); stroke: var(--isi-scr-line); stroke-width: 1; }
+.isi .s-time { font: 600 8px var(--isi-display); fill: var(--isi-scr-ink); }
+.isi .s-batt { fill: none; stroke: var(--isi-scr-ink); stroke-width: 1; opacity: .6; }
+.isi .s-kick { font: 500 6.5px var(--isi-mono); letter-spacing: 1.6px; }
+.isi .s-title { font: 700 19px var(--isi-display); fill: var(--isi-scr-ink); }
+.isi .s-sub { font: 400 8.5px var(--isi-display); fill: var(--isi-scr-mute); }
+.isi .s-lab { font: 500 8.5px var(--isi-display); fill: var(--isi-scr-ink); }
+.isi .s-val { font: 700 8.5px var(--isi-display); fill: var(--isi-scr-ink); }
+.isi .s-track { fill: var(--isi-scr-line); }
+.isi .s-btn-t { font: 600 9.5px var(--isi-display); fill: #fff; text-anchor: middle; }
+.isi .s-home { fill: var(--isi-scr-ink); opacity: .25; }
+.isi .s-line { stroke: var(--isi-scr-line); stroke-width: 1; fill: none; }
+.isi .c-indigo { fill: var(--isi-s-indigo); } .isi .c-teal { fill: var(--isi-s-teal); } .isi .c-rose { fill: var(--isi-s-rose); } .isi .c-amber { fill: var(--isi-s-amber); }
+.isi .x-indigo { stroke: var(--isi-s-indigo); } .isi .x-teal { stroke: var(--isi-s-teal); } .isi .x-rose { stroke: var(--isi-s-rose); } .isi .x-amber { stroke: var(--isi-s-amber); }
+.isi .dot-indigo { background: var(--isi-s-indigo); } .isi .dot-teal { background: var(--isi-s-teal); } .isi .dot-rose { background: var(--isi-s-rose); } .isi .dot-amber { background: var(--isi-s-amber); } .isi .dot-cine { background: var(--isi-accent); }
 
-/* Case */
-.isi-case {
-  background: var(--isi-surface);
-  border: 1px solid var(--isi-line);
-  border-radius: 18px;
-  padding: clamp(20px, 4vw, 32px);
-  display: grid;
-  gap: 18px;
+/* Assess */
+.isi .a-arm { transform-origin: 86px 146px; animation: isi-arm 6s ease-in-out infinite -2.6s; }
+@keyframes isi-arm { 0% { transform: rotate(0); } 40%, 60% { transform: rotate(-150deg); } 100% { transform: rotate(0); } }
+.isi .a-arc { stroke-dasharray: 62.8; animation: isi-arc 6s ease-in-out infinite -2.6s; }
+@keyframes isi-arc { 0% { stroke-dashoffset: 62.8; } 40%, 60% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: 62.8; } }
+.isi .a-n { font: 700 15px var(--isi-display); fill: var(--isi-s-indigo); opacity: 0; }
+.isi .a-n1 { animation: isi-n1 6s linear infinite -2.6s; } .isi .a-n2 { animation: isi-n2 6s linear infinite -2.6s; } .isi .a-n3 { animation: isi-n3 6s linear infinite -2.6s; } .isi .a-n4 { animation: isi-n4 6s linear infinite -2.6s; }
+@keyframes isi-n1 { 0%, 9% { opacity: 1; } 10%, 90% { opacity: 0; } 91%, 100% { opacity: 1; } }
+@keyframes isi-n2 { 0%, 9% { opacity: 0; } 10%, 19% { opacity: 1; } 20%, 79% { opacity: 0; } 80%, 89% { opacity: 1; } 90%, 100% { opacity: 0; } }
+@keyframes isi-n3 { 0%, 19% { opacity: 0; } 20%, 31% { opacity: 1; } 32%, 67% { opacity: 0; } 68%, 79% { opacity: 1; } 80%, 100% { opacity: 0; } }
+@keyframes isi-n4 { 0%, 31% { opacity: 0; } 32%, 67% { opacity: 1; } 68%, 100% { opacity: 0; } }
+.isi .a-pulse { transform-box: fill-box; transform-origin: center; animation: isi-halo 2.2s ease-out infinite; }
+@keyframes isi-halo { 0% { transform: scale(1); opacity: .5; } 100% { transform: scale(3); opacity: 0; } }
+.isi .a-bar { transform-box: fill-box; transform-origin: 0 50%; animation: isi-bar 6s ease-in-out infinite -2.6s; }
+@keyframes isi-bar { 0% { transform: scaleX(.1); } 40%, 60% { transform: scaleX(1); } 100% { transform: scaleX(.1); } }
+
+/* Posture */
+.isi .p-scan { animation: isi-scan 3.6s linear infinite; }
+@keyframes isi-scan { 0% { transform: translateY(0); opacity: 0; } 10%, 90% { opacity: .7; } 100% { transform: translateY(176px); opacity: 0; } }
+.isi .p-v1, .isi .p-t1 { animation: isi-pa 7s ease-in-out infinite -4s; } .isi .p-v2, .isi .p-t2 { animation: isi-pb 7s ease-in-out infinite -4s; }
+@keyframes isi-pa { 0%, 30% { opacity: 1; } 42%, 84% { opacity: 0; } 96%, 100% { opacity: 1; } }
+@keyframes isi-pb { 0%, 30% { opacity: 0; } 42%, 84% { opacity: 1; } 96%, 100% { opacity: 0; } }
+
+/* Learn */
+.isi .l-ring { stroke-dasharray: 238.8; animation: isi-ring 7s ease-in-out infinite -3.6s; }
+@keyframes isi-ring { 0% { stroke-dashoffset: 238.8; } 45%, 88% { stroke-dashoffset: 66.9; } 100% { stroke-dashoffset: 238.8; } }
+.isi .l-fill { transform-box: fill-box; transform-origin: center; animation: isi-tick 7s ease-in-out infinite; animation-delay: calc(var(--i) * 1.1s - 4.8s); }
+.isi .l-chk { stroke-dasharray: 14; animation: isi-chk 7s ease-in-out infinite; animation-delay: calc(var(--i) * 1.1s - 4.8s); }
+@keyframes isi-tick { 0%, 8% { transform: scale(0); } 18%, 88% { transform: scale(1); } 96%, 100% { transform: scale(0); } }
+@keyframes isi-chk { 0%, 12% { stroke-dashoffset: 14; } 22%, 88% { stroke-dashoffset: 0; } 96%, 100% { stroke-dashoffset: 14; } }
+
+/* Blossoming star */
+.isi .b-star { transform-box: fill-box; transform-origin: center; animation: isi-halo 2.6s ease-out infinite; }
+
+/* QLux */
+.isi .q-thigh { animation: isi-thigh 1.4s ease-in-out infinite; }
+.isi .q-thigh.b { animation-delay: -0.7s; }
+.isi .q-shin { animation: isi-shin 1.4s ease-in-out infinite; }
+.isi .q-shin.b { animation-delay: -0.7s; }
+.isi .q-arm { animation: isi-qarm 1.4s ease-in-out infinite; }
+.isi .q-arm.b { animation-delay: -0.7s; }
+@keyframes isi-thigh { 0%, 100% { transform: rotate(-30deg); } 50% { transform: rotate(30deg); } }
+@keyframes isi-shin { 0%, 45%, 100% { transform: rotate(4deg); } 72% { transform: rotate(62deg); } }
+@keyframes isi-qarm { 0%, 100% { transform: rotate(26deg); } 50% { transform: rotate(-26deg); } }
+.isi .q-ground { stroke-dasharray: 6 8; animation: isi-ground 0.55s linear infinite; }
+@keyframes isi-ground { to { stroke-dashoffset: -14; } }
+.isi .q-sprock { animation: isi-sprock 1s linear infinite; }
+@keyframes isi-sprock { to { transform: translateY(14px); } }
+.isi .q-wave { animation: isi-qwave 1.4s linear infinite; }
+@keyframes isi-qwave { to { transform: translateX(-44px); } }
+.isi .q-play { animation: isi-play 6s linear infinite; }
+@keyframes isi-play { 0% { transform: translateX(0); } 100% { transform: translateX(160px); } }
+
+/* ---------- Pod loop ---------- */
+.isi-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px; }
+.isi-step { position: relative; background: var(--isi-surface); border: 1px solid var(--isi-line); border-radius: 22px; padding: 18px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.isi-step svg { width: 100%; height: auto; background: var(--isi-raise); border-radius: 14px; }
+.isi-step p { font-size: 15px; color: var(--isi-muted); }
+.isi-step::after { content: ""; position: absolute; top: 50%; right: -20px; width: 12px; height: 12px; border-top: 3px solid var(--isi-accent); border-right: 3px solid var(--isi-accent); transform: translateY(-50%) rotate(45deg); animation: isi-chev 1.6s ease-in-out infinite; }
+.isi-step:last-child::after { display: none; }
+@keyframes isi-chev { 0%, 100% { translate: -3px 0; opacity: .4; } 50% { translate: 4px 0; opacity: 1; } }
+@media (max-width: 820px) {
+  .isi-steps { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+  .isi-step::after { top: auto; bottom: -22px; right: auto; left: 50%; transform: translateX(-50%) rotate(135deg); }
 }
-.isi-case-big { font-size: clamp(22px, 4.4vw, 32px); font-weight: 300; line-height: 1.3; text-wrap: balance; }
-.isi-case-big b { font-weight: 600; color: var(--isi-accent); }
+.isi-r1, .isi-r2, .isi-r3 { transform-box: fill-box; transform-origin: center; }
+.isi .pc { animation: isi-float2 3.4s ease-in-out infinite; }
+.isi .pc.b { animation-delay: -1.1s; } .isi .pc.c { animation-delay: -2.2s; }
+@keyframes isi-float2 { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.isi .broad { transform-box: fill-box; transform-origin: center; fill: none; stroke: var(--isi-accent); stroke-width: 1.4; animation: isi-broad 3s ease-out infinite; }
+.isi .broad.b { animation-delay: -1s; } .isi .broad.c { animation-delay: -2s; }
+@keyframes isi-broad { 0% { transform: scale(.3); opacity: .9; } 100% { transform: scale(1.8); opacity: 0; } }
+.isi .scrglow { animation: isi-glowscr 2.4s ease-in-out infinite; }
+.isi .scrglow.b { animation-delay: -.8s; } .isi .scrglow.c { animation-delay: -1.6s; }
+@keyframes isi-glowscr { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+.isi .noz { animation: isi-nozup 5s ease-in-out infinite; }
+.isi .noz-x { animation: isi-nozx 0.9s ease-in-out infinite alternate; }
+.isi .obj { transform-box: fill-box; transform-origin: 50% 100%; animation: isi-objgrow 5s ease-in-out infinite; }
+@keyframes isi-nozup { 0% { transform: translateY(72px); } 85%, 100% { transform: translateY(30px); } }
+@keyframes isi-nozx { from { transform: translateX(-10px); } to { transform: translateX(10px); } }
+@keyframes isi-objgrow { 0% { transform: scaleY(0.04); } 85%, 100% { transform: scaleY(1); } }
+.isi .tile { transform-box: fill-box; transform-origin: center; animation: isi-tile 6s ease-in-out infinite; animation-delay: calc(var(--i) * .7s - 4.5s); }
+@keyframes isi-tile { 0%, 8% { transform: scale(.5); opacity: .2; } 20%, 86% { transform: scale(1); opacity: 1; } 96%, 100% { transform: scale(.5); opacity: .2; } }
+.isi .coin { animation: isi-coin 3s cubic-bezier(.3,0,.5,1) infinite; animation-delay: -1.7s; }
+@keyframes isi-coin { 0% { transform: translateY(-70px); opacity: 0; } 12% { opacity: 1; } 55% { transform: translateY(0); } 68% { transform: translateY(-14px); } 80%, 100% { transform: translateY(0); opacity: 1; } }
+
+.isi-evidence { display: grid; gap: 14px; }
+.isi-bars { display: grid; gap: 14px; }
+.isi-bar-row { display: grid; grid-template-columns: 84px minmax(0, 1fr); align-items: center; gap: 12px; }
+.isi-bar-row b { font-family: var(--isi-mono); font-size: 13px; font-weight: 500; color: var(--isi-muted); }
+.isi-bar-track { height: 36px; border-radius: 999px; background: var(--isi-raise); overflow: hidden; position: relative; }
+.isi-bar-fill { height: 100%; border-radius: 999px; display: flex; align-items: center; justify-content: flex-end; padding-inline: 16px; font-weight: 600; font-size: 14px; font-variant-numeric: tabular-nums; color: var(--isi-accent-ink); background: linear-gradient(100deg, var(--isi-pupil-lo), var(--isi-accent) 40%, var(--isi-pupil-hi) 55%, var(--isi-accent) 70%, var(--isi-pupil-lo)); background-size: 250% 100%; animation: isi-sheen 5s linear infinite; }
+.isi-bar-fill.lo { background: var(--isi-muted); animation: none; color: var(--isi-bg); }
+@keyframes isi-sheen { to { background-position: -250% 0; } }
+
+/* ---------- Include orbit ---------- */
+.isi-incl { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(24px, 5vw, 56px); align-items: center; }
+.isi-orbit { width: min(100%, 400px); margin-inline: auto; position: relative; }
+.isi-orbit svg { width: 100%; height: auto; overflow: visible; }
+.isi-or { fill: none; stroke: var(--isi-line); stroke-width: 1; }
+.isi-o1 { animation: isi-spin 14s linear infinite; transform-origin: 0 0; }
+.isi-o2 { animation: isi-spin 22s linear infinite reverse; transform-origin: 0 0; }
+.isi-o3 { animation: isi-spin 32s linear infinite; transform-origin: 0 0; }
+.isi-o4 { animation: isi-spin 44s linear infinite reverse; transform-origin: 0 0; }
+.isi-bars4 { display: grid; gap: 0; border-top: 1px solid var(--isi-line); }
+.isi-bars4 li { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 4px 16px; padding-block: 16px; border-bottom: 1px solid var(--isi-line); align-items: baseline; }
+.isi-bars4 li::before { content: ""; grid-row: span 2; width: 12px; height: 12px; border-radius: 50%; background: var(--c); align-self: center; box-shadow: 0 0 0 5px color-mix(in srgb, var(--c) 22%, transparent); }
+.isi-bars4 b { font-weight: 600; font-size: 17px; }
+.isi-bars4 span { color: var(--isi-muted); font-size: 15px; }
+@media (max-width: 760px) { .isi-incl { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- Bloom ---------- */
+.isi-bloom { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(24px, 5vw, 56px); align-items: center; }
+.isi-radar { width: min(100%, 440px); margin-inline: auto; background: radial-gradient(circle at 50% 50%, var(--isi-glow), transparent 70%); }
+.isi-radar svg { width: 100%; height: auto; overflow: visible; }
+.isi-rr { fill: none; stroke: var(--isi-line); stroke-width: 1; }
+.isi-ax { stroke: var(--isi-line); stroke-width: 1; }
+.isi-rn { font: 500 7px var(--isi-mono); fill: var(--isi-muted); }
+.isi-states { display: grid; gap: 12px; }
+.isi-state { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 4px 16px; padding: 16px 18px; border-radius: 16px; border: 1px solid var(--isi-line); background: var(--isi-surface); opacity: .45; animation: isi-state 9s ease-in-out infinite; animation-delay: var(--d); }
+.isi-state strong { grid-row: span 2; font-family: var(--isi-mono); font-size: 14px; color: var(--isi-amber); align-self: center; }
+.isi-state b { font-weight: 600; font-size: 17px; }
+.isi-state span { color: var(--isi-muted); font-size: 14px; }
+@keyframes isi-state { 0%, 30% { opacity: 1; border-color: var(--isi-amber); } 36%, 94% { opacity: .45; border-color: var(--isi-line); } 100% { opacity: 1; border-color: var(--isi-amber); } }
+@media (max-width: 760px) { .isi-bloom { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- Network ---------- */
+.isi-netwrap { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: clamp(20px, 4vw, 44px); align-items: center; }
+.isi-net { background: var(--isi-surface); border: 1px solid var(--isi-line); border-radius: 22px; padding: 14px; }
+.isi-net svg { width: 100%; height: auto; }
+.isi-link { stroke: var(--isi-line); stroke-width: 1.3; fill: none; }
+.isi-link.live { stroke: var(--isi-accent); stroke-width: 1.6; stroke-dasharray: 4 8; animation: isi-flow 2.6s linear infinite; opacity: .85; }
+.isi-link.later { stroke: var(--isi-muted); stroke-dasharray: 2 7; animation: isi-flow 6s linear infinite; opacity: .5; }
+@keyframes isi-flow { to { stroke-dashoffset: -48; } }
+.isi-nc { fill: var(--isi-accent); }
+.isi-nv { fill: var(--isi-fg); }
+.isi-hl { fill: var(--isi-accent); transform-box: fill-box; transform-origin: center; animation: isi-halo 3.4s ease-out infinite; }
+.isi-hl:nth-of-type(2n) { animation-delay: -1.1s; } .isi-hl:nth-of-type(3n) { animation-delay: -2.2s; }
 .isi-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.isi-chip {
-  font-size: 13px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--isi-line);
-  background: var(--isi-raise);
-  color: var(--isi-fg);
-}
+.isi-chip { font-size: 14px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--isi-line); background: var(--isi-raise); color: var(--isi-fg); }
+.isi-legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; color: var(--isi-muted); padding-top: 10px; }
+.isi-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; vertical-align: -1px; }
+.isi-future { display: grid; gap: 16px; align-content: center; }
+@media (max-width: 820px) { .isi-netwrap { grid-template-columns: minmax(0, 1fr); } }
 
-/* Physio panel */
-.isi-physio {
-  position: relative;
-  border-radius: 20px;
-  padding: clamp(22px, 5vw, 40px);
-  background: var(--isi-raise);
-  border: 1px solid var(--isi-line);
-  display: grid;
-  gap: 14px;
-  overflow: hidden;
-}
-.isi-physio h2 { max-width: 20ch; }
-.isi-physio p { color: var(--isi-muted); max-width: 60ch; }
-.isi-physio svg.isi-bg-mark { position: absolute; right: -40px; bottom: -50px; width: 260px; opacity: 0.12; color: var(--isi-fg); pointer-events: none; }
-.isi-sites { display: flex; flex-wrap: wrap; gap: 8px; }
-
-/* Network graphic */
-.isi-net { background: var(--isi-surface); border: 1px solid var(--isi-line); border-radius: 18px; padding: 12px; }
-.isi-net svg { display: block; width: 100%; height: auto; }
-.isi-net text { font-family: var(--isi-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; fill: var(--isi-muted); }
-.isi-link { stroke: var(--isi-line); stroke-width: 1.2; fill: none; }
-.isi-link--live { stroke: var(--isi-accent); stroke-width: 1.4; stroke-dasharray: 4 7; animation: isi-flow 3s linear infinite; opacity: 0.8; }
-.isi-world { stroke: var(--isi-muted); stroke-width: 1; fill: none; stroke-dasharray: 2 6; animation: isi-flow 6s linear infinite; }
-@keyframes isi-flow { to { stroke-dashoffset: -44; } }
-.isi-node { fill: var(--isi-accent); }
-.isi-node--v { fill: var(--isi-fg); }
-.isi-halo { fill: var(--isi-accent); opacity: 0.25; transform-box: fill-box; transform-origin: center; animation: isi-halo 3.4s ease-in-out infinite; }
-.isi-halo:nth-of-type(2n) { animation-delay: -1.1s; }
-.isi-halo:nth-of-type(3n) { animation-delay: -2.2s; }
-@keyframes isi-halo { 0%, 100% { transform: scale(1); opacity: 0.3; } 50% { transform: scale(2.1); opacity: 0; } }
-
-/* Closing */
-.isi-close {
-  margin-top: 64px;
-  text-align: center;
-  display: grid;
-  justify-items: center;
-  gap: 18px;
-  padding: clamp(28px, 6vw, 48px) clamp(16px, 4vw, 32px);
-  border-radius: 22px;
-  border: 1px solid var(--isi-line);
-  background: radial-gradient(circle at 50% 0%, var(--isi-glow), transparent 70%), var(--isi-surface);
-}
-.isi-close h2 { max-width: 20ch; }
-.isi-close .isi-mark { width: 120px; }
-.isi-contact { font-size: 14px; color: var(--isi-muted); display: grid; gap: 2px; }
-.isi-contact b { color: var(--isi-fg); font-weight: 600; }
-.isi-contact span { user-select: all; -webkit-user-select: all; }
-.isi-foot { margin-top: 32px; text-align: center; font-size: 13px; color: var(--isi-muted); }
+/* ---------- Close ---------- */
+.isi-close { position: relative; isolation: isolate; overflow: hidden; margin-top: clamp(64px, 10vw, 112px); text-align: center; display: grid; justify-items: center; gap: 20px; padding: clamp(36px, 7vw, 72px) clamp(16px, 4vw, 40px); border-radius: 28px; border: 1px solid var(--isi-line); background: radial-gradient(circle at 50% 0%, var(--isi-glow), transparent 70%), var(--isi-surface); }
+.isi-close .isi-eye-svg { width: 130px; }
+.isi-close h2 { max-width: 22ch; }
+.isi-who { display: grid; gap: 2px; font-size: 14px; color: var(--isi-muted); }
+.isi-who b { color: var(--isi-fg); font-weight: 600; font-size: 16px; }
+.isi-foot { margin-top: 28px; text-align: center; font-size: 13px; color: var(--isi-muted); }
 .isi-foot b { color: var(--isi-fg); font-weight: 500; }
 
 @media (prefers-reduced-motion: reduce) {
   .isi *, .isi *::before, .isi *::after { animation: none !important; transition: none !important; }
+  .isi-line { width: auto !important; }
+  .isi-marq-track { transform: none; }
 }
 </style>
 
 </head>
 <body style="margin:0">
-<main class="isi" id="isi-about">
+<div class="isi" id="isi-about">
+
+  <!-- ===== HERO: your brand screenshot, alive ===== -->
+  <div class="isi-wrap">
+    <header class="isi-hero">
+      <div class="isi-stage">
+        <div class="isi-eyewrap">
+          <div class="isi-rings" aria-hidden="true">
+            <svg viewBox="-500 -500 1000 1000">
+              <circle class="isi-ring" r="106"/><circle class="isi-ring" r="156"/><circle class="isi-ring" r="218"/>
+              <circle class="isi-ring" r="275"/><circle class="isi-ring" r="337"/><circle class="isi-ring" r="418"/><circle class="isi-ring" r="500"/>
+              <circle class="isi-wave" r="500"/><circle class="isi-wave" r="500"/><circle class="isi-wave" r="500"/>
+            </svg>
+          </div>
+          <svg class="isi-eye-svg" viewBox="-200 -110 400 220" role="img" aria-label="Inclusive.Si eye logo">
+            <defs>
+              <radialGradient id="isi-pg1" cx="38%" cy="32%" r="75%">
+                <stop offset="0" style="stop-color: var(--isi-pupil-hi)"/>
+                <stop offset="1" style="stop-color: var(--isi-pupil-lo)"/>
+              </radialGradient>
+            </defs>
+            <g class="isi-blink">
+              <path d="M-156 0 C-100 -52 -52 -81 0 -81 C52 -81 100 -52 156 0 C100 52 52 81 0 81 C-52 81 -100 52 -156 0Z" fill="none" stroke="currentColor" stroke-width="38" stroke-linejoin="miter" stroke-miterlimit="4"/>
+              <g class="isi-iris" fill="none" stroke="currentColor" stroke-width="15" stroke-linecap="round">
+                <path d="M-11.39 -42.5 A44 44 0 0 1 41.85 13.6"/>
+                <path d="M25.86 35.6 A44 44 0 0 1 -29.44 32.7"/>
+                <path d="M-43.04 9.15 A44 44 0 0 1 -32.7 -29.44"/>
+              </g>
+              <circle class="isi-pupil" r="20" fill="url(#isi-pg1)"/>
+            </g>
+          </svg>
+        </div>
+        <h1 class="isi-word">Inclusive<i>.</i><b>Si</b></h1>
+        <p class="isi-tag">Inclusive Super Intelligence</p>
+        <p class="isi-quote">Super intelligence begins when <b>no mind is left out.</b></p>
+        <nav class="isi-cta" aria-label="Inclusive.Si links">
+          <a class="isi-btn isi-btn--solid" href="https://www.instagram.com/inclusive.si?cplk=YmRsYTltYmVubTg5" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="0.8" fill="currentColor"/></svg>
+            Follow on Instagram
+          </a>
+          <a class="isi-btn isi-btn--ghost" href="https://www.findphysio.org" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/></svg>
+            Visit findphysio.org
+          </a>
+          <a class="isi-btn isi-btn--ghost" href="https://josesyson-physio.github.io/" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
+            Founder portfolio
+          </a>
+        </nav>
+      </div>
+    </header>
+  </div>
+
+  <!-- ===== MARQUEE ===== -->
+  <div class="isi-marq" aria-label="What Inclusive.Si stands for">
+    <div class="isi-marq-track">
+      <div class="isi-marq-set">
+        <span><b>Built by our own community</b></span><i class="isi-sep"></i>
+        <span>Patients became creators</span><i class="isi-sep"></i>
+        <span><b>Learn. Earn. Build.</b></span><i class="isi-sep"></i>
+        <span>It does not matter how fancy it looks if it solves the problem</span><i class="isi-sep"></i>
+        <span><b>Unseen to Unstoppable</b></span><i class="isi-sep"></i>
+        <span>Inclusive Super Intelligence</span><i class="isi-sep"></i>
+      </div>
+      <div class="isi-marq-set" aria-hidden="true">
+        <span><b>Built by our own community</b></span><i class="isi-sep"></i>
+        <span>Patients became creators</span><i class="isi-sep"></i>
+        <span><b>Learn. Earn. Build.</b></span><i class="isi-sep"></i>
+        <span>It does not matter how fancy it looks if it solves the problem</span><i class="isi-sep"></i>
+        <span><b>Unseen to Unstoppable</b></span><i class="isi-sep"></i>
+        <span>Inclusive Super Intelligence</span><i class="isi-sep"></i>
+      </div>
+    </div>
+  </div>
+
   <div class="isi-wrap">
 
-    <!-- 1. HERO -->
-    <header class="isi-hero">
-      <div class="isi-rings" aria-hidden="true">
-        <svg viewBox="0 0 1000 1000">
-          <circle class="isi-ring" cx="500" cy="500" r="500"/>
-          <circle class="isi-ring" cx="500" cy="500" r="500"/>
-          <circle class="isi-ring" cx="500" cy="500" r="500"/>
-          <circle class="isi-ring" cx="500" cy="500" r="500"/>
-          <circle class="isi-ring" cx="500" cy="500" r="500"/>
-        </svg>
+    <!-- ===== ABOUT STATEMENT ===== -->
+    <section class="isi-sec" aria-label="About Inclusive.Si">
+      <header class="isi-head">
+        <p class="isi-label">About Inclusive.Si</p>
+      </header>
+      <div class="isi-about">
+        <p class="isi-statement">Built under <b>Inclusive.Si</b>, a project from MotionPlus Physio Pvt. Ltd. Created with <em>people from our clinics</em>, to solve real human problems. <b>More apps are on the way.</b></p>
+        <div class="isi-brandcard">
+          <svg class="isi-eye-svg" viewBox="-200 -110 400 220" role="img" aria-label="Inclusive.Si eye logo">
+            <defs>
+              <radialGradient id="isi-pg2" cx="38%" cy="32%" r="75%">
+                <stop offset="0" style="stop-color: var(--isi-pupil-hi)"/>
+                <stop offset="1" style="stop-color: var(--isi-pupil-lo)"/>
+              </radialGradient>
+            </defs>
+            <g class="isi-blink">
+              <path d="M-156 0 C-100 -52 -52 -81 0 -81 C52 -81 100 -52 156 0 C100 52 52 81 0 81 C-52 81 -100 52 -156 0Z" fill="none" stroke="currentColor" stroke-width="38" stroke-linejoin="miter" stroke-miterlimit="4"/>
+              <g class="isi-iris" fill="none" stroke="currentColor" stroke-width="15" stroke-linecap="round">
+                <path d="M-11.39 -42.5 A44 44 0 0 1 41.85 13.6"/>
+                <path d="M25.86 35.6 A44 44 0 0 1 -29.44 32.7"/>
+                <path d="M-43.04 9.15 A44 44 0 0 1 -32.7 -29.44"/>
+              </g>
+              <circle class="isi-pupil" r="20" fill="url(#isi-pg2)"/>
+            </g>
+          </svg>
+          <p class="isi-miniword">Inclusive<i>.</i><b>Si</b></p>
+          <p>The eye is the third eye. In India, its opening is the opening of wisdom. The circle around it is inclusion.</p>
+        </div>
       </div>
+    </section>
 
-      <div class="isi-mark" role="img" aria-label="Inclusive.Si eye logo">
-        <svg viewBox="0 0 460 260">
-          <defs>
-            <radialGradient id="isi-pg" cx="35%" cy="30%" r="80%">
-              <stop offset="0" stop-color="#b3bbff"/>
-              <stop offset="1" stop-color="#5566ff"/>
-            </radialGradient>
-          </defs>
-          <path d="M17 130 C 75 68 145 24 230 24 C 315 24 385 68 443 130 C 385 192 315 236 230 236 C 145 236 75 192 17 130 Z" fill="none" stroke="currentColor" stroke-width="30" stroke-linejoin="miter" stroke-miterlimit="10"/>
-          <circle class="isi-iris" cx="230" cy="130" r="65" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-dasharray="84 52.4"/>
-          <circle class="isi-pupil" cx="230" cy="130" r="24" fill="url(#isi-pg)"/>
-        </svg>
+    <!-- ===== ORIGIN ===== -->
+    <section class="isi-sec" aria-labelledby="isi-h-origin">
+      <header class="isi-head">
+        <p class="isi-label">Where it began</p>
+        <h2 id="isi-h-origin">Patients became creators.</h2>
+        <p class="isi-lede">MotionPlus began in rehabilitation and pediatric care. Our apps are built with people we treated in our clinics, and trained to build. Everything started with vibe coding.</p>
+      </header>
+      <div class="isi-origin">
+        <div class="isi-panel isi-people">
+          <p class="isi-label">From the clinic</p>
+          <svg viewBox="0 0 360 150" role="img" aria-label="People in a row turning from patients into creators">
+            <text class="isi-tl isi-tl-a" x="180" y="22" text-anchor="middle">Patient</text>
+            <text class="isi-tl isi-tl-b" x="180" y="22" text-anchor="middle">Creator</text>
+            <g transform="translate(0 38)">
+              <g style="--i:0"><circle class="isi-person" style="--i:0" cx="32" cy="34" r="11"/><path class="isi-person" style="--i:0" d="M14 96 v-18 a18 18 0 0 1 36 0 v18z"/><text class="isi-spark" style="--i:0" x="32" y="14" text-anchor="middle">&lt;/&gt;</text></g>
+              <g><circle class="isi-person" style="--i:1" cx="92" cy="34" r="11"/><path class="isi-person" style="--i:1" d="M74 96 v-18 a18 18 0 0 1 36 0 v18z"/><text class="isi-spark" style="--i:1" x="92" y="14" text-anchor="middle">&lt;/&gt;</text></g>
+              <g><circle class="isi-person" style="--i:2" cx="152" cy="34" r="11"/><path class="isi-person" style="--i:2" d="M134 96 v-18 a18 18 0 0 1 36 0 v18z"/><text class="isi-spark" style="--i:2" x="152" y="14" text-anchor="middle">&lt;/&gt;</text></g>
+              <g><circle class="isi-person" style="--i:3" cx="212" cy="34" r="11"/><path class="isi-person" style="--i:3" d="M194 96 v-18 a18 18 0 0 1 36 0 v18z"/><text class="isi-spark" style="--i:3" x="212" y="14" text-anchor="middle">&lt;/&gt;</text></g>
+              <g><circle class="isi-person" style="--i:4" cx="272" cy="34" r="11"/><path class="isi-person" style="--i:4" d="M254 96 v-18 a18 18 0 0 1 36 0 v18z"/><text class="isi-spark" style="--i:4" x="272" y="14" text-anchor="middle">&lt;/&gt;</text></g>
+              <g><circle class="isi-person" style="--i:5" cx="332" cy="34" r="11"/><path class="isi-person" style="--i:5" d="M314 96 v-18 a18 18 0 0 1 36 0 v18z"/><text class="isi-spark" style="--i:5" x="332" y="14" text-anchor="middle">&lt;/&gt;</text></g>
+            </g>
+          </svg>
+          <p class="isi-lede" style="font-size:15px">Those who were once patients are now creators.</p>
+        </div>
+        <div class="isi-panel isi-term" role="img" aria-label="A terminal showing how an app gets built with the community">
+          <div class="isi-term-bar"><i></i><i></i><i></i></div>
+          <span class="isi-line l1"><span class="k">$</span> vibe build <span class="a">"a free learning app"</span></span>
+          <span class="isi-line l2"><span class="g">+</span> ask the people who need it</span>
+          <span class="isi-line l3"><span class="g">+</span> build with people from our clinics</span>
+          <span class="isi-line l4"><span class="g">+</span> ship. it solves the problem.</span>
+          <span><span class="isi-cursor"></span></span>
+        </div>
+        <p class="isi-pull">It does not matter how fancy it looks <b>if it solves the problem.</b></p>
       </div>
+    </section>
 
-      <h1 class="isi-word">Inclusive<i>.</i><b>Si</b></h1>
-      <p class="isi-tag">Inclusive Super Intelligence</p>
-      <p class="isi-quote">The third eye opens when every talent is seen.</p>
+    <!-- ===== APPS ===== -->
+    <section class="isi-sec" aria-labelledby="isi-h-apps">
+      <header class="isi-head">
+        <p class="isi-label">The apps</p>
+        <h2 id="isi-h-apps">Five apps, made with the people they are for.</h2>
+        <p class="isi-lede">Each one starts from a real problem we met in our clinics. All five carry the same About Inclusive.Si block.</p>
+      </header>
+      <div class="isi-rail" tabindex="0" role="group" aria-label="Inclusive.Si apps, scroll sideways to see all five">
 
+        <!-- 1 Assess -->
+        <article class="isi-app" style="--i:0">
+          <div class="isi-phone" style="--i:0">
+            <svg class="isi-scr" viewBox="0 0 200 400" role="img" aria-label="MotionPlus Assess: a shoulder measured while raised">
+              <rect class="s-bg" width="200" height="400"/>
+              <text class="s-time" x="16" y="20">9:41</text><rect class="s-batt" x="164" y="13" width="18" height="8" rx="2.5"/>
+              <text class="s-kick c-indigo" x="16" y="46">MOTIONPLUS</text>
+              <text class="s-title" x="16" y="66">Assess</text>
+              <text class="s-sub" x="16" y="80">Shoulder flexion</text>
+              <rect class="s-card" x="12" y="92" width="176" height="168" rx="16"/>
+              <path class="s-line" d="M24 246 H176" />
+              <circle cx="86" cy="122" r="8" style="fill: var(--isi-scr-line)"/>
+              <path d="M86 134 V196 M86 196 V246" stroke="var(--isi-scr-mute)" style="stroke: var(--isi-scr-mute)" stroke-width="5" stroke-linecap="round" fill="none"/>
+              <path class="a-arc x-indigo" d="M86 170 A24 24 0 0 0 98 125.2" fill="none" stroke-width="2.4" stroke-linecap="round"/>
+              <g class="a-arm"><path class="x-indigo" d="M86 146 V174 L86 196" fill="none" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></g>
+              <circle class="c-indigo" cx="86" cy="146" r="4"/><circle class="a-pulse c-indigo" cx="86" cy="146" r="4"/>
+              <text class="a-n a-n1" x="22" y="152">30°</text><text class="a-n a-n2" x="22" y="152">70°</text><text class="a-n a-n3" x="22" y="152">110°</text><text class="a-n a-n4" x="22" y="152">148°</text>
+              <text class="s-lab" x="16" y="284">Left shoulder</text><text class="s-val" x="184" y="284" text-anchor="end">148°</text>
+              <rect class="s-track" x="16" y="290" width="168" height="5" rx="2.5"/><rect class="a-bar c-indigo" x="16" y="290" width="138" height="5" rx="2.5"/>
+              <text class="s-lab" x="16" y="316">Right shoulder</text><text class="s-val" x="184" y="316" text-anchor="end">152°</text>
+              <rect class="s-track" x="16" y="322" width="168" height="5" rx="2.5"/><rect class="a-bar c-indigo" x="16" y="322" width="142" height="5" rx="2.5"/>
+              <rect class="c-indigo" x="16" y="342" width="168" height="34" rx="17"/><text class="s-btn-t" x="100" y="363">Save assessment</text>
+              <rect class="s-home" x="72" y="387" width="56" height="3" rx="1.5"/>
+            </svg>
+          </div>
+          <div><h3><i class="dot dot-indigo"></i>MotionPlus Assess</h3><p>Movement and clinical assessment.</p></div>
+        </article>
+
+        <!-- 2 Posture -->
+        <article class="isi-app" style="--i:1">
+          <div class="isi-phone" style="--i:1">
+            <svg class="isi-scr" viewBox="0 0 200 400" role="img" aria-label="MotionPlus Posture: a side view body aligning to a plumb line">
+              <rect class="s-bg" width="200" height="400"/>
+              <text class="s-time" x="16" y="20">9:41</text><rect class="s-batt" x="164" y="13" width="18" height="8" rx="2.5"/>
+              <text class="s-kick c-teal" x="16" y="46">MOTIONPLUS</text>
+              <text class="s-title" x="16" y="66">Posture</text>
+              <text class="s-sub" x="16" y="80">Side view analysis</text>
+              <rect class="s-card" x="12" y="92" width="176" height="204" rx="16"/>
+              <path class="s-line" d="M24 140 H176 M24 190 H176 M24 240 H176"/>
+              <path class="x-teal" d="M100 100 V286" stroke-width="1.4" stroke-dasharray="4 4" fill="none"/>
+              <polyline class="x-teal" fill="none" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity=".9" points="118,120 110,152 100,202 102,246 100,284">
+                <animate attributeName="points" dur="7s" begin="-4s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.3;0.45;0.85;1" keySplines=".4 0 .2 1;.4 0 .2 1;.4 0 .2 1;.4 0 .2 1" values="118,120 110,152 100,202 102,246 100,284;118,120 110,152 100,202 102,246 100,284;100,120 100,152 100,202 100,246 100,284;100,120 100,152 100,202 100,246 100,284;118,120 110,152 100,202 102,246 100,284"/>
+              </polyline>
+              <path class="x-teal" d="M100 284 H122" stroke-width="5" stroke-linecap="round" fill="none"/>
+              <circle cx="116" cy="106" r="12" style="fill: var(--isi-scr-line)">
+                <animate attributeName="cx" dur="7s" begin="-4s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.3;0.45;0.85;1" keySplines=".4 0 .2 1;.4 0 .2 1;.4 0 .2 1;.4 0 .2 1" values="116;116;100;100;116"/>
+              </circle>
+              <g style="fill: var(--isi-scr-card)" class="x-teal" stroke-width="2">
+                <circle cx="118" cy="120" r="4"><animate attributeName="cx" dur="7s" begin="-4s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.3;0.45;0.85;1" keySplines=".4 0 .2 1;.4 0 .2 1;.4 0 .2 1;.4 0 .2 1" values="118;118;100;100;118"/></circle>
+                <circle cx="110" cy="152" r="4"><animate attributeName="cx" dur="7s" begin="-4s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.3;0.45;0.85;1" keySplines=".4 0 .2 1;.4 0 .2 1;.4 0 .2 1;.4 0 .2 1" values="110;110;100;100;110"/></circle>
+                <circle cx="100" cy="202" r="4"/>
+                <circle cx="102" cy="246" r="4"><animate attributeName="cx" dur="7s" begin="-4s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.3;0.45;0.85;1" keySplines=".4 0 .2 1;.4 0 .2 1;.4 0 .2 1;.4 0 .2 1" values="102;102;100;100;102"/></circle>
+                <circle cx="100" cy="284" r="4"/>
+              </g>
+              <rect class="p-scan c-teal" x="18" y="102" width="164" height="2" rx="1" opacity="0"/>
+              <text class="s-lab" x="16" y="322">Alignment</text>
+              <text class="s-val p-v1" x="184" y="322" text-anchor="end" style="fill: var(--isi-s-rose)">64%</text><text class="s-val p-v2" x="184" y="322" text-anchor="end" style="fill: var(--isi-s-teal)">96%</text>
+              <rect class="p-t1 c-rose" x="16" y="332" width="76" height="16" rx="8" fill-opacity=".14"/><text class="p-t1" x="54" y="343.5" text-anchor="middle" style="font: 600 7.5px var(--isi-display); fill: var(--isi-s-rose)">Forward head</text>
+              <rect class="p-t2 c-teal" x="16" y="332" width="58" height="16" rx="8" fill-opacity=".14"/><text class="p-t2" x="45" y="343.5" text-anchor="middle" style="font: 600 7.5px var(--isi-display); fill: var(--isi-s-teal)">Aligned</text>
+              <rect class="c-teal" x="16" y="356" width="168" height="26" rx="13"/><text class="s-btn-t" x="100" y="373" style="font-size: 9px">Scan again</text>
+            </svg>
+          </div>
+          <div><h3><i class="dot dot-teal"></i>MotionPlus Posture</h3><p>Posture analysis.</p></div>
+        </article>
+
+        <!-- 3 Learn Anywhere -->
+        <article class="isi-app" style="--i:2">
+          <div class="isi-phone" style="--i:2">
+            <svg class="isi-scr" viewBox="0 0 200 400" role="img" aria-label="Learn Anywhere: a progress ring filling and lessons being completed">
+              <rect class="s-bg" width="200" height="400"/>
+              <text class="s-time" x="16" y="20">9:41</text><rect class="s-batt" x="164" y="13" width="18" height="8" rx="2.5"/>
+              <text class="s-kick c-rose" x="16" y="46">LEARN ANYWHERE</text>
+              <text class="s-title" x="16" y="66">Today</text>
+              <rect class="c-rose" x="144" y="50" width="40" height="18" rx="9"/><text class="s-btn-t" x="164" y="62.5" style="font-size: 8px; letter-spacing: 1px">FREE</text>
+              <circle cx="100" cy="132" r="38" fill="none" style="stroke: var(--isi-scr-line)" stroke-width="9"/>
+              <circle class="l-ring x-rose" cx="100" cy="132" r="38" fill="none" stroke-width="9" stroke-linecap="round" transform="rotate(-90 100 132)" stroke-dashoffset="66.9"/>
+              <text x="100" y="138" text-anchor="middle" style="font: 700 19px var(--isi-display); fill: var(--isi-scr-ink)">72%</text>
+              <text x="100" y="152" text-anchor="middle" class="s-sub" style="font-size: 7px">this week</text>
+              <g>
+                <rect class="s-card" x="14" y="190" width="172" height="34" rx="11"/><circle cx="34" cy="207" r="8.5" fill="none" style="stroke: var(--isi-scr-line)" stroke-width="1.6"/><circle class="l-fill c-rose" style="--i:0" cx="34" cy="207" r="8.5"/><path class="l-chk" style="--i:0; stroke: #fff" d="M29.5 207.5 L33 211 L39 203.5" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <text class="s-lab" x="52" y="210.5">Reading</text><text class="s-sub" x="172" y="210.5" text-anchor="end">›</text>
+                <rect class="s-card" x="14" y="230" width="172" height="34" rx="11"/><circle cx="34" cy="247" r="8.5" fill="none" style="stroke: var(--isi-scr-line)" stroke-width="1.6"/><circle class="l-fill c-rose" style="--i:1" cx="34" cy="247" r="8.5"/><path class="l-chk" style="--i:1; stroke: #fff" d="M29.5 247.5 L33 251 L39 243.5" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <text class="s-lab" x="52" y="250.5">Numbers</text><text class="s-sub" x="172" y="250.5" text-anchor="end">›</text>
+                <rect class="s-card" x="14" y="270" width="172" height="34" rx="11"/><circle cx="34" cy="287" r="8.5" fill="none" style="stroke: var(--isi-scr-line)" stroke-width="1.6"/><circle class="l-fill c-rose" style="--i:2" cx="34" cy="287" r="8.5"/><path class="l-chk" style="--i:2; stroke: #fff" d="M29.5 287.5 L33 291 L39 283.5" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <text class="s-lab" x="52" y="290.5">Digital skills</text><text class="s-sub" x="172" y="290.5" text-anchor="end">›</text>
+                <rect class="s-card" x="14" y="310" width="172" height="34" rx="11"/><circle cx="34" cy="327" r="8.5" fill="none" style="stroke: var(--isi-scr-line)" stroke-width="1.6"/><circle class="l-fill c-rose" style="--i:3" cx="34" cy="327" r="8.5"/><path class="l-chk" style="--i:3; stroke: #fff" d="M29.5 327.5 L33 331 L39 323.5" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <text class="s-lab" x="52" y="330.5">Start a business</text><text class="s-sub" x="172" y="330.5" text-anchor="end">›</text>
+              </g>
+              <rect class="c-rose" x="16" y="356" width="168" height="26" rx="13"/><text class="s-btn-t" x="100" y="373" style="font-size: 9px">Continue</text>
+            </svg>
+          </div>
+          <div><h3><i class="dot dot-rose"></i>Learn Anywhere</h3><p>A free learning app.</p></div>
+        </article>
+
+        <!-- 4 Blossoming Mind -->
+        <article class="isi-app" style="--i:3">
+          <div class="isi-phone" style="--i:3">
+            <svg class="isi-scr" viewBox="0 0 200 400" role="img" aria-label="Blossoming Mind: ten talent domains blooming into a strengths profile">
+              <rect class="s-bg" width="200" height="400"/>
+              <text class="s-time" x="16" y="20">9:41</text><rect class="s-batt" x="164" y="13" width="18" height="8" rx="2.5"/>
+              <text class="s-kick c-amber" x="16" y="46">BLOSSOMING MIND</text>
+              <text class="s-title" x="16" y="66">My Spark</text>
+              <text class="s-sub" x="16" y="80">10 domains, scored 1 to 5</text>
+              <rect class="s-card" x="12" y="92" width="176" height="208" rx="16"/>
+              <g transform="translate(100 196) scale(.7)">
+                <polygon class="s-line" points="0,-24 14.11,-19.42 22.83,-7.42 22.83,7.42 14.11,19.42 0,24 -14.11,19.42 -22.83,7.42 -22.83,-7.42 -14.11,-19.42"/>
+                <polygon class="s-line" points="0,-48 28.21,-38.83 45.65,-14.83 45.65,14.83 28.21,38.83 0,48 -28.21,38.83 -45.65,14.83 -45.65,-14.83 -28.21,-38.83"/>
+                <polygon class="s-line" points="0,-72 42.32,-58.25 68.48,-22.25 68.48,22.25 42.32,58.25 0,72 -42.32,58.25 -68.48,22.25 -68.48,-22.25 -42.32,-58.25"/>
+                <polygon class="s-line" points="0,-96 56.43,-77.67 91.3,-29.67 91.3,29.67 56.43,77.67 0,96 -56.43,77.67 -91.3,29.67 -91.3,-29.67 -56.43,-77.67"/>
+                <polygon class="s-line" points="0,-120 70.53,-97.08 114.13,-37.08 114.13,37.08 70.53,97.08 0,120 -70.53,97.08 -114.13,37.08 -114.13,-37.08 -70.53,-97.08"/>
+                <polygon class="x-amber c-amber" fill-opacity=".28" stroke-width="3" stroke-linejoin="round" points="0,-72 28.21,-38.83 114.13,-37.08 68.48,22.25 70.53,97.08 0,96 -56.43,77.67 -45.65,14.83 -68.48,-22.25 -70.53,-97.08">
+                  <animate attributeName="points" dur="9s" repeatCount="indefinite" keyTimes="0;0.30;0.40;0.63;0.70;0.96;1" values="0.0,-72.0 28.21,-38.83 114.13,-37.08 68.48,22.25 70.53,97.08 0.0,96.0 -56.43,77.67 -45.65,14.83 -68.48,-22.25 -70.53,-97.08;0.0,-72.0 28.21,-38.83 114.13,-37.08 68.48,22.25 70.53,97.08 0.0,96.0 -56.43,77.67 -45.65,14.83 -68.48,-22.25 -70.53,-97.08;0.0,-24.0 14.11,-19.42 22.83,-7.42 22.83,7.42 14.11,19.42 0.0,24.0 -14.11,19.42 -22.83,7.42 -22.83,-7.42 -14.11,-19.42;0.0,-24.0 14.11,-19.42 22.83,-7.42 22.83,7.42 14.11,19.42 0.0,24.0 -14.11,19.42 -22.83,7.42 -22.83,-7.42 -14.11,-19.42;0.0,-48.0 14.11,-19.42 68.48,-22.25 45.65,14.83 56.43,77.67 0.0,48.0 -42.32,58.25 -22.83,7.42 -45.65,-14.83 -42.32,-58.25;0.0,-48.0 14.11,-19.42 68.48,-22.25 45.65,14.83 56.43,77.67 0.0,48.0 -42.32,58.25 -22.83,7.42 -45.65,-14.83 -42.32,-58.25;0.0,-72.0 28.21,-38.83 114.13,-37.08 68.48,22.25 70.53,97.08 0.0,96.0 -56.43,77.67 -45.65,14.83 -68.48,-22.25 -70.53,-97.08"/>
+                </polygon>
+                <circle class="b-star c-amber" cx="114.13" cy="-37.08" r="9"><animate attributeName="cx" dur="9s" repeatCount="indefinite" keyTimes="0;0.30;0.40;0.63;0.70;0.96;1" values="114.13;114.13;22.83;22.83;68.48;68.48;114.13"/><animate attributeName="cy" dur="9s" repeatCount="indefinite" keyTimes="0;0.30;0.40;0.63;0.70;0.96;1" values="-37.08;-37.08;-7.42;-7.42;-22.25;-22.25;-37.08"/></circle><circle class="c-amber" cx="114.13" cy="-37.08" r="8"><animate attributeName="cx" dur="9s" repeatCount="indefinite" keyTimes="0;0.30;0.40;0.63;0.70;0.96;1" values="114.13;114.13;22.83;22.83;68.48;68.48;114.13"/><animate attributeName="cy" dur="9s" repeatCount="indefinite" keyTimes="0;0.30;0.40;0.63;0.70;0.96;1" values="-37.08;-37.08;-7.42;-7.42;-22.25;-22.25;-37.08"/></circle>
+              </g>
+              <rect class="c-amber" x="16" y="314" width="168" height="30" rx="15"/><text class="s-btn-t" x="100" y="333" style="fill: #1a1200; font-size: 9px">Unseen to Unstoppable</text>
+              <rect class="s-card" x="16" y="354" width="80" height="22" rx="11"/><text class="s-sub" x="56" y="368" text-anchor="middle" style="font-size: 7.5px">Strengths</text>
+              <rect class="s-card" x="104" y="354" width="80" height="22" rx="11"/><text class="s-sub" x="144" y="368" text-anchor="middle" style="font-size: 7.5px">Care pathway</text>
+              <rect class="s-home" x="72" y="387" width="56" height="3" rx="1.5"/>
+            </svg>
+          </div>
+          <div><h3><i class="dot dot-amber"></i>Blossoming Mind</h3><p>Talent discovery for children.</p></div>
+        </article>
+
+        <!-- 5 QLux -->
+        <article class="isi-app" style="--i:4">
+          <div class="isi-phone" style="--i:4">
+            <svg class="isi-scr" viewBox="0 0 200 400" role="img" aria-label="QLux: a body moving on screen, driven by code">
+              <defs><clipPath id="isi-qclip"><rect x="12" y="92" width="176" height="132" rx="14"/></clipPath><clipPath id="isi-qclip2"><rect x="12" y="234" width="176" height="34" rx="10"/></clipPath></defs>
+              <rect width="200" height="400" style="fill: var(--isi-cine)"/>
+              <text x="16" y="20" style="font: 600 8px var(--isi-display); fill: #e9ecff">9:41</text><rect x="164" y="13" width="18" height="8" rx="2.5" fill="none" stroke="#e9ecff" opacity=".6"/>
+              <text class="s-kick" x="16" y="46" style="fill: var(--isi-s-amber)">QLUX</text>
+              <text x="16" y="66" style="font: 700 19px var(--isi-display); fill: #f5f6ff">Motion</text>
+              <text x="16" y="80" style="font: 400 8.5px var(--isi-display); fill: #8f98bb">AI, physics and body mechanics</text>
+              <g clip-path="url(#isi-qclip)">
+                <rect x="12" y="92" width="176" height="132" style="fill: var(--isi-cine-2)"/>
+                <g opacity=".5" style="fill: #0b0f1f"><g class="q-sprock"><rect x="16" y="86" width="6" height="8" rx="1.5"/><rect x="16" y="100" width="6" height="8" rx="1.5"/><rect x="16" y="114" width="6" height="8" rx="1.5"/><rect x="16" y="128" width="6" height="8" rx="1.5"/><rect x="16" y="142" width="6" height="8" rx="1.5"/><rect x="16" y="156" width="6" height="8" rx="1.5"/><rect x="16" y="170" width="6" height="8" rx="1.5"/><rect x="16" y="184" width="6" height="8" rx="1.5"/><rect x="16" y="198" width="6" height="8" rx="1.5"/><rect x="16" y="212" width="6" height="8" rx="1.5"/>
+                <rect x="178" y="86" width="6" height="8" rx="1.5"/><rect x="178" y="100" width="6" height="8" rx="1.5"/><rect x="178" y="114" width="6" height="8" rx="1.5"/><rect x="178" y="128" width="6" height="8" rx="1.5"/><rect x="178" y="142" width="6" height="8" rx="1.5"/><rect x="178" y="156" width="6" height="8" rx="1.5"/><rect x="178" y="170" width="6" height="8" rx="1.5"/><rect x="178" y="184" width="6" height="8" rx="1.5"/><rect x="178" y="198" width="6" height="8" rx="1.5"/><rect x="178" y="212" width="6" height="8" rx="1.5"/></g></g>
+                <path class="q-ground" d="M26 208 H174" stroke="#8f98bb" stroke-width="1.4" fill="none" opacity=".7"/>
+                <g stroke="#f5f6ff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                  <g class="q-thigh b" style="transform-origin:100px 150px"><path d="M100 150 V178" opacity=".55"/><g class="q-shin b" style="transform-origin:100px 178px"><path d="M100 178 V206" opacity=".55"/></g></g>
+                  <path d="M100 116 V150"/>
+                  <g class="q-arm b" style="transform-origin:100px 120px"><path d="M100 120 V140 L104 156" opacity=".55" stroke-width="3.2"/></g>
+                  <g class="q-thigh" style="transform-origin:100px 150px"><path d="M100 150 V178"/><g class="q-shin" style="transform-origin:100px 178px"><path d="M100 178 V206"/><circle cx="100" cy="206" r="2.5" fill="#ffb547" stroke="none"/></g></g>
+                  <g class="q-arm" style="transform-origin:100px 120px"><path d="M100 120 V140 L104 156" stroke-width="3.2"/></g>
+                  <circle cx="100" cy="104" r="9" fill="#f5f6ff" stroke="none"/>
+                </g>
+                <circle cx="100" cy="150" r="3" fill="#ffb547"/><circle cx="100" cy="120" r="3" fill="#ffb547"/>
+              </g>
+              <rect x="12" y="92" width="176" height="132" rx="14" fill="none" stroke="#8f98bb" opacity=".3"/>
+              <g clip-path="url(#isi-qclip2)"><rect x="12" y="234" width="176" height="34" style="fill: var(--isi-cine-2)"/>
+                <path class="q-wave" d="M-20 251 q11 -14 22 0 t22 0 t22 0 t22 0 t22 0 t22 0 t22 0 t22 0 t22 0 t22 0 t22 0 t22 0 t22 0 t22 0" stroke="#34d6c0" stroke-width="1.8" fill="none" stroke-linecap="round"/></g>
+              <rect x="16" y="278" width="168" height="3" rx="1.5" fill="#2b345e"/><circle class="q-play" cx="20" cy="279.5" r="5" fill="#ffb547"/>
+              <g style="font: 500 7.5px var(--isi-display)"><rect x="16" y="294" width="26" height="16" rx="8" fill="#2b345e"/><text x="29" y="305" text-anchor="middle" fill="#e9ecff">AI</text>
+              <rect x="48" y="294" width="46" height="16" rx="8" fill="#2b345e"/><text x="71" y="305" text-anchor="middle" fill="#e9ecff">Physics</text>
+              <rect x="100" y="294" width="60" height="16" rx="8" fill="#2b345e"/><text x="130" y="305" text-anchor="middle" fill="#e9ecff">Kinesiology</text></g>
+              <rect x="16" y="322" width="168" height="40" rx="12" style="fill: var(--isi-cine-2)"/>
+              <text x="26" y="339" style="font: 500 8px var(--isi-mono)" fill="#8f98bb">// driven by code</text>
+              <text x="26" y="353" style="font: 500 8.5px var(--isi-mono)" fill="#34d6c0">body.move(<tspan fill="#ffb547">gait</tspan>)</text>
+              <rect x="72" y="387" width="56" height="3" rx="1.5" fill="#e9ecff" opacity=".25"/>
+            </svg>
+          </div>
+          <div><h3><i class="dot dot-cine"></i>QLux</h3><p>A new approach to cinema. AI, physics, kinesiology and body mechanics, driven by code.</p></div>
+        </article>
+      </div>
+      <p class="isi-small">Motion illustrations of each app. Swipe sideways to see all five.</p>
+    </section>
+
+    <!-- ===== PODS ===== -->
+    <section class="isi-sec" aria-labelledby="isi-h-pods">
+      <header class="isi-head">
+        <p class="isi-label">The engine</p>
+        <h2 id="isi-h-pods">Anyone can post a problem. Anyone can solve it and earn.</h2>
+        <p class="isi-lede">Pods are physical spaces with computers, AI tools and 3D printers, placed inside rehab and child ability centres. The first pilot is planned at Uniquorns and Smart Rehab in Hyderabad, then across India.</p>
+      </header>
+      <div class="isi-steps">
+        <article class="isi-step">
+          <svg viewBox="0 0 240 170" role="img" aria-label="Problems being posted to the marketplace">
+            <circle class="broad" cx="214" cy="86" r="30"/><circle class="broad b" cx="214" cy="86" r="30"/><circle class="broad c" cx="214" cy="86" r="30"/>
+            <g class="pc"><rect x="22" y="16" width="160" height="38" rx="11" style="fill: var(--isi-surface); stroke: var(--isi-line)"/><circle cx="42" cy="35" r="8" style="fill: var(--isi-accent)"/><text x="58" y="33" style="font: 600 10px var(--isi-display); fill: var(--isi-fg)">Menu design</text><rect x="58" y="39" width="70" height="4" rx="2" style="fill: var(--isi-line)"/></g>
+            <g class="pc b"><rect x="22" y="66" width="160" height="38" rx="11" style="fill: var(--isi-surface); stroke: var(--isi-line)"/><circle cx="42" cy="85" r="8" style="fill: var(--isi-teal)"/><text x="58" y="83" style="font: 600 10px var(--isi-display); fill: var(--isi-fg)">3D-printed grip</text><rect x="58" y="89" width="82" height="4" rx="2" style="fill: var(--isi-line)"/></g>
+            <g class="pc c"><rect x="22" y="116" width="160" height="38" rx="11" style="fill: var(--isi-surface); stroke: var(--isi-line)"/><circle cx="42" cy="135" r="8" style="fill: var(--isi-amber)"/><text x="58" y="133" style="font: 600 10px var(--isi-display); fill: var(--isi-fg)">Translate a guide</text><rect x="58" y="139" width="64" height="4" rx="2" style="fill: var(--isi-line)"/></g>
+            <circle cx="214" cy="86" r="7" style="fill: var(--isi-accent)"/>
+          </svg>
+          <h3>Post</h3>
+          <p>Centres, small businesses and outsiders post a problem. People who cannot afford market rates can still get work done.</p>
+        </article>
+        <article class="isi-step">
+          <svg viewBox="0 0 240 170" role="img" aria-label="A pod with three seats and a 3D printer building an object">
+            <rect x="10" y="26" width="152" height="124" rx="14" style="fill: var(--isi-surface); stroke: var(--isi-line)"/>
+            <text x="22" y="46" style="font: 500 8px var(--isi-mono); letter-spacing: 2px; fill: var(--isi-accent)">POD</text>
+            <path d="M10 150 H162" style="stroke: var(--isi-muted)" stroke-width="2"/>
+            <g><rect x="24" y="100" width="30" height="20" rx="3" style="fill: var(--isi-raise); stroke: var(--isi-line)"/><rect class="scrglow" x="27" y="103" width="24" height="14" rx="2" style="fill: var(--isi-accent)"/><rect x="36" y="120" width="6" height="8" style="fill: var(--isi-line)"/>
+              <circle cx="39" cy="82" r="6" style="fill: var(--isi-muted)"/><path d="M30 100 v-4 a9 9 0 0 1 18 0 v4z" style="fill: var(--isi-muted); opacity:.5"/></g>
+            <g><rect x="64" y="100" width="30" height="20" rx="3" style="fill: var(--isi-raise); stroke: var(--isi-line)"/><rect class="scrglow b" x="67" y="103" width="24" height="14" rx="2" style="fill: var(--isi-teal)"/><rect x="76" y="120" width="6" height="8" style="fill: var(--isi-line)"/>
+              <circle cx="79" cy="82" r="6" style="fill: var(--isi-muted)"/><path d="M70 100 v-4 a9 9 0 0 1 18 0 v4z" style="fill: var(--isi-muted); opacity:.5"/></g>
+            <g><rect x="104" y="100" width="30" height="20" rx="3" style="fill: var(--isi-raise); stroke: var(--isi-line)"/><rect class="scrglow c" x="107" y="103" width="24" height="14" rx="2" style="fill: var(--isi-amber)"/><rect x="116" y="120" width="6" height="8" style="fill: var(--isi-line)"/>
+              <circle cx="119" cy="82" r="6" style="fill: var(--isi-muted)"/><path d="M110 100 v-4 a9 9 0 0 1 18 0 v4z" style="fill: var(--isi-muted); opacity:.5"/></g>
+            <path d="M24 128 H144" style="stroke: var(--isi-line)" stroke-width="2"/>
+            <!-- 3D printer -->
+            <path d="M176 148 V62 M224 148 V62 M172 62 H228" style="stroke: var(--isi-muted)" stroke-width="3" stroke-linecap="round" fill="none"/>
+            <path d="M172 150 H228" style="stroke: var(--isi-fg)" stroke-width="4" stroke-linecap="round"/>
+            <path class="obj" d="M192 148 C190 138 196 130 196 122 C196 114 192 110 194 106 H206 C208 110 204 114 204 122 C204 130 210 138 208 148Z" style="fill: var(--isi-accent)"/>
+            <g class="noz"><g transform="translate(0 0)"><path d="M178 66 H222" style="stroke: var(--isi-fg)" stroke-width="3" stroke-linecap="round"/><g class="noz-x"><rect x="194" y="62" width="12" height="9" rx="2" style="fill: var(--isi-fg)"/><path d="M198 71 h4 l-2 6z" style="fill: var(--isi-amber)"/></g></g></g>
+          </svg>
+          <h3>Build</h3>
+          <p>A minimal space with 2 to 4 seats to begin, basic computers, AI models and a 3D printer. Seats grow over time.</p>
+        </article>
+        <article class="isi-step">
+          <svg viewBox="0 0 240 170" role="img" aria-label="A finished project adds to a portfolio and a coin is earned">
+            <g><rect class="tile" style="--i:0; fill: var(--isi-surface); stroke: var(--isi-line)" x="20" y="22" width="60" height="46" rx="9"/><circle class="tile" style="--i:0; fill: var(--isi-accent)" cx="50" cy="45" r="9"/></g>
+            <g><rect class="tile" style="--i:1; fill: var(--isi-surface); stroke: var(--isi-line)" x="90" y="22" width="60" height="46" rx="9"/><rect class="tile" style="--i:1; fill: var(--isi-teal)" x="108" y="36" width="24" height="18" rx="4"/></g>
+            <g><rect class="tile" style="--i:2; fill: var(--isi-surface); stroke: var(--isi-line)" x="160" y="22" width="60" height="46" rx="9"/><path class="tile" style="--i:2; fill: var(--isi-amber)" d="M190 34 l5 10 11 1.5 -8 8 2 11 -10 -5.5 -10 5.5 2 -11 -8 -8 11 -1.5z"/></g>
+            <ellipse cx="120" cy="150" rx="26" ry="5" style="fill: var(--isi-line)"/>
+            <g class="coin"><circle cx="120" cy="136" r="17" style="fill: var(--isi-amber)"/><circle cx="120" cy="136" r="12.5" fill="none" style="stroke: var(--isi-bg)" stroke-width="1.4" opacity=".55"/><text x="120" y="142" text-anchor="middle" style="font: 700 16px var(--isi-display); fill: var(--isi-bg)">₹</text></g>
+          </svg>
+          <h3>Earn</h3>
+          <p>Paid on delivery. Every finished project joins the maker's portfolio and brings the next problem in.</p>
+        </article>
+      </div>
+      <div class="isi-evidence">
+        <div class="isi-bars" role="img" aria-label="Gig and platform workers in India: 7.7 million in 2020 to 21, projected 23.5 million by 2029 to 30">
+          <div class="isi-bar-row"><b>2020-21</b><div class="isi-bar-track"><div class="isi-bar-fill lo" style="width: 33%">7.7M</div></div></div>
+          <div class="isi-bar-row"><b>2029-30</b><div class="isi-bar-track"><div class="isi-bar-fill" style="width: 100%">23.5M</div></div></div>
+        </div>
+        <p class="isi-lede" style="font-size:15px">Project-based work is becoming normal. NITI Aayog projects India's gig and platform workforce to grow from 7.7 million to 23.5 million.</p>
+        <p class="isi-small">Source: NITI Aayog, India's Booming Gig and Platform Economy.</p>
+      </div>
+    </section>
+
+    <!-- ===== INCLUDE ===== -->
+    <section class="isi-sec" aria-labelledby="isi-h-incl">
+      <header class="isi-head">
+        <p class="isi-label">Who we include</p>
+        <h2 id="isi-h-incl">Inclusion is bigger than disability.</h2>
+        <p class="isi-lede">Inclusive.Si is for people held back physically, financially, socially or by lack of resources. We begin with people with physical disabilities, because that is where the model is hardest to get right.</p>
+      </header>
+      <div class="isi-incl">
+        <div class="isi-orbit" role="img" aria-label="Four barriers orbiting a single eye at the center">
+          <svg viewBox="-150 -150 300 300">
+            <circle class="isi-or" r="44"/><circle class="isi-or" r="76"/><circle class="isi-or" r="108"/><circle class="isi-or" r="140"/>
+            <g class="isi-o1"><circle cx="44" cy="0" r="7" style="fill: var(--isi-accent)"/></g>
+            <g class="isi-o2"><circle cx="-76" cy="0" r="7" style="fill: var(--isi-teal)"/></g>
+            <g class="isi-o3"><circle cx="0" cy="108" r="7" style="fill: var(--isi-amber)"/></g>
+            <g class="isi-o4"><circle cx="0" cy="-140" r="7" style="fill: var(--isi-rose)"/></g>
+            <g transform="scale(.19)" style="color: var(--isi-fg)">
+              <defs><radialGradient id="isi-pg3" cx="38%" cy="32%" r="75%"><stop offset="0" style="stop-color: var(--isi-pupil-hi)"/><stop offset="1" style="stop-color: var(--isi-pupil-lo)"/></radialGradient></defs>
+              <path d="M-156 0 C-100 -52 -52 -81 0 -81 C52 -81 100 -52 156 0 C100 52 52 81 0 81 C-52 81 -100 52 -156 0Z" fill="none" stroke="currentColor" stroke-width="38" stroke-linejoin="miter" stroke-miterlimit="4"/>
+              <g class="isi-iris" fill="none" stroke="currentColor" stroke-width="15" stroke-linecap="round"><path d="M-11.39 -42.5 A44 44 0 0 1 41.85 13.6"/><path d="M25.86 35.6 A44 44 0 0 1 -29.44 32.7"/><path d="M-43.04 9.15 A44 44 0 0 1 -32.7 -29.44"/></g>
+              <circle class="isi-pupil" r="20" fill="url(#isi-pg3)"/>
+            </g>
+          </svg>
+        </div>
+        <ul class="isi-bars4">
+          <li style="--c: var(--isi-accent)"><b>Physical</b><span>An accessible workplace inside a centre they already visit.</span></li>
+          <li style="--c: var(--isi-teal)"><b>Financial</b><span>Shared equipment and AI tools at no or low cost.</span></li>
+          <li style="--c: var(--isi-amber)"><b>Social</b><span>A marketplace that brings work to them, and a public record of what they finished.</span></li>
+          <li style="--c: var(--isi-rose)"><b>Resources</b><span>Learning by doing real projects next to other makers.</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ===== BLOOM ===== -->
+    <section class="isi-sec" aria-labelledby="isi-h-bloom">
+      <header class="isi-head">
+        <p class="isi-label">Already running</p>
+        <h2 id="isi-h-bloom">From unseen to unstoppable.</h2>
+        <p class="isi-lede">The Blossoming Mind talent assessment, built with our physiotherapists, looks at 10 domains scored 1 to 5 and turns them into a strengths profile called My Spark. It is running with children in Hyderabad.</p>
+      </header>
+      <div class="isi-bloom">
+        <div class="isi-radar" role="img" aria-label="A radar chart of ten talent domains growing from a low starting line into a wide strengths profile">
+          <svg viewBox="-150 -140 300 280">
+            <g>
+              <polygon class="isi-rr" points="0,-24 14.11,-19.42 22.83,-7.42 22.83,7.42 14.11,19.42 0,24 -14.11,19.42 -22.83,7.42 -22.83,-7.42 -14.11,-19.42"/>
+              <polygon class="isi-rr" points="0,-48 28.21,-38.83 45.65,-14.83 45.65,14.83 28.21,38.83 0,48 -28.21,38.83 -45.65,14.83 -45.65,-14.83 -28.21,-38.83"/>
+              <polygon class="isi-rr" points="0,-72 42.32,-58.25 68.48,-22.25 68.48,22.25 42.32,58.25 0,72 -42.32,58.25 -68.48,22.25 -68.48,-22.25 -42.32,-58.25"/>
+              <polygon class="isi-rr" points="0,-96 56.43,-77.67 91.3,-29.67 91.3,29.67 56.43,77.67 0,96 -56.43,77.67 -91.3,29.67 -91.3,-29.67 -56.43,-77.67"/>
+              <polygon class="isi-rr" points="0,-120 70.53,-97.08 114.13,-37.08 114.13,37.08 70.53,97.08 0,120 -70.53,97.08 -114.13,37.08 -114.13,-37.08 -70.53,-97.08"/>
+              <path class="isi-ax" d="M0 0 L0 -120 M0 0 L70.53 -97.08 M0 0 L114.13 -37.08 M0 0 L114.13 37.08 M0 0 L70.53 97.08 M0 0 L0 120 M0 0 L-70.53 97.08 M0 0 L-114.13 37.08 M0 0 L-114.13 -37.08 M0 0 L-70.53 -97.08"/>
+              <text class="isi-rn" x="4" y="-21">1</text><text class="isi-rn" x="4" y="-45">2</text><text class="isi-rn" x="4" y="-69">3</text><text class="isi-rn" x="4" y="-93">4</text><text class="isi-rn" x="4" y="-117">5</text>
+              <polygon style="fill: var(--isi-amber); fill-opacity: .3; stroke: var(--isi-amber)" stroke-width="2.5" stroke-linejoin="round" points="0,-72 28.21,-38.83 114.13,-37.08 68.48,22.25 70.53,97.08 0,96 -56.43,77.67 -45.65,14.83 -68.48,-22.25 -70.53,-97.08">
+                <animate attributeName="points" dur="9s" repeatCount="indefinite" keyTimes="0;0.30;0.40;0.63;0.70;0.96;1" values="0.0,-72.0 28.21,-38.83 114.13,-37.08 68.48,22.25 70.53,97.08 0.0,96.0 -56.43,77.67 -45.65,14.83 -68.48,-22.25 -70.53,-97.08;0.0,-72.0 28.21,-38.83 114.13,-37.08 68.48,22.25 70.53,97.08 0.0,96.0 -56.43,77.67 -45.65,14.83 -68.48,-22.25 -70.53,-97.08;0.0,-24.0 14.11,-19.42 22.83,-7.42 22.83,7.42 14.11,19.42 0.0,24.0 -14.11,19.42 -22.83,7.42 -22.83,-7.42 -14.11,-19.42;0.0,-24.0 14.11,-19.42 22.83,-7.42 22.83,7.42 14.11,19.42 0.0,24.0 -14.11,19.42 -22.83,7.42 -22.83,-7.42 -14.11,-19.42;0.0,-48.0 14.11,-19.42 68.48,-22.25 45.65,14.83 56.43,77.67 0.0,48.0 -42.32,58.25 -22.83,7.42 -45.65,-14.83 -42.32,-58.25;0.0,-48.0 14.11,-19.42 68.48,-22.25 45.65,14.83 56.43,77.67 0.0,48.0 -42.32,58.25 -22.83,7.42 -45.65,-14.83 -42.32,-58.25;0.0,-72.0 28.21,-38.83 114.13,-37.08 68.48,22.25 70.53,97.08 0.0,96.0 -56.43,77.67 -45.65,14.83 -68.48,-22.25 -70.53,-97.08"/>
+              </polygon>
+              <circle class="b-star" cx="114.13" cy="-37.08" r="9" style="fill: var(--isi-amber)"><animate attributeName="cx" dur="9s" repeatCount="indefinite" keyTimes="0;0.30;0.40;0.63;0.70;0.96;1" values="114.13;114.13;22.83;22.83;68.48;68.48;114.13"/><animate attributeName="cy" dur="9s" repeatCount="indefinite" keyTimes="0;0.30;0.40;0.63;0.70;0.96;1" values="-37.08;-37.08;-7.42;-7.42;-22.25;-22.25;-37.08"/></circle><circle cx="114.13" cy="-37.08" r="6" style="fill: var(--isi-amber)"><animate attributeName="cx" dur="9s" repeatCount="indefinite" keyTimes="0;0.30;0.40;0.63;0.70;0.96;1" values="114.13;114.13;22.83;22.83;68.48;68.48;114.13"/><animate attributeName="cy" dur="9s" repeatCount="indefinite" keyTimes="0;0.30;0.40;0.63;0.70;0.96;1" values="-37.08;-37.08;-7.42;-7.42;-22.25;-22.25;-37.08"/></circle>
+              <text x="122" y="-44" style="font: 600 9px var(--isi-display); fill: var(--isi-amber)">Spark<animate attributeName="x" dur="9s" repeatCount="indefinite" keyTimes="0;0.30;0.40;0.63;0.70;0.96;1" values="122.13;122.13;30.83;30.83;76.48;76.48;122.13"/><animate attributeName="y" dur="9s" repeatCount="indefinite" keyTimes="0;0.30;0.40;0.63;0.70;0.96;1" values="-44.08;-44.08;-14.42;-14.42;-29.25;-29.25;-44.08"/></text>
+            </g>
+          </svg>
+        </div>
+        <div class="isi-states">
+          <div class="isi-state" style="--d: 3s"><strong>01</strong><b>Unseen</b><span>A low score is a starting line, not a verdict.</span></div>
+          <div class="isi-state" style="--d: 6.3s"><strong>02</strong><b>Seen</b><span>Physiotherapists and therapists look again and find what stands out.</span></div>
+          <div class="isi-state" style="--d: -0.36s"><strong>03</strong><b>Unstoppable</b><span>A strengths profile, a care pathway and a route to independent income through skills.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== NETWORK ===== -->
+    <section class="isi-sec" aria-labelledby="isi-h-next">
+      <header class="isi-head">
+        <p class="isi-label">What comes next</p>
+        <h2 id="isi-h-next">Solutions for every basic human need.</h2>
+        <p class="isi-lede">Inclusive.Si creates solutions for every human's basic-need problems, with people who are often left out of technology. It starts in city centres and reaches villages later.</p>
+      </header>
+      <div class="isi-netwrap">
+        <figure class="isi-net" role="img" aria-label="A network of centre and city pods connected to village centres, with work arriving from outside">
+          <svg viewBox="0 0 480 270">
+            <path class="isi-link later" d="M30 56 C150 -6 330 -6 450 56"/>
+            <path class="isi-link" d="M70 120 L130 80 M70 120 L140 160 M70 120 L95 200 M130 80 L200 120 M140 160 L200 120 M140 160 L95 200 M130 80 L140 160"/>
+            <path class="isi-link live" d="M200 120 L300 70 M200 120 L340 130 M200 120 L310 190 M130 80 L200 120 M140 160 L200 120"/>
+            <path class="isi-link later" d="M300 70 L390 90 M340 130 L390 90 M340 130 L400 170 M340 130 L445 130 M310 190 L360 230 M310 190 L260 240 M140 160 L260 240"/>
+            <g>
+              <circle class="isi-hl" cx="70" cy="120" r="8"/><circle class="isi-nc" cx="70" cy="120" r="8"/>
+              <circle class="isi-hl" cx="130" cy="80" r="8"/><circle class="isi-nc" cx="130" cy="80" r="8"/>
+              <circle class="isi-hl" cx="140" cy="160" r="8"/><circle class="isi-nc" cx="140" cy="160" r="8"/>
+              <circle class="isi-hl" cx="95" cy="200" r="8"/><circle class="isi-nc" cx="95" cy="200" r="8"/>
+              <circle class="isi-hl" cx="200" cy="120" r="11"/><circle class="isi-nc" cx="200" cy="120" r="11"/>
+              <circle class="isi-nv" cx="300" cy="70" r="6"/><circle class="isi-nv" cx="340" cy="130" r="6"/><circle class="isi-nv" cx="310" cy="190" r="6"/>
+              <circle class="isi-nv" cx="390" cy="90" r="5" opacity=".7"/><circle class="isi-nv" cx="400" cy="170" r="5" opacity=".7"/><circle class="isi-nv" cx="445" cy="130" r="5" opacity=".7"/><circle class="isi-nv" cx="360" cy="230" r="5" opacity=".7"/><circle class="isi-nv" cx="260" cy="240" r="5" opacity=".7"/>
+            </g>
+          </svg>
+          <div class="isi-legend"><span><i style="background: var(--isi-accent)"></i>Centres and city pods</span><span><i style="background: var(--isi-fg)"></i>Village centres, later</span><span><i style="background: transparent; border: 1.5px dotted var(--isi-muted)"></i>Work from outside</span></div>
+        </figure>
+        <div class="isi-future">
+          <p class="isi-label">On the road</p>
+          <div class="isi-chips">
+            <span class="isi-chip">More startups</span><span class="isi-chip">Free education tools</span><span class="isi-chip">Information tools</span><span class="isi-chip">Tech-based agriculture products</span><span class="isi-chip">Problem-solving tools</span><span class="isi-chip">Threat-detection systems</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== CLOSE ===== -->
+    <section class="isi-close" aria-labelledby="isi-h-close">
+      <svg class="isi-eye-svg" viewBox="-200 -110 400 220" role="img" aria-label="Inclusive.Si eye logo">
+        <defs><radialGradient id="isi-pg4" cx="38%" cy="32%" r="75%"><stop offset="0" style="stop-color: var(--isi-pupil-hi)"/><stop offset="1" style="stop-color: var(--isi-pupil-lo)"/></radialGradient></defs>
+        <g class="isi-blink">
+          <path d="M-156 0 C-100 -52 -52 -81 0 -81 C52 -81 100 -52 156 0 C100 52 52 81 0 81 C-52 81 -100 52 -156 0Z" fill="none" stroke="currentColor" stroke-width="38" stroke-linejoin="miter" stroke-miterlimit="4"/>
+          <g class="isi-iris" fill="none" stroke="currentColor" stroke-width="15" stroke-linecap="round"><path d="M-11.39 -42.5 A44 44 0 0 1 41.85 13.6"/><path d="M25.86 35.6 A44 44 0 0 1 -29.44 32.7"/><path d="M-43.04 9.15 A44 44 0 0 1 -32.7 -29.44"/></g>
+          <circle class="isi-pupil" r="20" fill="url(#isi-pg4)"/>
+        </g>
+      </svg>
+      <h2 id="isi-h-close">The birth of Super Intelligence is from India.</h2>
+      <p class="isi-lede">Come and see what we are building, one pod and one app at a time.</p>
       <nav class="isi-cta" aria-label="Inclusive.Si links">
         <a class="isi-btn isi-btn--solid" href="https://www.instagram.com/inclusive.si?cplk=YmRsYTltYmVubTg5" target="_blank" rel="noopener noreferrer">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="0.8" fill="currentColor"/></svg>
@@ -382,213 +903,21 @@ body { background: var(--isi-bg); color: var(--isi-fg); }
           Founder portfolio
         </a>
       </nav>
-    </header>
-
-    <!-- 2. THE IDEA -->
-    <section class="isi-section" aria-labelledby="isi-h-idea">
-      <header>
-        <p class="isi-label">The idea</p>
-        <h2 id="isi-h-idea">Super Intelligence is not one machine. It is the associated knowledge of every mind.</h2>
-        <p class="isi-lede">Inclusive.Si is building India's first Super Intelligence by joining the knowledge of experts with the talent of people the economy overlooked. When both work together, at scale, something new emerges.</p>
-      </header>
-      <div class="isi-eq">
-        <div class="isi-eq-card"><span class="isi-label">Knowledge</span><h3>Every expert</h3><p>Therapists, engineers, designers, farmers and AI models.</p></div>
-        <span class="isi-eq-op" aria-hidden="true">+</span>
-        <div class="isi-eq-card"><span class="isi-label">Talent</span><h3>Every person</h3><p>Hidden ability in people who never got the tools or a first client.</p></div>
-        <span class="isi-eq-op" aria-hidden="true">=</span>
-        <div class="isi-eq-card isi-eq-card--end"><span class="isi-label">Emerges</span><h3>Super Intelligence</h3><p>Knowledge and talent working together.</p></div>
-      </div>
-      <p class="isi-by"><strong>Syson Jose S PT</strong>, Founder &middot; <a href="https://josesyson-physio.github.io/" target="_blank" rel="noopener noreferrer">See the founder portfolio</a></p>
-    </section>
-
-    <!-- 3. WHO WE INCLUDE -->
-    <section class="isi-section" aria-labelledby="isi-h-who">
-      <header>
-        <p class="isi-label">Who we include</p>
-        <h2 id="isi-h-who">Inclusion is bigger than disability.</h2>
-        <p class="isi-lede">Inclusive.Si is for everyone who is held back. We start with people who are physically challenged, because that is where the model is hardest to get right.</p>
-      </header>
-      <div class="isi-grid">
-        <div class="isi-card"><span class="isi-label">Physically</span><h3>Built for the body</h3><p>Workplaces and tools that were not made for their bodies or senses.</p></div>
-        <div class="isi-card"><span class="isi-label">Socially</span><h3>Seen by the network</h3><p>No referrals, no network, low expectations from others.</p></div>
-        <div class="isi-card"><span class="isi-label">Financially</span><h3>Free to begin</h3><p>No computer, no software, no money to wait for a first client.</p></div>
-        <div class="isi-card"><span class="isi-label">In resources</span><h3>A place to practise</h3><p>No training, no mentor, no workplace to learn in.</p></div>
-      </div>
-    </section>
-
-    <!-- 4. THE POD -->
-    <section class="isi-section" aria-labelledby="isi-h-pod">
-      <header>
-        <p class="isi-label">Where it starts</p>
-        <h2 id="isi-h-pod">An AI pod in every neuro rehab centre.</h2>
-        <p class="isi-lede">A pod is a small, step-free workspace with two to four seats, basic computers running AI models, assistive tools and a 3D printer. People walk in and work, like an early-2000s net café. Seats grow with demand.</p>
-      </header>
-      <div class="isi-layers">
-        <div class="isi-card"><span class="isi-label">Pod</span><h3>A place to work</h3><p>Computers, AI tools, a 3D printer and screen readers, voice typing and switches, so the tool fits the person.</p></div>
-        <div class="isi-card"><span class="isi-label">Marketplace</span><h3>A source of paid work</h3><p>Projects are posted, matched, delivered and paid for. Every finished project joins the maker's portfolio.</p></div>
-        <div class="isi-card"><span class="isi-label">Network</span><h3>People who support each other</h3><p>Pods across the city are connected, so a project posted at one centre can be done at another.</p></div>
-      </div>
-      <ol class="isi-steps" style="margin:8px 0 0;padding:0;list-style:none" aria-label="How a project moves">
-        <li><b>Post</b><span>Small businesses and startups post a project.</span></li>
-        <li><b>Choose</b><span>An app, a website, a design or marketing.</span></li>
-        <li><b>Discuss</b><span>Makers talk changes through with the client.</span></li>
-        <li><b>Learn and build</b><span>Trained on the job, with AI at their side.</span></li>
-        <li><b>Get paid</b><span>Payment on delivery. The work joins their portfolio.</span></li>
-      </ol>
-      <p class="isi-lede">Like a freelancing website, with a real place to work. Every finished project brings the next one in.</p>
-    </section>
-
-    <!-- 5. THE WORK IS THERE -->
-    <section class="isi-section" aria-labelledby="isi-h-work">
-      <header>
-        <p class="isi-label">The work is there</p>
-        <h2 id="isi-h-work">Work that a pod can do, and the market is asking for.</h2>
-      </header>
-      <div class="isi-stats">
-        <div class="isi-stat"><strong>23.5M</strong><span>gig and platform workers projected in India by 2029 to 30, up from 7.7M</span></div>
-        <div class="isi-stat"><strong>69%</strong><span>of that work is high or medium skilled, the kind done at a desk</span></div>
-      </div>
-      <p class="isi-src">Source: NITI Aayog, India's Booming Gig and Platform Economy (2022)</p>
-      <div class="isi-grid">
-        <div class="isi-card"><h3>Digital services</h3><p>Logos, menus, social posts and simple websites for small businesses.</p></div>
-        <div class="isi-card"><h3>AI and data work</h3><p>Labelling, transcription and translation in Indian languages.</p></div>
-        <div class="isi-card"><h3>Assistive products</h3><p>3D-printed grips, switch mounts and learning aids, designed with therapists.</p></div>
-        <div class="isi-card"><h3>Content and learning</h3><p>Therapy sheets, visual schedules, short videos and local-language guides.</p></div>
-      </div>
-    </section>
-
-    <!-- 6. THE RIPPLE -->
-    <section class="isi-section" aria-labelledby="isi-h-ripple">
-      <header>
-        <p class="isi-label">The ripple</p>
-        <h2 id="isi-h-ripple">Every project is a small economy.</h2>
-        <p class="isi-lede">One maker earns income, skill and a portfolio. An affordable project lifts a local vendor. Makers team up and launch their own startups, and then hire the next makers.</p>
-      </header>
-      <div class="isi-grid">
-        <div class="isi-card"><span class="isi-label">Startups and small businesses</span><p>Talent they can afford. Design, apps and marketing without big-agency fees, delivered close to home.</p></div>
-        <div class="isi-card"><span class="isi-label">Makers</span><p>Income they earn. Paid projects instead of handouts, a public portfolio and a path to their own business.</p></div>
-      </div>
-    </section>
-
-    <!-- 7. PROOF -->
-    <section class="isi-section" aria-labelledby="isi-h-proof">
-      <header>
-        <p class="isi-label">Already running</p>
-        <h2 id="isi-h-proof">In child ability centres, we find a child's hidden strength early.</h2>
-        <p class="isi-lede">The Blossoming Mind talent assessment is running in Hyderabad. Physiotherapy knowledge, therapists' insight and structured scoring across 10 talent domains, each scored 1 to 5, are joined by AI into one strengths profile.</p>
-      </header>
-      <div class="isi-case">
-        <p class="isi-label">A real example</p>
-        <p class="isi-case-big">A score of 1 is a <b>starting line</b>. An 8-year-old needed support in all ten areas. Four kinds of knowledge looked again, and found joy, a sibling bond and a love of the outdoors.</p>
-        <div class="isi-chips">
-          <span class="isi-chip">Physiotherapist</span><span class="isi-chip">Special educator</span><span class="isi-chip">Therapists</span><span class="isi-chip">AI</span>
-        </div>
-        <p class="isi-lede">The result is a strengths profile, a 90-day plan, future tech support such as picture-choice communication and visual routines, and a path to financial stability. Unseen to Unstoppable.</p>
-        <p class="isi-src">The Blossoming Mind report, Hyderabad, 6 October 2026. Child's name withheld.</p>
-      </div>
-    </section>
-
-    <!-- 8. BY PHYSIOS -->
-    <section class="isi-section" aria-labelledby="isi-h-physio">
-      <div class="isi-physio">
-        <svg class="isi-bg-mark" viewBox="0 0 460 260" aria-hidden="true"><path d="M17 130 C 75 68 145 24 230 24 C 315 24 385 68 443 130 C 385 192 315 236 230 236 C 145 236 75 192 17 130 Z" fill="none" stroke="currentColor" stroke-width="30" stroke-linejoin="miter"/><circle cx="230" cy="130" r="65" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-dasharray="84 52.4"/></svg>
-        <p class="isi-label">By the physio</p>
-        <h2 id="isi-h-physio">By physios. For everyone.</h2>
-        <p>Physiotherapists read how a body moves, balances and grows. That is why they are often the first to notice what a person can do, not only what they cannot. Inclusive.Si grows out of that habit of looking again.</p>
-        <p>The idea was born inside MotionPlus Physio's rehabilitation and child ability centres, and every pod keeps clinical care and a person's strengths at the centre.</p>
-        <div class="isi-sites">
-          <span class="isi-chip">Hyderabad</span><span class="isi-chip">Shimoga</span><span class="isi-chip">Bijapur</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- 9. THEN THE VILLAGES -->
-    <section class="isi-section" aria-labelledby="isi-h-village">
-      <header>
-        <p class="isi-label">Then, the villages</p>
-        <h2 id="isi-h-village">The same system, taken to every village.</h2>
-        <p class="isi-lede">Anyone in the world can send work to a maker in a remote Indian village. Farmers' field knowledge meets AI right where the crops grow. Our vision is to help Telangana reach its goal of a $1 trillion economy by 2034.</p>
-      </header>
-      <figure class="isi-net" role="img" aria-label="Network graphic: centres connect to city pods, which connect to village pods, with work arriving from the world.">
-        <svg viewBox="0 0 400 230">
-          <path class="isi-world" d="M20 40 C 120 -10 280 -10 380 40"/>
-          <text x="200" y="14" text-anchor="middle">Work from the world</text>
-
-          <path class="isi-link isi-link--live" d="M60 80 L170 100"/>
-          <path class="isi-link isi-link--live" d="M54 150 L170 100"/>
-          <path class="isi-link isi-link--live" d="M92 190 L190 160"/>
-          <path class="isi-link isi-link--live" d="M170 100 L190 160"/>
-          <path class="isi-link isi-link--live" d="M170 100 L300 70"/>
-          <path class="isi-link isi-link--live" d="M190 160 L300 130"/>
-          <path class="isi-link isi-link--live" d="M190 160 L310 195"/>
-          <path class="isi-link" d="M300 70 L300 130"/>
-          <path class="isi-link" d="M300 130 L350 100"/>
-          <path class="isi-link" d="M350 100 L300 70"/>
-
-          <circle class="isi-halo" cx="60" cy="80" r="7"/><circle class="isi-node" cx="60" cy="80" r="7"/>
-          <circle class="isi-halo" cx="54" cy="150" r="7"/><circle class="isi-node" cx="54" cy="150" r="7"/>
-          <circle class="isi-halo" cx="92" cy="190" r="7"/><circle class="isi-node" cx="92" cy="190" r="7"/>
-          <circle class="isi-halo" cx="170" cy="100" r="9"/><circle class="isi-node" cx="170" cy="100" r="9"/>
-          <circle class="isi-halo" cx="190" cy="160" r="9"/><circle class="isi-node" cx="190" cy="160" r="9"/>
-          <circle class="isi-halo" cx="300" cy="70" r="6"/><circle class="isi-node isi-node--v" cx="300" cy="70" r="6"/>
-          <circle class="isi-halo" cx="300" cy="130" r="6"/><circle class="isi-node isi-node--v" cx="300" cy="130" r="6"/>
-          <circle class="isi-halo" cx="350" cy="100" r="6"/><circle class="isi-node isi-node--v" cx="350" cy="100" r="6"/>
-          <circle class="isi-halo" cx="310" cy="195" r="6"/><circle class="isi-node isi-node--v" cx="310" cy="195" r="6"/>
-
-          <text x="20" y="222">Centres</text>
-          <text x="150" y="222">City pods</text>
-          <text x="290" y="222">Village pods</text>
-        </svg>
-      </figure>
-      <p class="isi-src">Telangana's $1 trillion by 2034 target is as stated by CM Revanth Reddy.</p>
-    </section>
-
-    <!-- 10. WHAT EMERGES -->
-    <section class="isi-section" aria-labelledby="isi-h-next">
-      <header>
-        <p class="isi-label">The emergence</p>
-        <h2 id="isi-h-next">What Super Intelligence makes possible.</h2>
-      </header>
-      <div class="isi-grid">
-        <div class="isi-card isi-card--solve"><h3>Hardware intelligence</h3><p>Smart devices designed and built inside the pods.</p></div>
-        <div class="isi-card isi-card--solve"><h3>Neuromotor tracking and mapping</h3><p>Movement data that makes rehabilitation measurable.</p></div>
-        <div class="isi-card isi-card--solve"><h3>Advanced agriculture systems</h3><p>Village field knowledge joined with AI.</p></div>
-        <div class="isi-card isi-card--solve"><h3>Assistive tech, made locally</h3><p>Affordable devices designed with the people who use them.</p></div>
-      </div>
-      <p class="isi-lede">And achievements we cannot yet imagine.</p>
-    </section>
-
-    <!-- 11. CLOSE + ONE-TAP LINKS -->
-    <section class="isi-close" aria-labelledby="isi-h-close" id="isi-close">
-      <div class="isi-mark" role="img" aria-label="Inclusive.Si eye logo">
-        <svg viewBox="0 0 460 260">
-          <path d="M17 130 C 75 68 145 24 230 24 C 315 24 385 68 443 130 C 385 192 315 236 230 236 C 145 236 75 192 17 130 Z" fill="none" stroke="currentColor" stroke-width="30" stroke-linejoin="miter" stroke-miterlimit="10"/>
-          <circle class="isi-iris" cx="230" cy="130" r="65" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-dasharray="84 52.4"/>
-          <circle class="isi-pupil" cx="230" cy="130" r="24" fill="#6f7dff"/>
-        </svg>
-      </div>
-      <h2 id="isi-h-close">The birth of Super Intelligence is from India.</h2>
-      <p class="isi-lede">For the first time, India sets the trend for the world's tech industry. Come and see what we are building, one pod at a time.</p>
-      <nav class="isi-cta" aria-label="Inclusive.Si links, page end">
-        <a class="isi-btn isi-btn--solid" href="https://www.instagram.com/inclusive.si?cplk=YmRsYTltYmVubTg5" target="_blank" rel="noopener noreferrer">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="0.8" fill="currentColor"/></svg>
-          Follow on Instagram
-        </a>
-        <a class="isi-btn isi-btn--ghost" href="https://www.findphysio.org" target="_blank" rel="noopener noreferrer">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/></svg>
-          Visit findphysio.org
-        </a>
-        <a class="isi-btn isi-btn--ghost" href="https://josesyson-physio.github.io/" target="_blank" rel="noopener noreferrer">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
-          Founder portfolio
-        </a>
-      </nav>
-      <div class="isi-contact"><b>Syson Jose S PT</b><span>Founder, Inclusive.Si</span><span>+91 7373121987</span></div>
+      <div class="isi-who"><b>Syson Jose S PT</b><span>Founder, Inclusive.Si</span></div>
     </section>
 
     <p class="isi-foot">Inclusive.Si is a project from <b>MotionPlus Physio Pvt. Ltd.</b> &middot; Unseen to Unstoppable.</p>
   </div>
-</main>
+</div>
+<script>
+(function () {
+  try {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.querySelectorAll('#isi-about svg').forEach(function (s) { if (s.pauseAnimations) { s.pauseAnimations(); } });
+    }
+  } catch (e) {}
+})();
+</script>
 
 </body>
 </html>
