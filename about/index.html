@@ -138,7 +138,7 @@ body { background: var(--isi-bg); color: var(--isi-fg); }
 .isi-cta { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; width: 100%; margin-top: 6px; }
 .isi-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; padding: 14px 26px; border-radius: 999px; font-weight: 600; font-size: 16px; text-decoration: none; border: 1.5px solid var(--isi-accent); flex: 1 1 210px; max-width: 300px; transition: transform .2s ease, box-shadow .2s ease, background .2s ease; -webkit-tap-highlight-color: transparent; }
 .isi-btn svg { width: 20px; height: 20px; flex: none; }
-.isi-btn--solid { background: var(--isi-accent); color: var(--isi-accent-ink); }
+.isi .isi-btn--solid { background: var(--isi-accent); color: var(--isi-accent-ink); }
 .isi-btn--ghost { background: transparent; color: var(--isi-fg); }
 .isi-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 34px var(--isi-glow); }
 .isi-btn--ghost:hover { background: var(--isi-raise); }
@@ -393,7 +393,7 @@ body { background: var(--isi-bg); color: var(--isi-fg); }
 
 </head>
 <body style="margin:0">
-<div class="isi" id="isi-about">
+<main class="isi" id="isi-about">
 
   <!-- ===== HERO: your brand screenshot, alive ===== -->
   <div class="isi-wrap">
@@ -889,7 +889,7 @@ body { background: var(--isi-bg); color: var(--isi-fg); }
       </svg>
       <h2 id="isi-h-close">The birth of Super Intelligence is from India.</h2>
       <p class="isi-lede">Come and see what we are building, one pod and one app at a time.</p>
-      <nav class="isi-cta" aria-label="Inclusive.Si links">
+      <nav class="isi-cta" aria-label="Inclusive.Si links, page end">
         <a class="isi-btn isi-btn--solid" href="https://www.instagram.com/inclusive.si?cplk=YmRsYTltYmVubTg5" target="_blank" rel="noopener noreferrer">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="0.8" fill="currentColor"/></svg>
           Follow on Instagram
@@ -908,7 +908,7 @@ body { background: var(--isi-bg); color: var(--isi-fg); }
 
     <p class="isi-foot">Inclusive.Si is a project from <b>MotionPlus Physio Pvt. Ltd.</b> &middot; Unseen to Unstoppable.</p>
   </div>
-</div>
+</main>
 <script>
 (function () {
   try {
