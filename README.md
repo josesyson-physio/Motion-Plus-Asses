@@ -1,6 +1,6 @@
-# MotionPlus Assess
+# MotionPlus Pro
 
-A phone- and tablet-friendly app from MotionPlus Physio for digital rehabilitation assessments.
+A phone- and tablet-friendly app from MotionPlus Physio for digital rehabilitation assessments, with posture and gait analysis in a premium Tools space.
 
 ## What it does
 
@@ -11,6 +11,14 @@ A phone- and tablet-friendly app from MotionPlus Physio for digital rehabilitati
 - **Privacy:** patients are identified by code, never by name. Records stay on the device; encrypted backup files move patients between branch devices.
 
 Licensed instruments (FIM, MoCA, Oswestry, NDI, QuickDASH, Fugl-Meyer) are score-entry only and do not reproduce the official item wording.
+
+## Tools (posture and gait)
+
+The **Tools** tab holds Posture Analysis and Gait Analysis. Both also appear in the assessment list and on each patient's page. A tool opens the posture engine (`posture/`) in a frame for the chosen patient; when the clinician taps **Save to record**, the score, findings, focus areas, key measures and a compressed session (landmarks only, never photos or video) are saved as an ordinary assessment. That means they show in the patient's history, charts, PDFs, AI reports and backups, and **Open in Tools** reopens them for editing. Earlier posture and gait records become the tool's Progress history.
+
+`posture/` still works on its own, with its own sign-in, at `/posture/`.
+
+`sw.js` keeps the app working offline and caches the pose model and libraries after the first visit. Change `VERSION` in it when the model or libraries change.
 
 ## Where it runs
 

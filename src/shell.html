@@ -1,8 +1,13 @@
 <!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>MotionPlus Assess</title>
-<meta name="description" content="MotionPlus Assess: digital rehab assessments, progress charts and professional reports for physiotherapy, occupational therapy, speech, sensory and behavioural care.">
+<title>MotionPlus Pro</title>
+<meta name="theme-color" content="#0a0a0a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="MotionPlus Pro: digital rehab assessments, posture and gait analysis, progress charts and professional reports for physiotherapy, occupational therapy, speech, sensory and behavioural care.">
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..800&family=IBM+Plex+Mono:wght@500;600&display=swap">
@@ -562,12 +567,100 @@ td.muted{color:var(--muted)}
 /* Undo the app's sticky page-header style for the About page's own headers */
 .isi header{top:auto;z-index:auto;background:none;backdrop-filter:none;-webkit-backdrop-filter:none;border:0;margin:0;padding-inline:0;align-items:stretch}
 .isi header:not(.isi-hero){position:static;padding-block:0}
+
+.focus{display:grid;gap:8px}
+.fcard{border:1px solid var(--line);border-left:3px solid var(--muted);border-radius:12px;background:var(--surface);padding:10px 12px}
+.fcard.warn{border-left-color:var(--warn)}.fcard.bad{border-left-color:var(--bad)}.fcard.good{border-left-color:var(--good)}
+.fcard div{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.fcard p{margin:6px 0 0;font-size:13px;color:var(--muted)}
+.measures{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px 12px}
+.mrow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.mrow:last-child{border-bottom:none}
+.mrow span{flex:1;color:var(--muted)}
+.mrow b{font:600 13px var(--mono);font-variant-numeric:tabular-nums}
+.mdot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--muted)}
+.mdot.good{background:var(--good)}.mdot.warn{background:var(--warn)}.mdot.bad{background:var(--bad)}
+/* ---------- MotionPlus Pro: Tools space ---------- */
+.brand .pro,.pro-word{font-weight:800;background:linear-gradient(100deg,#ffe866,#ffd60a 40%,#ff9f43);-webkit-background-clip:text;background-clip:text;color:transparent}
+.pro-chip{display:inline-flex;align-items:center;font:700 9.5px var(--mono);letter-spacing:.14em;padding:3px 7px;border-radius:6px;color:#1a1400;background:linear-gradient(100deg,#ffe866,#ffd60a 45%,#ffb020);vertical-align:2px;flex:none}
+.pro-chip.big{font-size:10.5px;padding:5px 10px;border-radius:8px;align-self:flex-start}
+.tabs .tab-pro{position:relative}
+.tabs .tab-pro::after{content:"";position:absolute;top:7px;right:calc(50% - 17px);width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--surface)}
+.tabs .tab-pro[aria-current="page"]::after{display:none}
+td{white-space:pre-line}
+.tart{width:100%;height:100%;display:block}
+.promo{position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;text-align:left;padding:12px 14px;border-radius:18px;border:1px solid var(--accent-line);background:radial-gradient(120% 140% at 0% 0%,#2a2408 0%,#141414 55%)}
+.promo::before{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 35%,rgba(255,214,10,.07) 50%,transparent 65%);transform:translateX(-100%);pointer-events:none}
+.promo-art{width:54px;height:66px;flex:none;border-radius:12px;background:#0c0c0a;border:1px solid #2e2b22;padding:4px}
+.promo-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;align-items:flex-start}
+.promo-txt b{font:800 17px var(--display);font-stretch:90%}
+.promo-txt>span:last-child{font-size:13px;color:var(--muted);font-weight:400}
+.promo-go{font-size:26px;color:var(--accent);line-height:1}
+.thero{position:relative;overflow:hidden;border-radius:22px;border:1px solid var(--accent-line);padding:20px 18px 16px;display:flex;flex-direction:column;gap:8px;background:radial-gradient(90% 120% at 100% 0%,#2b2507 0%,transparent 60%),linear-gradient(160deg,#151410,#0d0d0d)}
+.thero-glow{position:absolute;width:260px;height:260px;right:-90px;top:-120px;border-radius:50%;background:radial-gradient(circle,rgba(255,214,10,.22),transparent 65%);pointer-events:none}
+.thero h2{font:800 27px/1.06 var(--display);font-stretch:82%;margin:4px 0 0;text-transform:uppercase;text-wrap:balance;position:relative}
+.thero h2 em{font-style:normal;color:var(--accent)}
+.thero .note{position:relative;max-width:46ch}
+.tstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px;position:relative}
+.tstats div{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.tstats b{display:block;font:600 22px/1.1 var(--mono);font-variant-numeric:tabular-nums}
+.tstats span{font-size:11.5px;color:var(--muted)}
+.tcards{display:grid;gap:12px}
+@media (min-width:600px){.tcards{grid-template-columns:1fr 1fr}}
+.tcard{border-radius:20px;border:1px solid var(--line);background:linear-gradient(180deg,#171717,#111);overflow:hidden;display:flex;flex-direction:column;transition:border-color .2s,transform .2s}
+.tcard:hover{border-color:var(--accent-line)}
+.tcard-art{height:150px;padding:10px;background:radial-gradient(70% 90% at 50% 100%,rgba(255,214,10,.12),transparent 70%),#0c0c0a;border-bottom:1px solid var(--line)}
+.tcard-body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;flex:1}
+.tcard-body h3{font:800 20px var(--display);font-stretch:88%;margin:0}
+.tcard-body .primary{margin-top:auto}
+.tfeats{display:flex;flex-wrap:wrap;gap:6px}
+.tfeats span{font-size:12px;padding:4px 9px;border-radius:999px;border:1px solid var(--accent-line);color:var(--accent);background:var(--accent-soft)}
+.trec{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);flex:none}
+.trec svg{width:20px;height:20px}
+.privacy{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--surface)}
+.privacy svg{width:20px;height:20px;flex:none;color:var(--good);margin-top:1px}
+.privacy p{margin:0;font-size:13px;color:var(--muted)}
+.ptools{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ptool{display:flex;align-items:center;gap:10px;text-align:left;padding:10px 12px;border-radius:14px;border-color:var(--accent-line);background:linear-gradient(135deg,#1f1c0b,#151515)}
+.ptool>svg{width:24px;height:24px;color:var(--accent);flex:none}
+.ptool span:not(.pro-chip){flex:1;min-width:0;display:flex;flex-direction:column}
+.ptool b{font-weight:700;font-size:14px}
+.ptool small{color:var(--muted);font-size:12px;font-weight:400}
+@media (max-width:380px){.ptool .pro-chip{display:none}}
+body.toolmode .app{max-width:none;padding:0;height:100dvh;display:flex;flex-direction:column}
+body.toolmode .app>*{animation:none}
+.thead{padding-inline:16px;flex:none}
+.tpat{font:600 13px var(--mono);padding:6px 10px;border-radius:10px;background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent-line);white-space:nowrap}
+.tool-out{padding:16px}
+.tframe-wrap{position:relative;flex:1;min-height:0}
+.tframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--bg)}
+.tload{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg);text-align:center;transition:opacity .35s ease,visibility .35s}
+.tload.done{opacity:0;visibility:hidden}
+.tload-art{width:120px;height:140px;margin-bottom:6px}
+.tload span{color:var(--muted);font-size:13px}
+.tbar{display:block;width:160px;height:3px;border-radius:3px;margin-top:8px;background:linear-gradient(90deg,transparent,var(--accent),transparent) 0 0/50% 100% no-repeat,#242424}
+@media (prefers-reduced-motion:no-preference){
+  .promo::before{animation:sheen 4.5s ease-in-out 1s infinite}
+  @keyframes sheen{0%,60%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+  .tart .plumb{animation:dash 2.4s linear infinite}
+  @keyframes dash{to{stroke-dashoffset:-16}}
+  .tart .dot{animation:pulse 2.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+  .tart .dot:nth-child(2){animation-delay:.2s}.tart .dot:nth-child(3){animation-delay:.4s}.tart .dot:nth-child(4){animation-delay:.6s}.tart .dot:nth-child(5){animation-delay:.8s}
+  @keyframes pulse{50%{transform:scale(1.5);opacity:.6}}
+  .tart .ghost{animation:ghost 2.2s ease-in-out infinite}
+  .tart .g2{animation-delay:.25s}
+  @keyframes ghost{50%{opacity:.35}}
+  .tcard:hover{transform:translateY(-2px)}
+  .tbar{animation:load 1.3s ease-in-out infinite}
+  @keyframes load{from{background-position:-80px 0,0 0}to{background-position:240px 0,0 0}}
+}
 </style>
 
 <main class="app" id="app"></main>
 <nav class="tabs" id="tabs" aria-label="Main"><div class="in">
   <button data-act="tab" data-tab="patients"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .7 3.2 2.4 3.5 5.2"/></svg>Home</button>
   <button data-act="tab" data-tab="library"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 3.5V2.5h6v1M8.5 9h7M8.5 12.5h7M8.5 16h4"/></svg>Assessments</button>
+  <button data-act="tab" data-tab="tools" class="tab-pro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="4.6" r="2.1"/><path d="M12 7.2v6.3l-2.2 7M12 13.5l2.2 7M12 9.3l-3.6 2.4M12 9.3l3.6 2.4"/><path d="M4.5 3.5v17" stroke-dasharray="1.6 2.6"/></svg>Tools</button>
   <button data-act="tab" data-tab="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Settings</button>
 </div></nav>
 <div class="bar" id="bar" role="region" aria-label="Actions" hidden><div class="in" id="barIn"></div></div>
