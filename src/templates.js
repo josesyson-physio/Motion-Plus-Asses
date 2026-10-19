@@ -32,6 +32,13 @@ function bandOf(x, list) { for (const b of list) if (x <= b[0]) return [b[1], b[
 const mmtNum = g => parseFloat(g) + (/\+$/.test(g) ? 0.3 : /-$/.test(g) ? -0.3 : 0);
 const lr = (v, id) => v[id] || {};
 
+// Tool records (Posture and Gait Analysis) carry the score the tool calculated; bands match the tool's own colours.
+function toolScore(v, what) {
+  if (!has(v.score)) return { val: null, txt: "Not scored", band: ["Not scored", "neutral"] };
+  const n = Math.round(+v.score);
+  return { val: n, max: 100, txt: `${n}/100`, band: n >= 80 ? [v.rating || `Good ${what.toLowerCase()}`, "good"] : n >= 60 ? [v.rating || "Some areas to train", "warn"] : [v.rating || "Areas to treat", "bad"] };
+}
+
 const BERG_ITEMS = [
   ["Sitting to standing", ["Needs moderate or maximal assist to stand", "Needs minimal aid to stand or to stabilise", "Able to stand using hands after several tries", "Able to stand independently using hands", "Able to stand without using hands and stabilise independently"]],
   ["Standing unsupported", ["Unable to stand 30 s unassisted", "Needs several tries to stand 30 s unsupported", "Able to stand 30 s unsupported", "Able to stand 2 min with supervision", "Able to stand safely 2 min"]],
@@ -371,6 +378,16 @@ const TPL = [
     desc: "Structured evaluation note for any discipline. Good for entering paper notes later.",
     fields: [ar("s", "Subjective (history, complaints, goals of patient)"), ar("o", "Objective (observation, tests, measures)"), ar("a", "Assessment (clinical impression, problem list)"), ar("p", "Plan (treatment, frequency, home programme)"), ar("goals", "Goals"), ck("red", "Red flags screened", ["Unexplained weight loss", "Night pain", "Bladder or bowel change", "Saddle anaesthesia", "History of cancer", "Fever", "None present"])],
     score(v) { return { val: null, txt: "Note", band: v.red?.length && !v.red.includes("None present") ? ["Red flags noted", "bad"] : ["Recorded", "neutral"] }; } }),
+
+  /* ---------- MotionPlus Tools: run in the Tools space, saved here as a record ---------- */
+  T({ id: "posture", name: "Posture Analysis", short: "Posture", disc: ["PT"], cat: "MotionPlus Tools", tool: "posture", hb: true, max: 100, mcid: 5, unit: "points",
+    desc: "Front, side and back photos with on-device landmark detection, plumb-line and spine analysis, and a colour-coded body map.",
+    fields: [nm("score", "Posture score", "/100"), tx("rating", "Rating"), ar("findings", "Key findings"), ar("focus", "Focus areas (treat and train)"), ar("measures", "Key measures")],
+    score: v => toolScore(v, "Posture") }),
+  T({ id: "gait", name: "Gait Analysis", short: "Gait", disc: ["PT"], cat: "MotionPlus Tools", tool: "gait", hb: true, max: 100, mcid: 5, unit: "points",
+    desc: "Side and back walking video: knee and hip motion through the gait cycle, pelvic drop, cadence and left-right symmetry.",
+    fields: [nm("score", "Gait score", "/100"), tx("rating", "Rating"), ar("findings", "Key findings"), ar("focus", "Focus areas (treat and train)"), ar("measures", "Key measures")],
+    score: v => toolScore(v, "Gait") }),
 ];
 
 const TPLMAP = Object.fromEntries(TPL.map(t => [t.id, t]));

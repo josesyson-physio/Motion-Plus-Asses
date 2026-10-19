@@ -137,7 +137,7 @@ async function previewPdf(filename, blob) {
 
 /* ---------- Chrome ---------- */
 let view = {};
-function go(name, ...args) { view = { name, args }; render(); window.scrollTo(0, 0); const h = $("#app h1")?.textContent.trim(); document.title = h && h !== "Home" ? `${h} · MotionPlus Assess` : "MotionPlus Assess"; }
+function go(name, ...args) { if (name !== "tool") { document.body.classList.remove("toolmode"); toolCtx = null; } view = { name, args }; render(); window.scrollTo(0, 0); const h = $("#app h1")?.textContent.trim(); document.title = h && h !== "Home" ? `${h} · MotionPlus Pro` : "MotionPlus Pro"; }
 function render() { (VIEWS[view.name] || VIEWS.patients)(...(view.args || [])); }
 function chrome(tab, barHtml) {
   $("#tabs").hidden = !tab; $("#bar").hidden = !barHtml; $("#barIn").innerHTML = barHtml || "";
@@ -145,7 +145,7 @@ function chrome(tab, barHtml) {
   document.body.classList.toggle("has-bar", !!barHtml); document.body.classList.toggle("has-tabs", !!tab);
 }
 const back = (act, extra = "") => `<button class="back" data-act="${act}" ${extra} aria-label="Back">‹</button>`;
-const brand = () => `<div class="brand">MOTIONPLUS PHYSIO${db.settings.clinic ? " · " + esc(db.settings.clinic).toUpperCase() : ""}</div>`;
+const brand = () => `<div class="brand">MOTIONPLUS <b class="pro">PRO</b>${db.settings.clinic ? " · " + esc(db.settings.clinic).toUpperCase() : ""}</div>`;
 const LOCK_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
 const topHead = (title, right = "") => `<header><img class="mark" src="${MP_LOGO}" alt="MotionPlus Physio"><div class="grow">${brand()}<h1>${title}</h1></div>${right}${pinKey ? `<button class="ghost headlock" data-act="lockNow" aria-label="Lock the app">${LOCK_IC}</button>` : ""}</header>`;
 const IC = { up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 18v-6M9 15l3-3 3 3"/></svg>', user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.6-3.6 3.2-5.5 6.5-5.5 1.6 0 3 .4 4.1 1.2M18 14v6M15 17h6"/></svg>', clip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 3.5V2.5h6v1M8.5 9h7M8.5 12.5h7M8.5 16h4"/></svg>', cam: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>' };
@@ -159,9 +159,10 @@ VIEWS.patients = () => {
   $("#app").innerHTML = `
   ${topHead("Home", `<button class="ghost" data-act="about">About</button>`)}
   <div class="stack">
-    <section class="hero"><div><div class="label">${esc(db.settings.branch || "MotionPlus Assess")}</div><h2>Assess. Track. <em>Report.</em></h2><p class="note">${db.settings.therapist ? `Signed in as ${esc(db.settings.therapist)}` : "Digital rehab assessments for every discipline."}</p></div><img src="${MP_LOGO}" alt=""></section>
+    <section class="hero"><div><div class="label">${esc(db.settings.branch || "MotionPlus Pro")}</div><h2>Assess. Track. <em>Report.</em></h2><p class="note">${db.settings.therapist ? `Signed in as ${esc(db.settings.therapist)}` : "Digital rehab assessments for every discipline."}</p></div><img src="${MP_LOGO}" alt=""></section>
     <div class="stats"><div class="stat"><b>${db.patients.length}</b><span>Patients</span></div><div class="stat"><b>${db.assessments.filter(a => a.date >= daysAgo(30)).length}</b><span>Tests, 30 days</span></div><div class="stat"><b>${db.reports.length}</b><span>AI reports</span></div></div>
     <div class="quick"><button class="primary" data-act="newPatient">${IC.user}New patient</button><button data-act="tab" data-tab="library">${IC.clip}Start a test</button><button data-act="builder" data-pid="">${IC.cam}Form from photo</button><label class="qfile">${IC.up}<span>Upload old report</span><input type="file" class="oldrep" accept="application/pdf,.pdf" aria-label="Upload an old MotionPlus PDF report"></label></div>
+    ${toolsPromo()}
     <h2 class="sec">Patients</h2>
     <input id="q" type="search" placeholder="Search by code or diagnosis" value="${esc(q)}" aria-label="Search patients">
     <div class="stack" id="plist"></div>
@@ -218,6 +219,7 @@ VIEWS.patient = id => {
       <button data-act="pdfPatient" data-id="${id}" ${as.length ? "" : "disabled"}>PDF summary</button>
       <button data-act="transfer" data-id="${id}">Transfer</button>
     </div>
+    <div class="ptools" role="group" aria-label="MotionPlus Tools">${Object.values(TOOLS).map(k => `<button class="ptool" data-act="startForm" data-tid="${k.id}" data-pid="${id}">${k.icon}<span><b>${k.name.split(" ")[0]}</b><small>${k.tag}</small></span><span class="pro-chip">PRO</span></button>`).join("")}</div>
     <label class="filebtn">${IC.up}<span>Upload old report to compare</span><input type="file" class="oldrep" accept="application/pdf,.pdf" aria-label="Upload an old MotionPlus PDF report"></label>
     ${charts ? `<h2 class="sec">Progress</h2>${charts}` : ""}
     <h2 class="sec">Assessments</h2>
@@ -265,9 +267,9 @@ VIEWS.library = pid => {
 };
 function listTemplates(pid) {
   const ql = libQ.toLowerCase();
-  const list = allTpl().filter(t => (libDisc === "All" || (libDisc === "Custom" ? t.custom : t.disc.includes(libDisc))) && (t.name + t.short + t.cat + t.desc).toLowerCase().includes(ql));
+  const list = allTpl().filter(t => (libDisc === "All" || (libDisc === "Custom" ? t.custom : t.disc.includes(libDisc))) && (t.name + t.short + t.cat + t.desc).toLowerCase().includes(ql)).sort((a, b) => (b.tool ? 1 : 0) - (a.tool ? 1 : 0));
   $("#tlist").innerHTML = list.map(t => `<div class="tool"><button class="tool-main" data-act="startForm" data-tid="${t.id}" data-pid="${pid || ""}">
-      <span class="tname">${esc(t.name)}</span><span class="psub">${esc(t.desc)}</span>
+      <span class="tname">${esc(t.name)}${t.tool ? ' <span class="pro-chip">PRO</span>' : ""}</span><span class="psub">${esc(t.desc)}</span>
       <span class="tags">${(t.custom ? ["Custom"] : []).concat(t.disc).map(d => `<span class="tag">${esc(d)}</span>`).join("")}<span class="tag soft">${esc(t.cat)}</span></span></button>
       ${t.custom ? `<button class="ghost" data-act="builder" data-tid="${t.id}" data-pid="${pid || ""}" aria-label="Edit ${esc(t.name)}">Edit</button>` : ""}</div>`).join("") || `<div class="empty">No assessments match. Try another word, or create your own template.</div>`;
 }
@@ -275,14 +277,114 @@ function listTemplates(pid) {
 VIEWS.pickPatient = tid => {
   const t = allTpl().find(x => x.id === tid);
   chrome(null, `<button class="primary wide" data-act="newPatient" data-then="${tid}">+ New patient</button>`);
-  $("#app").innerHTML = `<header>${back("tab", 'data-tab="library"')}<h1>Which patient?</h1></header>
+  $("#app").innerHTML = `<header>${back("tab", `data-tab="${t.tool ? "tools" : "library"}"`)}<h1>Which patient?</h1></header>
   <div class="stack"><div class="psub">Starting ${esc(t.name)}</div>
   ${db.patients.map(p => `<button class="patient" data-act="startForm" data-tid="${tid}" data-pid="${p.id}"><span class="avatar">${esc(p.code.split("-").pop())}</span><span class="pmeta"><span class="pname">${esc(p.code)}</span><span class="psub">${esc(p.age)} · ${esc(p.sex)} · ${esc(p.dx)}</span></span></button>`).join("") || `<div class="empty">No patients yet. Add one to start.</div>`}</div>`;
 };
 
+/* ---------- MotionPlus Tools ----------
+   Posture and gait analysis run in the Tools space: the posture engine (posture/index.html) opens in a same-origin frame,
+   gets the patient from here, and sends back a summary plus its session (landmarks, never photos) to save as an assessment. */
+const TOOL_ART = {
+  posture: `<svg viewBox="0 0 120 150" class="tart" aria-hidden="true"><defs><linearGradient id="tgp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd60a"/><stop offset="1" stop-color="#ff9f43"/></linearGradient></defs>
+    <g stroke="#2e2b22" stroke-width="1">${[20, 40, 60, 80, 100, 120, 140].map(y => `<line x1="8" x2="112" y1="${y}" y2="${y}"/>`).join("")}</g>
+    <line class="plumb" x1="62" x2="62" y1="6" y2="146" stroke="url(#tgp)" stroke-width="1.6" stroke-dasharray="4 4"/>
+    <g fill="none" stroke="#f6f4ec" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="66" cy="22" r="9"/><path d="M64 31 Q58 52 60 74 L62 104 L60 140"/><path d="M62 104 L66 140"/><path d="M61 42 L70 64 L72 80"/></g>
+    <g fill="#ffd60a">${[[66, 22], [61, 42], [60, 74], [62, 104], [61, 140]].map(([x, y]) => `<circle class="dot" cx="${x}" cy="${y}" r="3.2"/>`).join("")}</g></svg>`,
+  gait: `<svg viewBox="0 0 150 150" class="tart" aria-hidden="true"><defs><linearGradient id="tgg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffd60a" stop-opacity="0"/><stop offset="1" stop-color="#ffd60a"/></linearGradient></defs>
+    <line x1="6" x2="144" y1="140" y2="140" stroke="#2e2b22" stroke-width="2"/>
+    <g class="ghost g1" fill="none" stroke="#f6f4ec" stroke-opacity=".18" stroke-width="3" stroke-linecap="round"><circle cx="40" cy="24" r="9"/><path d="M40 33 L42 78 L30 108 L26 138 M42 78 L52 108 L60 138 M41 44 L30 66 M41 44 L52 64"/></g>
+    <g class="ghost g2" fill="none" stroke="#f6f4ec" stroke-opacity=".4" stroke-width="3" stroke-linecap="round"><circle cx="70" cy="24" r="9"/><path d="M70 33 L72 78 L66 108 L64 138 M72 78 L76 108 L80 138 M71 44 L64 66 M71 44 L78 64"/></g>
+    <g fill="none" stroke="#f6f4ec" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="100" cy="24" r="9"/><path d="M100 33 L102 78 L114 106 L122 138 M102 78 L92 108 L84 138 M101 44 L112 66 M101 44 L90 64"/></g>
+    <path d="M8 120 Q60 112 112 106" stroke="url(#tgg)" stroke-width="2" fill="none"/>
+    <g fill="#ffd60a"><circle cx="102" cy="78" r="3.2"/><circle cx="114" cy="106" r="3.2"/><circle cx="92" cy="108" r="3.2"/></g></svg>`,
+};
+const TOOLS = {
+  posture: { id: "posture", name: "Posture Analysis", tag: "Photo analysis", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="4.5" r="2"/><path d="M12 7v7l-1 7M12 14l1.5 7M12 9l3 3"/><path d="M5 3v18" stroke-dasharray="2 2.5"/></svg>',
+    blurb: "Front, side and back photos. Landmarks are found on the device, then checked against the plumb line, spine curves and left-right balance.",
+    feats: ["Plumb line", "Spine curves", "Body map", "Exercises"] },
+  gait: { id: "gait", name: "Gait Analysis", tag: "Video analysis", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="13" cy="4.5" r="2"/><path d="M13 7l-1 6-3 3-1 5M12 13l3 3 1 5M12.5 9l-3 2M12.5 9l3 2"/><path d="M3 21h18" opacity=".5"/></svg>',
+    blurb: "A short side and back walking video. Knee and hip motion through each stride, pelvic drop, cadence and step symmetry.",
+    feats: ["Gait cycle", "Pelvic drop", "Cadence", "L/R symmetry"] },
+};
+const isTool = a => !!TPLMAP[a?.tid]?.tool;
+function toolsPromo() {
+  const n = db.assessments.filter(isTool).length;
+  return `<button class="promo" data-act="tab" data-tab="tools"><span class="promo-art">${TOOL_ART.posture}</span><span class="promo-txt"><span class="pro-chip">PRO</span><b>MotionPlus Tools</b><span>Posture and gait analysis from photos and video${n ? ` · ${n} saved` : ""}</span></span><span class="promo-go" aria-hidden="true">›</span></button>`;
+}
+// Warm the posture engine while the clinician reads the Tools page, so the first analysis opens quickly.
+function warmTools() { if (window.claude || document.getElementById("warmTools")) return;
+  for (const [i, href] of ["posture/", "posture/vision_bundle.mjs"].entries()) document.head.insertAdjacentHTML("beforeend", `<link rel="prefetch" href="${href}"${i ? "" : ' id="warmTools"'}>`); }
+VIEWS.tools = () => {
+  chrome("tools"); warmTools();
+  const recs = db.assessments.filter(isTool).sort(byDate).reverse(), pts = new Set(recs.map(a => a.pid)).size;
+  const count = k => recs.filter(a => a.tid === k).length;
+  $("#app").innerHTML = `
+  ${topHead("Tools")}
+  <div class="stack">
+    <section class="thero"><div class="thero-glow" aria-hidden="true"></div>
+      <span class="pro-chip big">MOTIONPLUS PRO</span>
+      <h2>Movement analysis, <em>on this device.</em></h2>
+      <p class="note">Analyse posture and walking from photos and video. Each result is saved straight into the patient's assessments, next to Berg, LEFS and the rest.</p>
+      <div class="tstats"><div><b>${count("posture")}</b><span>Posture</span></div><div><b>${count("gait")}</b><span>Gait</span></div><div><b>${pts}</b><span>Patients</span></div></div>
+    </section>
+    <div class="tcards">${Object.values(TOOLS).map(k => `
+      <article class="tcard">
+        <div class="tcard-art">${TOOL_ART[k.id]}</div>
+        <div class="tcard-body"><h3>${k.name}</h3><p class="note">${k.blurb}</p>
+          <div class="tfeats">${k.feats.map(f => `<span>${f}</span>`).join("")}</div>
+          <button class="primary" data-act="startForm" data-tid="${k.id}">Start ${k.name.split(" ")[0].toLowerCase()} analysis</button></div>
+      </article>`).join("")}</div>
+    <h2 class="sec">Recent analyses</h2>
+    <div>${recs.slice(0, 8).map(a => { const p = P(a.pid), t = getTpl(a), r = runScore(t, a.values, p); return `<button class="hist" data-act="result" data-id="${a.id}"><span class="trec">${TOOLS[t.tool].icon}</span><span class="grow"><b>${esc(t.name)} · ${esc(p?.code || "")}</b><span class="psub">${fmt(a.date)} · ${esc(r.txt)}</span></span>${chip(r.band)}</button>`; }).join("") || `<div class="empty">No analyses yet. Start one above, or from a patient's page.</div>`}</div>
+    <div class="privacy">${LOCK_IC}<p>Photos and videos are analysed on this phone or tablet and are never saved. Only scores, body landmarks and your notes are kept${pinKey ? ", encrypted with your PIN" : ". Set a PIN in Settings to encrypt them"}.</p></div>
+  </div>`;
+};
+let toolCtx = null;
+VIEWS.tool = (kind, pid, aid) => {
+  const p = P(pid), k = TOOLS[kind]; if (!p || !k) return go("tools");
+  chrome(null); document.body.classList.add("toolmode");
+  toolCtx = { kind, pid, aid, shown: false };
+  const inClaude = !!window.claude?.use;
+  $("#app").innerHTML = `
+  <header class="thead">${back(aid ? "result" : "patient", `data-id="${aid || pid}"`)}<div class="grow"><div class="brand">MOTIONPLUS <b class="pro">PRO</b> · TOOLS</div><h1>${k.name}</h1></div><span class="tpat">${esc(p.code)}</span></header>
+  ${inClaude ? `<div class="stack tool-out"><div class="empty">Tools need the camera and the on-device analysis engine, which the Claude viewer blocks. Open MotionPlus Pro from its web address to use them.</div></div>`
+    : `<div class="tframe-wrap"><div class="tload" id="tload"><div class="tload-art">${TOOL_ART[kind]}</div><b>Preparing ${k.name.toLowerCase()}</b><span>Loading the on-device engine…</span><i class="tbar"></i></div>
+       <iframe id="toolFrame" class="tframe" title="${k.name} for ${esc(p.code)}" src="posture/?embed=${kind}" allow="camera; fullscreen"></iframe></div>`}`;
+};
+function toolInit() {
+  const { kind, pid, aid } = toolCtx, p = P(pid), s = db.settings;
+  const history = db.assessments.filter(a => a.pid === pid && isTool(a) && a.id !== aid && typeof a.values.session === "string").sort(byDate).map(a => ({ kind: a.tid, date: a.date, session: a.values.session }));
+  return { type: "mp-init", mode: kind, patient: { code: p.code, age: p.age, sex: p.sex, dx: p.dx }, assessor: s.therapist || "",
+    clinic: { name: s.clinic || "", logo: s.logo || "", phone: s.phone || "", email: s.email || "", address: s.address || "" },
+    store: db.toolStore || {}, history, session: aid ? A(aid)?.values.session || null : null };
+}
+const toolLines = (x, n = 30) => Array.isArray(x) ? x.filter(v => typeof v === "string").slice(0, n).map(v => v.slice(0, 300)).join("\n") : "";
+function toolSaved(m) {
+  const { kind, pid, aid } = toolCtx, sm = m.summary || {}, n = Number(sm.score);
+  if (m.kind !== kind || !(n >= 0 && n <= 100) || typeof m.session !== "string" || m.session.length > 3e6) { toast("That result could not be read. Try saving again."); return; }
+  const values = { score: String(Math.round(n)), rating: typeof sm.rating === "string" ? sm.rating.slice(0, 80) : "", findings: toolLines(sm.findings), focus: toolLines(sm.focus), measures: toolLines(sm.measures, 40), session: m.session };
+  const old = aid && A(aid), date = okDate(m.date) && m.date <= today() ? m.date : today();
+  const rec = old ? { ...old, values, date } : { id: uid(), pid, tid: kind, date, values, notes: "", created: Date.now() };
+  if (old) db.assessments[db.assessments.indexOf(old)] = rec; else db.assessments.push(rec);
+  if (!save()) return;
+  toast(`${TOOLS[kind].name} saved to ${P(pid).code}`); go("result", rec.id);
+}
+addEventListener("message", e => {
+  const f = $("#toolFrame"); if (!f || !toolCtx || e.source !== f.contentWindow) return;
+  if (location.origin !== "null" && e.origin !== location.origin) return;
+  const m = e.data || {}, to = location.origin === "null" ? "*" : location.origin;
+  if (m.type === "mp-ready") f.contentWindow.postMessage(toolInit(), to);
+  else if (m.type === "mp-shown") { toolCtx.shown = true; $("#tload")?.classList.add("done"); }
+  else if (m.type === "mp-store" && (m.key === "mp.norms" || m.key === "mp.gaitNorms") && typeof m.value === "string" && m.value.length < 50000) { db.toolStore = { ...(db.toolStore || {}), [m.key]: m.value }; save(); }
+  else if (m.type === "mp-result") toolSaved(m);
+});
+
 /* ---------- Assessment form ---------- */
 let draft = null;
 function startForm(pid, tid, aid) {
+  const tt = TPLMAP[aid ? A(aid)?.tid : tid];
+  if (tt?.tool) return go("tool", tt.tool, aid ? A(aid).pid : pid, aid || null);
   if (aid) { const a = A(aid); draft = JSON.parse(JSON.stringify(a)); }
   else { const t = allTpl().find(x => x.id === tid); draft = { id: uid(), pid, tid, date: today(), values: {}, notes: "", created: Date.now() };
     if (t.custom) draft.tpl = db.templates.find(x => x.id === tid);
@@ -337,11 +439,19 @@ function setVal(fid, k, val) {
   updateLive();
 }
 
+// Tool records read as findings, focus areas and measures instead of an item table.
+function toolResult(a) {
+  const ls = k => String(a.values[k] || "").split("\n").filter(Boolean), st = x => /: Treat/.test(x) ? "bad" : /: Train/.test(x) ? "warn" : /\(Normal\)/.test(x) ? "good" : "neutral";
+  const f = ls("findings"), fo = ls("focus"), me = ls("measures");
+  return `${f.length ? `<h2 class="sec">Key findings</h2><div class="chips">${f.map(x => `<span class="chip warn">${esc(x)}</span>`).join("")}</div>` : ""}
+    ${fo.length ? `<h2 class="sec">Focus areas</h2><div class="focus">${fo.map(x => { const [head, ...rest] = x.split(" · "), [area, what] = head.split(": "); return `<div class="fcard ${st(x)}"><div><b>${esc(area)}</b><span class="chip ${st(x)}">${esc(what || "")}</span></div>${rest.length ? `<p>${esc(rest.join(" · "))}</p>` : ""}</div>`; }).join("")}</div>` : `<div class="empty">Every region is within normal range.</div>`}
+    ${me.length ? `<h2 class="sec">Key measures</h2><div class="measures">${me.map(x => { const m = x.match(/^(.*?): (.*?) \((\w+)\)$/); return m ? `<div class="mrow"><span>${esc(m[1])}</span><b>${esc(m[2])}</b><i class="mdot ${st(x) === "neutral" ? (m[3] === "Treat" ? "bad" : "warn") : st(x)}" title="${esc(m[3])}"></i></div>` : `<div class="mrow"><span>${esc(x)}</span></div>`; }).join("")}</div>` : ""}`;
+}
 VIEWS.result = aid => {
   const a = A(aid); if (!a) return go("patients"); const t = getTpl(a), p = P(a.pid), r = runScore(t, a.values, p), c = compare(t, a, p);
   const s = series(a.pid, a.tid), rep = db.reports.find(x => x.kind === "single" && x.aids[0] === aid);
   const pv = c?.prev?.values || {};
-  chrome(null, `<button data-act="editA" data-id="${aid}">Edit</button><button data-act="aiSingle" data-id="${aid}">✦ AI report</button><button class="primary" data-act="pdfA" data-id="${aid}">PDF</button>`);
+  chrome(null, `<button data-act="editA" data-id="${aid}">${t.tool ? "Open in Tools" : "Edit"}</button><button data-act="aiSingle" data-id="${aid}">✦ AI report</button><button class="primary" data-act="pdfA" data-id="${aid}">PDF</button>`);
   $("#app").innerHTML = `
   <header>${back("patient", `data-id="${a.pid}"`)}<h1>${esc(t.name)}</h1></header>
   <div class="stack">
@@ -356,10 +466,10 @@ VIEWS.result = aid => {
     </div>
     ${s.length > 1 ? `<div class="chart">${chartSVG(s, t)}</div>` : ""}
     ${rep ? `<button class="hist" data-act="report" data-id="${rep.id}"><span class="grow"><b>AI report</b><span class="psub">Written ${fmt(rep.date)}${rep.edited ? " · edited" : ""}</span></span><span class="chip neutral">Open</span></button>` : ""}
-    <h2 class="sec">Item scores</h2>
+    ${t.tool ? toolResult(a) : `<h2 class="sec">Item scores</h2>
     <div class="tablewrap" tabindex="0" role="region" aria-label="Item scores table"><table><thead><tr><th>Item</th><th class="n">${c ? fmtShort(a.date) : "Score"}</th>${c ? `<th class="n">${fmtShort(c.prev.date)}</th>` : ""}</tr></thead><tbody>
     ${t.fields.map(f => f.t === "head" ? `<tr class="trh"><td colspan="${c ? 3 : 2}">${esc(f.label)}</td></tr>` : (has(a.values[f.id]) || has(pv[f.id])) ? `<tr><td>${esc(f.label)}</td><td class="n">${esc(fmtVal(f, a.values[f.id]))}</td>${c ? `<td class="n muted">${esc(fmtVal(f, pv[f.id]))}</td>` : ""}</tr>` : "").join("")}
-    </tbody></table></div>
+    </tbody></table></div>`}
     ${a.notes ? `<h2 class="sec">Clinical notes</h2><p class="notes">${esc(a.notes)}</p>` : ""}
     <div class="danger"><button class="link-danger" data-act="delA" data-id="${aid}">Delete this assessment</button></div>
   </div>`;
@@ -848,7 +958,7 @@ async function makePdf({ pid, aids, report, title }) {
     if (contact) { doc.setFontSize(cSize); doc.text(cLine, W / 2, 285, { align: "center" }); } }
   // Carry the results inside the PDF so this report can be uploaded again later for comparison (see importReport).
   const { notes, ...pd } = p, payload = { app: "MotionPlus Assess", format: 1, patient: pd, assessments: aids.map(A).filter(Boolean) };
-  doc.setProperties({ title: pdfSafe(`${title} ${p.code}`), subject: "MotionPlus Assess report", creator: "MotionPlus Assess", keywords: "MPA1:" + b64(new TextEncoder().encode(JSON.stringify(payload))) });
+  doc.setProperties({ title: pdfSafe(`${title} ${p.code}`), subject: "MotionPlus Pro report", creator: "MotionPlus Pro", keywords: "MPA1:" + b64(new TextEncoder().encode(JSON.stringify(payload))) });
   await saveFile(`${p.code}-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${today()}.pdf`, doc.output("blob"));
 }
 function pdfChart(doc, x, y, w, h, s, t, C) {
@@ -929,7 +1039,7 @@ function cleanList(list, fn) { const arr = Array.isArray(list) ? list : [], out 
 /* ---------- Upload an old report ---------- */
 const NO_DATA = "This PDF has no MotionPlus results inside. Only reports saved from the app from 12 Oct 2026 onwards can be uploaded.";
 async function importReport(file) {
-  if (!/pdf$/i.test(file.type) && !/\.pdf$/i.test(file.name)) { toast("Choose a PDF report saved from MotionPlus Assess."); return; }
+  if (!/pdf$/i.test(file.type) && !/\.pdf$/i.test(file.name)) { toast("Choose a PDF report saved from MotionPlus."); return; }
   try { await need("pdf"); } catch (e) { toast("The PDF reader didn't load. Check the internet connection and try again."); return; }
   let data;
   try { const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise, kw = (await pdf.getMetadata()).info?.Keywords || "";
@@ -950,7 +1060,7 @@ async function importReport(file) {
 let lockMsg = "";
 VIEWS.lock = () => {
   chrome(null);
-  $("#app").innerHTML = `<div class="lock"><img src="${MP_LOGO}" alt="MotionPlus Physio"><h1>MotionPlus Assess</h1><p class="note">Enter your PIN to open the patient records on this device.</p>
+  $("#app").innerHTML = `<div class="lock"><img src="${MP_LOGO}" alt="MotionPlus Physio"><h1>MotionPlus <span class="pro-word">Pro</span></h1><p class="note">Enter your PIN to open the patient records on this device.</p>
     <form id="lockform"><label class="label" for="pinin">PIN</label><input id="pinin" type="password" inputmode="numeric" autocomplete="off" maxlength="16" required>
     <p class="err" role="alert">${esc(lockMsg)}</p><button class="primary" type="submit">Unlock</button></form>
     <button class="link-danger" data-act="forgotPin">Forgot PIN?</button></div>`;
@@ -1117,3 +1227,5 @@ document.documentElement.lang = "en";
 go(locked ? "lock" : "patients");
 // Load the PDF tool once the first screen is up, so reports still work if the connection drops later.
 setTimeout(() => need("jspdf").catch(() => {}), 1500);
+// Offline and fast reopen when served from the web (the Claude viewer has its own caching).
+if ("serviceWorker" in navigator && !window.claude && (location.protocol === "https:" || location.hostname === "localhost")) navigator.serviceWorker.register("sw.js").catch(() => {});
