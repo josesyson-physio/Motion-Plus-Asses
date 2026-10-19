@@ -137,7 +137,7 @@ async function previewPdf(filename, blob) {
 
 /* ---------- Chrome ---------- */
 let view = {};
-function go(name, ...args) { if (name !== "tool") { document.body.classList.remove("toolmode"); toolCtx = null; } view = { name, args }; render(); window.scrollTo(0, 0); const h = $("#app h1")?.textContent.trim(); document.title = h && h !== "Home" ? `${h} · MotionPlus Pro` : "MotionPlus Pro"; }
+function go(name, ...args) { if (name !== "tool") { document.body.classList.remove("toolmode"); toolCtx = null; } if (name !== "gonio") gzStop(); view = { name, args }; render(); window.scrollTo(0, 0); const h = $("#app h1")?.textContent.trim(); document.title = h && h !== "Home" ? `${h} · MotionPlus Pro` : "MotionPlus Pro"; }
 function render() { (VIEWS[view.name] || VIEWS.patients)(...(view.args || [])); }
 function chrome(tab, barHtml) {
   $("#tabs").hidden = !tab; $("#bar").hidden = !barHtml; $("#barIn").innerHTML = barHtml || "";
@@ -275,7 +275,7 @@ function listTemplates(pid) {
 }
 
 VIEWS.pickPatient = tid => {
-  const t = allTpl().find(x => x.id === tid);
+  const t = tid === GONIO ? { name: "Goniometer", tool: GONIO } : allTpl().find(x => x.id === tid);
   chrome(null, `<button class="primary wide" data-act="newPatient" data-then="${tid}">+ New patient</button>`);
   $("#app").innerHTML = `<header>${back("tab", `data-tab="${t.tool ? "tools" : "library"}"`)}<h1>Which patient?</h1></header>
   <div class="stack"><div class="psub">Starting ${esc(t.name)}</div>
@@ -298,6 +298,13 @@ const TOOL_ART = {
     <g fill="none" stroke="#f6f4ec" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="100" cy="24" r="9"/><path d="M100 33 L102 78 L114 106 L122 138 M102 78 L92 108 L84 138 M101 44 L112 66 M101 44 L90 64"/></g>
     <path d="M8 120 Q60 112 112 106" stroke="url(#tgg)" stroke-width="2" fill="none"/>
     <g fill="#ffd60a"><circle cx="102" cy="78" r="3.2"/><circle cx="114" cy="106" r="3.2"/><circle cx="92" cy="108" r="3.2"/></g></svg>`,
+  goniometer: `<svg viewBox="0 0 150 150" class="tart" aria-hidden="true"><defs><linearGradient id="tgn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe866"/><stop offset="1" stop-color="#ff9f43"/></linearGradient></defs>
+    <g stroke="#2e2b22" stroke-width="1.5">${[0, 30, 60, 90, 120, 150, 180].map(d => { const r = d * Math.PI / 180; return `<line x1="${(75 - 58 * Math.cos(r)).toFixed(1)}" y1="${(118 - 58 * Math.sin(r)).toFixed(1)}" x2="${(75 - 66 * Math.cos(r)).toFixed(1)}" y2="${(118 - 66 * Math.sin(r)).toFixed(1)}"/>`; }).join("")}</g>
+    <path d="M17 118 A58 58 0 0 1 133 118" fill="none" stroke="#2e2b22" stroke-width="6"/>
+    <path class="gsweep" d="M17 118 A58 58 0 0 1 106 69" fill="none" stroke="url(#tgn)" stroke-width="6" stroke-linecap="round" pathLength="100"/>
+    <line x1="75" y1="118" x2="12" y2="118" stroke="#f6f4ec" stroke-width="4" stroke-linecap="round"/>
+    <g class="garm"><line x1="75" y1="118" x2="112" y2="62" stroke="#f6f4ec" stroke-width="4" stroke-linecap="round"/><circle cx="112" cy="62" r="4" fill="#ffd60a"/></g>
+    <circle cx="75" cy="118" r="7" fill="#ffd60a"/><text x="75" y="142" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="13" font-weight="600" fill="#ffd60a">0–180°</text></svg>`,
 };
 const TOOLS = {
   posture: { id: "posture", name: "Posture Analysis", tag: "Photo analysis", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="4.5" r="2"/><path d="M12 7v7l-1 7M12 14l1.5 7M12 9l3 3"/><path d="M5 3v18" stroke-dasharray="2 2.5"/></svg>',
@@ -306,37 +313,40 @@ const TOOLS = {
   gait: { id: "gait", name: "Gait Analysis", tag: "Video analysis", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="13" cy="4.5" r="2"/><path d="M13 7l-1 6-3 3-1 5M12 13l3 3 1 5M12.5 9l-3 2M12.5 9l3 2"/><path d="M3 21h18" opacity=".5"/></svg>',
     blurb: "A short side and back walking video. Knee and hip motion through each stride, pelvic drop, cadence and step symmetry.",
     feats: ["Gait cycle", "Pelvic drop", "Cadence", "L/R symmetry"] },
+  goniometer: { id: "goniometer", name: "Goniometer", tag: "Camera + tilt", cta: "Measure joint angles", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M5 19h15M5 19l9-12"/><path d="M10 19a5 5 0 0 0-2-4"/><circle cx="5" cy="19" r="1.4" fill="currentColor"/></svg>',
+    blurb: "Any major joint, two ways: three points on a photo, or the phone's tilt sensor on the limb. Each movement opens on the method that measures it best.",
+    feats: ["Camera angle", "Phone tilt", "Best of 3", "Saves to ROM"] },
 };
 const isTool = a => !!TPLMAP[a?.tid]?.tool;
 function toolsPromo() {
-  const n = db.assessments.filter(isTool).length;
-  return `<button class="promo" data-act="tab" data-tab="tools"><span class="promo-art">${TOOL_ART.posture}</span><span class="promo-txt"><span class="pro-chip">PRO</span><b>MotionPlus Tools</b><span>Posture and gait analysis from photos and video${n ? ` · ${n} saved` : ""}</span></span><span class="promo-go" aria-hidden="true">›</span></button>`;
+  const n = db.assessments.filter(a => isTool(a) || isGonio(a)).length;
+  return `<button class="promo" data-act="tab" data-tab="tools"><span class="promo-art">${TOOL_ART.posture}</span><span class="promo-txt"><span class="pro-chip">PRO</span><b>MotionPlus Tools</b><span>Posture, gait and joint angles${n ? ` · ${n} saved` : ""}</span></span><span class="promo-go" aria-hidden="true">›</span></button>`;
 }
 // Warm the posture engine while the clinician reads the Tools page, so the first analysis opens quickly.
 function warmTools() { if (window.claude || document.getElementById("warmTools")) return;
   for (const [i, href] of ["posture/", "posture/vision_bundle.mjs"].entries()) document.head.insertAdjacentHTML("beforeend", `<link rel="prefetch" href="${href}"${i ? "" : ' id="warmTools"'}>`); }
 VIEWS.tools = () => {
   chrome("tools"); warmTools();
-  const recs = db.assessments.filter(isTool).sort(byDate).reverse(), pts = new Set(recs.map(a => a.pid)).size;
-  const count = k => recs.filter(a => a.tid === k).length;
+  const recs = db.assessments.filter(a => isTool(a) || isGonio(a)).sort(byDate).reverse(), pts = new Set(recs.map(a => a.pid)).size;
+  const count = k => recs.filter(a => k === GONIO ? isGonio(a) : a.tid === k).length;
   $("#app").innerHTML = `
   ${topHead("Tools")}
   <div class="stack">
     <section class="thero"><div class="thero-glow" aria-hidden="true"></div>
       <span class="pro-chip big">MOTIONPLUS PRO</span>
       <h2>Movement analysis, <em>on this device.</em></h2>
-      <p class="note">Analyse posture and walking from photos and video. Each result is saved straight into the patient's assessments, next to Berg, LEFS and the rest.</p>
-      <div class="tstats"><div><b>${count("posture")}</b><span>Posture</span></div><div><b>${count("gait")}</b><span>Gait</span></div><div><b>${pts}</b><span>Patients</span></div></div>
+      <p class="note">Analyse posture and walking from photos and video, and measure joint angles with the camera or the phone's tilt sensor. Each result is saved straight into the patient's assessments, next to Berg, LEFS and the rest.</p>
+      <div class="tstats"><div><b>${count("posture")}</b><span>Posture</span></div><div><b>${count("gait")}</b><span>Gait</span></div><div><b>${count(GONIO)}</b><span>Goniometer</span></div><div><b>${pts}</b><span>Patients</span></div></div>
     </section>
     <div class="tcards">${Object.values(TOOLS).map(k => `
       <article class="tcard">
         <div class="tcard-art">${TOOL_ART[k.id]}</div>
         <div class="tcard-body"><h3>${k.name}</h3><p class="note">${k.blurb}</p>
           <div class="tfeats">${k.feats.map(f => `<span>${f}</span>`).join("")}</div>
-          <button class="primary" data-act="startForm" data-tid="${k.id}">Start ${k.name.split(" ")[0].toLowerCase()} analysis</button></div>
+          <button class="primary" data-act="startForm" data-tid="${k.id}">${k.cta || `Start ${k.name.split(" ")[0].toLowerCase()} analysis`}</button></div>
       </article>`).join("")}</div>
     <h2 class="sec">Recent analyses</h2>
-    <div>${recs.slice(0, 8).map(a => { const p = P(a.pid), t = getTpl(a), r = runScore(t, a.values, p); return `<button class="hist" data-act="result" data-id="${a.id}"><span class="trec">${TOOLS[t.tool].icon}</span><span class="grow"><b>${esc(t.name)} · ${esc(p?.code || "")}</b><span class="psub">${fmt(a.date)} · ${esc(r.txt)}</span></span>${chip(r.band)}</button>`; }).join("") || `<div class="empty">No analyses yet. Start one above, or from a patient's page.</div>`}</div>
+    <div>${recs.slice(0, 8).map(a => { const p = P(a.pid), t = getTpl(a), r = runScore(t, a.values, p); return `<button class="hist" data-act="result" data-id="${a.id}"><span class="trec">${TOOLS[isGonio(a) ? GONIO : t.tool].icon}</span><span class="grow"><b>${isGonio(a) ? "Goniometer" : esc(t.name)} · ${esc(p?.code || "")}</b><span class="psub">${fmt(a.date)} · ${esc(r.txt)}</span></span>${chip(r.band)}</button>`; }).join("") || `<div class="empty">No analyses yet. Start one above, or from a patient's page.</div>`}</div>
     <div class="privacy">${LOCK_IC}<p>Photos and videos are analysed on this phone or tablet and are never saved. Only scores, body landmarks and your notes are kept${pinKey ? ", encrypted with your PIN" : ". Set a PIN in Settings to encrypt them"}.</p></div>
   </div>`;
 };
@@ -380,9 +390,12 @@ addEventListener("message", e => {
   else if (m.type === "mp-result") toolSaved(m);
 });
 
+/*GONIO*/
+
 /* ---------- Assessment form ---------- */
 let draft = null;
 function startForm(pid, tid, aid) {
+  if (tid === GONIO) return go("gonio", pid);
   const tt = TPLMAP[aid ? A(aid)?.tid : tid];
   if (tt?.tool) return go("tool", tt.tool, aid ? A(aid).pid : pid, aid || null);
   if (aid) { const a = A(aid); draft = JSON.parse(JSON.stringify(a)); }
@@ -466,6 +479,7 @@ VIEWS.result = aid => {
     </div>
     ${s.length > 1 ? `<div class="chart">${chartSVG(s, t)}</div>` : ""}
     ${rep ? `<button class="hist" data-act="report" data-id="${rep.id}"><span class="grow"><b>AI report</b><span class="psub">Written ${fmt(rep.date)}${rep.edited ? " · edited" : ""}</span></span><span class="chip neutral">Open</span></button>` : ""}
+    ${t.id === "rom" ? `<button class="ptool gz-again" data-act="startForm" data-tid="${GONIO}" data-pid="${a.pid}">${TOOLS.goniometer.icon}<span><b>Measure with Goniometer</b><small>Camera or phone tilt · adds to today's record</small></span><span class="pro-chip">PRO</span></button>` : ""}
     ${t.tool ? toolResult(a) : `<h2 class="sec">Item scores</h2>
     <div class="tablewrap" tabindex="0" role="region" aria-label="Item scores table"><table><thead><tr><th>Item</th><th class="n">${c ? fmtShort(a.date) : "Score"}</th>${c ? `<th class="n">${fmtShort(c.prev.date)}</th>` : ""}</tr></thead><tbody>
     ${t.fields.map(f => f.t === "head" ? `<tr class="trh"><td colspan="${c ? 3 : 2}">${esc(f.label)}</td></tr>` : (has(a.values[f.id]) || has(pv[f.id])) ? `<tr><td>${esc(f.label)}</td><td class="n">${esc(fmtVal(f, a.values[f.id]))}</td>${c ? `<td class="n muted">${esc(fmtVal(f, pv[f.id]))}</td>` : ""}</tr>` : "").join("")}
@@ -1110,6 +1124,7 @@ async function removePin() {
 }
 
 const ACT = {
+  ...GZ_ACT,
   about: () => go("about"),
   lockNow: () => lockNow(),
   setPin: () => setPin(),

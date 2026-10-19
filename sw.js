@@ -1,7 +1,7 @@
 /* MotionPlus Pro service worker: opens fast and works offline after the first visit.
    Pages are fetched fresh when online (so updates show at once) and fall back to the saved copy offline.
    The pose model, its runtime and the PDF libraries are large and never change at a given address, so they come from the cache first. */
-const VERSION = "mp-2026-10-19";
+const VERSION = "mp-2026-10-19b";
 const PAGES = VERSION + "-pages", STATIC = VERSION + "-static";
 const LIBS = /^https:\/\/(cdnjs\.cloudflare\.com|fonts\.googleapis\.com|fonts\.gstatic\.com)\//;
 
