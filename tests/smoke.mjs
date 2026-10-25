@@ -36,6 +36,13 @@ await p.evaluate(() => go("summary")); await at("summary", "session summary"); a
 await p.click("#bar button:has-text('Explain')"); await at("explain", "explain to patient"); await noHScroll("explain");
 await p.click("#bar button:has-text('Done')"); await p.click("#bar button:has-text('Finish')"); await at("patient", "finish session");
 if (await p.evaluate(() => !!db.session)) fail("finished session is cleared");
+// Goals: write your own, edit it, delete and undo
+await p.evaluate(() => go("patient", db.patients[0].id)); const g0 = await p.evaluate(() => (db.patients[0].goals || []).length);
+await p.click("[data-act=goalNew]"); await at("goal", "goal editor"); await p.fill("#gtext", "Walk to the shops"); await p.click("[data-act=goalSave]"); await at("patient", "goal added");
+await p.click(".goal >> nth=-1"); await p.fill("#gtext", "Walk to the shops and back"); await p.click("[data-act=goalSave]");
+if ((await p.evaluate(() => db.patients[0].goals.at(-1).text)) !== "Walk to the shops and back") fail("goal edits save"); else console.log("ok goal edit");
+await p.click(".goal >> nth=-1"); await p.click("[data-act=goalDel]"); await p.click("#toast .tbtn");
+if ((await p.evaluate(() => db.patients[0].goals.length)) !== g0 + 1) fail("goal delete undoes"); else console.log("ok goal undo");
 await p.evaluate(() => go("settings")); await noHScroll("settings");
 for (const v of ["tools", "library", "today"]) { await p.evaluate(n => go(n), v); await noHScroll(v); }
 await b.close();
