@@ -288,7 +288,7 @@ const SESS_ACT = {
   sessHub: () => { tmStop(); go("sess"); },
   sessFinish: () => go("summary"),
   sessPdf: () => { const s = db.session; makePdf({ pid: s.pid, aids: Object.values(s.done).filter(A), title: "Session Report" }); },
-  sessDone: () => { const pid = db.session.pid; db.session = null; save(); celebrate("Session saved"); go("patient", pid); },
+  sessDone: () => { const pid = db.session.pid; db.session = null; save(); celebrate("Session saved"); go("patient", pid); pilotAsk(); },
   resumeSess: () => go(sessNext() ? "sess" : "summary"),
   explain: d => go("explain", d.pid),
   explainDone: () => { document.body.classList.remove("lightpage"); navNext = "back"; const s = db.session; s && P(s.pid)?.id === view.args[0] ? go("summary") : go("patient", view.args[0]); },

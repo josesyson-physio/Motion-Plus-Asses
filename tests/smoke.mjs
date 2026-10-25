@@ -43,6 +43,10 @@ await p.click(".goal >> nth=-1"); await p.fill("#gtext", "Walk to the shops and 
 if ((await p.evaluate(() => db.patients[0].goals.at(-1).text)) !== "Walk to the shops and back") fail("goal edits save"); else console.log("ok goal edit");
 await p.click(".goal >> nth=-1"); await p.click("[data-act=goalDel]"); await p.click("#toast .tbtn");
 if ((await p.evaluate(() => db.patients[0].goals.length)) !== g0 + 1) fail("goal delete undoes"); else console.log("ok goal undo");
+// Pilot feedback: saved on the phone with screen and phone info, never patient data
+await p.evaluate(() => { ACT.pilot({ v: "on" }); go("today"); }); await p.click(".pilotbar"); await at("feedback", "feedback form");
+await p.fill("#fbtext", "Test note"); await p.click("[data-act=fbSave]"); await at("today", "feedback saved");
+const fb = await p.evaluate(() => db.feedback?.at(-1)); if (!fb || fb.text !== "Test note" || !fb.ctx?.v || JSON.stringify(fb).includes("MP-")) fail("feedback saved without patient data"); else console.log("ok feedback");
 await p.evaluate(() => go("settings")); await noHScroll("settings");
 for (const v of ["tools", "library", "today"]) { await p.evaluate(n => go(n), v); await noHScroll(v); }
 await b.close();

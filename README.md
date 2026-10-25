@@ -80,3 +80,9 @@ To rebuild after editing `src/`, run `python3 build.py`.
 - **Is this change real?:** each result explains whether a change is beyond the MCID or measurement error, whether every item was scored, and whether the assessor or Goniometer method changed. Session summaries label each change.
 - **Clinic vs individual:** in clinic mode, Today shows who is assessing (switch from the team list in Settings) and every record and PDF line carries the assessor. Camera tools ask for consent once per patient.
 - **Offline:** Today shows when the phone is offline; everything still saves on the device.
+
+## Pilot kit
+
+- **Pilot mode** (Settings, Pilot and feedback): Today shows the pilot day and a "Tell us what to fix" button, and after the first session each day the app asks for a one-tap 1 to 5 rating.
+- **Feedback:** choose Something broke, Confusing, Idea or I like this, write a note and optionally rate the day. Each note records the screen, phone type, screen size and app version, never patient details. Notes stay on the phone until the tester taps Send, which opens the share sheet (or the pilot lead's email, or copies the text). "Save all as a file" keeps a copy.
+- **Errors:** while the pilot runs, unexpected app errors are noted (message and screen only, up to 20) so they go out with the feedback.
