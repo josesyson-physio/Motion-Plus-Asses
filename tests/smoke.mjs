@@ -17,13 +17,25 @@ await p.click(".tabs .fab"); if (!(await p.$(".sheet"))) fail("+ opens the sheet
 await p.click(".tabs [data-tab=patients]"); await at("patients", "patients tab"); await p.click(".patient >> nth=0"); await at("patient", "open patient");
 const before = await p.evaluate(() => db.assessments.length);
 await p.click("#bar button"); await p.fill("#libq", "pain"); await p.click(".tool-main >> nth=0"); await at("form", "start assessment");
-await p.click("[data-act=pick] >> nth=3"); await p.waitForTimeout(400);
+await p.click("[data-act=pick] >> nth=3"); await p.waitForTimeout(600); await p.click(".gdots button >> nth=-1");
 if (!(await p.evaluate(() => !!db.draft))) fail("answers autosave as a draft");
 await p.click("#bar button:has-text('Save')"); await at("result", "save assessment");
 if ((await p.evaluate(() => db.assessments.length)) !== before + 1) fail("assessment was saved");
 if (await p.evaluate(() => !!db.draft)) fail("draft cleared after save");
 await p.click("text=Delete this assessment"); await at("patient", "delete returns to patient");
 await p.click("#toast .tbtn"); if ((await p.evaluate(() => db.assessments.length)) !== before + 1) fail("undo restores the assessment"); else console.log("ok undo");
+// Guided session: plan, one page per question with auto-advance, summary, explain page
+await p.evaluate(() => { db.session = null; go("plan", db.patients[0].id); }); await at("plan", "session plan");
+await p.click("#bar .primary"); await at("sess", "session hub");
+const first = await p.evaluate(() => sessNext()); await p.click("#bar .primary");
+if (first === "goniometer" || first === "posture" || first === "gait") await p.evaluate(() => go("sess")); else {
+  await at("form", "first test opens"); if ((await p.evaluate(() => draft.g)) !== 0) fail("test opens one question per page");
+  if (await p.$(".gpage.single [data-act=pick]")) { await p.click(".gpage.single [data-act=pick] >> nth=1"); await p.waitForTimeout(600); if ((await p.evaluate(() => draft.g)) !== 1) fail("choosing an answer moves to the next page"); else console.log("ok auto-advance"); }
+  await p.click(".gdots button >> nth=-1"); await p.click("#bar button:has-text('Save')"); await at("sess", "saving returns to the session"); }
+await p.evaluate(() => go("summary")); await at("summary", "session summary"); await noHScroll("summary");
+await p.click("#bar button:has-text('Explain')"); await at("explain", "explain to patient"); await noHScroll("explain");
+await p.click("#bar button:has-text('Done')"); await p.click("#bar button:has-text('Finish')"); await at("patient", "finish session");
+if (await p.evaluate(() => !!db.session)) fail("finished session is cleared");
 await p.evaluate(() => go("settings")); await noHScroll("settings");
 for (const v of ["tools", "library", "today"]) { await p.evaluate(n => go(n), v); await noHScroll(v); }
 await b.close();

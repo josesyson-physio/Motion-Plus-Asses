@@ -52,7 +52,8 @@ document.addEventListener("keydown", e => {
 function plusSheet() {
   const T = TOOLS, pro = '<span class="pro-chip">PRO</span>';
   openSheet("Start something", `
-    ${sitem(IC.clip, "Start an assessment", "Choose from the test library", 'data-act="library" data-pid=""')}
+    ${sitem(IC.clock, "Start a session", "Plan the visit, then test one page at a time", 'data-act="newSession"')}
+    ${sitem(IC.clip, "Single test", "Choose from the test library", 'data-act="library" data-pid=""')}
     ${sitem(IC.user, "New patient", "Add a patient by code", 'data-act="newPatient"')}
     <div class="sgrid">${Object.values(T).map(k => `<button class="stool" data-act="startForm" data-tid="${k.id}">${k.icon}<b>${k.name.split(" ")[0]}</b>${pro}</button>`).join("")}</div>
     ${sitem(IC.cam, "Form from a photo", "Turn a paper form into a template", 'data-act="builder" data-pid=""')}
@@ -201,20 +202,27 @@ function improving() {
 }
 VIEWS.today = () => {
   chrome("today");
-  const s = db.settings, di = draftInfo(), due = retestsDue(), imp = improving(), wk = db.assessments.filter(a => a.date >= daysAgo(6)).length;
+  const s = db.settings, ss = db.session, sx = ss && P(ss.pid) ? { s: ss, p: P(ss.pid), n: Object.keys(ss.done).length, of: ss.plan.length } : null, di = draftInfo(), due = retestsDue(), imp = improving(), wk = db.assessments.filter(a => a.date >= daysAgo(6)).length;
   const recent = db.assessments.filter(a => P(a.pid)).sort(byDate).reverse().slice(0, 4);
   const where = [s.mode === "solo" ? s.therapist : s.clinic, s.mode === "solo" ? "" : s.branch, new Date().toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })].filter(Boolean).map(esc).join(" · ");
   $("#app").innerHTML = `
   <header class="thead">${RP_MARK("rpmark hm")}<div class="grow"><div class="psub">${where}</div><h1>${greet()}</h1></div>${pinKey ? `<button class="ghost headlock" data-act="lockNow" aria-label="Lock the app">${LOCK_IC}</button>` : ""}</header>
   <div class="stack">
+    ${sx ? `<section class="cont">
+      <div class="crow"><span class="label gold">Session in progress</span><span class="psub">${sx.n} of ${sx.of} tests</span></div>
+      <b class="ctitle">${esc(sx.p.code)}${sx.p.dx ? ` · ${esc(sx.p.dx.slice(0, 40))}` : ""}</b>
+      <div class="pbar" aria-hidden="true"><i style="--w:${Math.round(100 * sx.n / sx.of)}%"></i></div>
+      <div class="chips">${sx.s.plan.map(x => `<span class="chip ${sx.s.done[x] ? "neutral" : ""} soft">${sx.s.done[x] ? "✓ " : ""}${esc(planShort(x))}</span>`).join("")}</div>
+      <div class="actions"><button class="primary" data-act="resumeSess">Continue session</button></div>
+    </section>` : ""}
     ${di ? `<section class="cont">
       <div class="crow"><span class="label gold">${di.editing ? "Continue editing" : "Continue assessment"}</span><span class="psub">${di.pct}% done</span></div>
       <b class="ctitle">${esc(di.p.code)} · ${esc(di.t.name)}</b>
       <div class="pbar" role="progressbar" aria-valuenow="${di.pct}" aria-valuemin="0" aria-valuemax="100" aria-label="Progress"><i style="--w:${di.pct}%"></i></div>
       <div class="actions"><button class="primary" data-act="resume">Continue</button><button data-act="discardDraft">Discard</button></div>
-    </section>` : `<section class="cont idle">
-      <span class="label gold">Ready when you are</span><b class="ctitle">Start with a patient</b>
-      <div class="actions"><button class="primary" data-act="fab">Start something</button><button data-act="tab" data-tab="patients">Patients</button></div>
+    </section>` : sx ? "" : `<section class="cont idle">
+      <span class="label gold">Ready when you are</span><b class="ctitle">Start a session</b>
+      <div class="actions"><button class="primary" data-act="newSession">Start session</button><button data-act="tab" data-tab="patients">Patients</button></div>
     </section>`}
     <div class="stats">
       <div class="stat">${cnum(wk)}<span>Tests this week</span></div>
@@ -238,6 +246,7 @@ const UX_ACT = {
   welcomeDone: () => { db.settings.welcomed = 1; save(); celebrate("All set"); go("today"); },
   resume: () => { draft = JSON.parse(JSON.stringify(db.draft)); go("form"); },
   discardDraft: (d, b) => { const old = db.draft; db.draft = null; save(); undoable("Draft discarded", () => { db.draft = old; }); render(); },
+  formMode: d => { db.settings.formMode = d.v; save(); render(); },
   textSize: d => { db.settings.textSize = +d.v; save(); applyPrefs(); render(); },
   haptics: d => { db.settings.haptics = d.v === "on"; save(); if (d.v === "on") hz("success"); render(); },
   lrPick: d => { if (view.name !== "form" || !draft) return; const t = getTpl(draft), f = t.fields.find(x => x.id === d.f), cur = (draft.values[d.f] || {})[d.k];

@@ -139,7 +139,7 @@ async function previewPdf(filename, blob) {
 
 /* ---------- Chrome ---------- */
 let view = {};
-function go(name, ...args) { if (name !== "tool") { document.body.classList.remove("toolmode"); toolCtx = null; } if (name !== "gonio") gzStop(); closeSheet(true);
+function go(name, ...args) { if (name !== "tool") { document.body.classList.remove("toolmode"); toolCtx = null; } if (name !== "gonio") gzStop(); if (name !== "explain") document.body.classList.remove("lightpage"); closeSheet(true); tmStop();
   const was = navKey(); if (was) navScroll[was] = scrollY; const dir = navDir(name);
   view = { name, args }; render(); window.scrollTo(0, dir === "back" ? navScroll[navKey()] || 0 : 0); animateNav(dir); const h = $("#app h1")?.textContent.trim(); document.title = h && h !== "Home" ? `${h} · MotionPlus Pro` : "MotionPlus Pro"; }
 function render() { (VIEWS[view.name] || VIEWS.patients)(...(view.args || [])); }
@@ -209,7 +209,7 @@ VIEWS.patient = id => {
   const charts = tids.map(tid => { const s = series(id, tid); if (s.length < 2) return ""; const t = getTpl(as.find(a => a.tid === tid)), d = Math.round((s.at(-1).val - s[0].val) * 100) / 100;
     const better = t.hb === undefined ? null : t.hb ? d > 0 : d < 0;
     return `<div class="chart"><div class="chead"><b>${esc(t.name)}</b><span class="chip ${better === null || d === 0 ? "neutral" : better ? "good" : "bad"}">${d > 0 ? "+" : ""}${d}${t.unit ? " " + esc(t.unit) : ""} since ${fmtShort(s[0].date)}</span></div>${chartSVG(s, t)}</div>`; }).join("");
-  chrome(null, `<button class="primary wide" data-act="library" data-pid="${id}">+ New assessment</button>`);
+  chrome(null, `<button data-act="library" data-pid="${id}">+ Single test</button><button class="primary wide" data-act="newSession" data-pid="${id}">${db.session?.pid === id ? "Continue session" : "Start session"}</button>`);
   $("#app").innerHTML = `
   <header>${back("tab", 'data-tab="patients"')}<h1>${esc(p.code)}</h1><button class="ghost" data-act="editPatient" data-id="${id}">Edit</button></header>
   <div class="stack">
@@ -219,13 +219,14 @@ VIEWS.patient = id => {
       <button data-act="aiProgress" data-id="${id}" ${as.length ? "" : "disabled"}>✦ AI progress report</button>
       <button data-act="pdfPatient" data-id="${id}" ${as.length ? "" : "disabled"}>PDF summary</button>
       <button data-act="transfer" data-id="${id}">Transfer</button>
+      <button data-act="explain" data-pid="${id}" ${as.length ? "" : "disabled"}>Explain to patient</button>
     </div>
     <div class="ptools" role="group" aria-label="MotionPlus Tools">${Object.values(TOOLS).map(k => `<button class="ptool" data-act="startForm" data-tid="${k.id}" data-pid="${id}">${k.icon}<span><b>${k.name.split(" ")[0]}</b><small>${k.tag}</small></span><span class="pro-chip">PRO</span></button>`).join("")}</div>
     <label class="filebtn">${IC.up}<span>Upload old report to compare</span><input type="file" class="oldrep" accept="application/pdf,.pdf" aria-label="Upload an old MotionPlus PDF report"></label>
     ${charts ? `<h2 class="sec">Progress</h2>${charts}` : ""}
-    <h2 class="sec">Assessments</h2>
-    <div>${as.map(a => { const t = getTpl(a), r = runScore(t, a.values, p); return `<button class="hist" data-act="result" data-id="${a.id}">
-      <span class="grow"><b>${esc(t?.name || "Assessment")}</b><span class="psub">${fmt(a.date)} · ${esc(r.txt)}</span></span>${chip(r.band)}</button>`; }).join("") || `<div class="empty">No assessments yet. Tap New assessment to start one.</div>`}</div>
+    <h2 class="sec">Timeline</h2>
+    <div class="tl">${[...new Set(as.map(a => a.date))].map(d => `<section class="tlv"><h3><span>${fmt(d)}</span><small>${as.filter(a => a.date === d).length} test${as.filter(a => a.date === d).length > 1 ? "s" : ""}</small></h3>${as.filter(a => a.date === d).map(a => { const t = getTpl(a), r = runScore(t, a.values, p); return `<button class="hist" data-act="result" data-id="${a.id}">
+      <span class="grow"><b>${esc(t?.name || "Assessment")}</b><span class="psub">${esc(r.txt)}</span></span>${chip(r.band)}</button>`; }).join("")}</section>`).join("") || `<div class="empty">No assessments yet. Tap Start session to begin.</div>`}</div>
     ${reps.length ? `<h2 class="sec">Reports</h2><div>${reps.map(r => `<button class="hist" data-act="report" data-id="${r.id}"><span class="grow"><b>${r.kind === "progress" ? "Progress report" : "Assessment report"}</b><span class="psub">${fmt(r.date)} · ${r.aids.length} assessment${r.aids.length > 1 ? "s" : ""}${r.edited ? " · edited" : ""}</span></span><span class="chip neutral">${r.basic ? "Standard" : "AI draft"}</span></button>`).join("")}</div>` : ""}
     <div class="danger"><button class="link-danger" data-act="delPatient" data-id="${id}">Delete patient and all records</button></div>
   </div>`;
@@ -276,9 +277,9 @@ function listTemplates(pid) {
 }
 
 VIEWS.pickPatient = tid => {
-  const t = tid === GONIO ? { name: "Goniometer", tool: GONIO } : allTpl().find(x => x.id === tid);
+  const t = tid === GONIO ? { name: "Goniometer", tool: GONIO } : tid === "session" ? { name: "a session" } : allTpl().find(x => x.id === tid);
   chrome(null, `<button class="primary wide" data-act="newPatient" data-then="${tid}">+ New patient</button>`);
-  $("#app").innerHTML = `<header>${back("tab", `data-tab="${t.tool ? "tools" : "library"}"`)}<h1>Which patient?</h1></header>
+  $("#app").innerHTML = `<header>${back("tab", `data-tab="${t.tool ? "tools" : tid === "session" ? "today" : "library"}"`)}<h1>Which patient?</h1></header>
   <div class="stack"><div class="psub">Starting ${esc(t.name)}</div>
   ${db.patients.map(p => `<button class="patient" data-act="startForm" data-tid="${tid}" data-pid="${p.id}"><span class="avatar">${esc(p.code.split("-").pop())}</span><span class="pmeta"><span class="pname">${esc(p.code)}</span><span class="psub">${esc(p.age)} · ${esc(p.sex)} · ${esc(p.dx)}</span></span></button>`).join("") || `<div class="empty">No patients yet. Add one to start.</div>`}</div>`;
 };
@@ -379,7 +380,7 @@ function toolSaved(m) {
   const rec = old ? { ...old, values, date } : { id: uid(), pid, tid: kind, date, values, notes: "", created: Date.now() };
   if (old) db.assessments[db.assessments.indexOf(old)] = rec; else db.assessments.push(rec);
   if (!save()) return;
-  toast(`${TOOLS[kind].name} saved to ${P(pid).code}`); go("result", rec.id);
+  toast(`${TOOLS[kind].name} saved to ${P(pid).code}`); if (!sessNote(kind, pid, rec.id)) go("result", rec.id);
 }
 addEventListener("message", e => {
   const f = $("#toolFrame"); if (!f || !toolCtx || e.source !== f.contentWindow) return;
@@ -392,10 +393,12 @@ addEventListener("message", e => {
 });
 
 /*GONIO*/
+/*SESSION*/
 
 /* ---------- Assessment form ---------- */
 let draft = null;
 function startForm(pid, tid, aid) {
+  if (tid === "session") return go("plan", pid);
   if (tid === GONIO) return go("gonio", pid);
   const tt = TPLMAP[aid ? A(aid)?.tid : tid];
   if (tt?.tool) return go("tool", tt.tool, aid ? A(aid).pid : pid, aid || null);
@@ -403,13 +406,15 @@ function startForm(pid, tid, aid) {
   else { const t = allTpl().find(x => x.id === tid); draft = { id: uid(), pid, tid, date: today(), values: {}, notes: "", created: Date.now() };
     if (t.custom) draft.tpl = db.templates.find(x => x.id === tid);
     t.fields.forEach(f => { if (f.def != null) draft.values[f.id] = String(f.def); }); }
+  if (db.settings.formMode !== "list") draft.g = aid ? gSteps(getTpl(draft)).length - 1 : 0; else draft.g = null;
   go("form");
 }
 VIEWS.form = () => {
+  if (draft.g != null) return VIEWS.gform();
   const t = getTpl(draft), p = P(draft.pid);
   chrome(null, `<div class="score" id="live" aria-live="polite" aria-atomic="true"></div><button class="primary" data-act="saveA">Save</button>`);
   $("#app").innerHTML = `
-  <header>${back(draft.created && A(draft.id) ? "result" : "library", A(draft.id) ? `data-id="${draft.id}"` : `data-pid="${draft.pid}"`)}<h1>${esc(t.name)}</h1></header>
+  <header>${back(draft.created && A(draft.id) ? "result" : "library", A(draft.id) ? `data-id="${draft.id}"` : `data-pid="${draft.pid}"`)}<h1>${esc(t.name)}</h1><button class="ghost" data-act="gPaged">One per page</button></header>
   <div class="stack">
     <div class="psub">${esc(p.code)} · ${esc(p.age)} yrs · ${esc(p.sex)}</div>
     ${t.lic ? `<p class="note lic">${esc(t.lic)}</p>` : ""}
@@ -445,6 +450,7 @@ const isLR = f => f && (f.t === "lrnum" || f.t === "lrsel");
 function formFields(t, v) { return t.fields.map((f, i) => (isLR(f) && !isLR(t.fields[i - 1]) ? `<div class="lrrow lrhead" aria-hidden="true"><span></span><span>Left</span><span>Right</span></div>` : "") + fieldHTML(f, v[f.id])).join(""); }
 function updateLive() {
   const el = $("#live"); if (!el || !draft) return; const t = getTpl(draft), r = runScore(t, draft.values, P(draft.pid));
+  const gb = $("#gbig"); if (gb) { gb.textContent = r.txt; $("#gband").innerHTML = chip(r.band); }
   el.innerHTML = `<b>${esc(r.txt)}</b><span>${r.of ? `${r.done}/${r.of} scored` : ""}${r.of && !r.done ? "" : `${r.of ? " · " : ""}${esc(r.band?.[0] || "")}`}</span>`;
 }
 function setVal(fid, k, val) {
@@ -823,6 +829,8 @@ VIEWS.settings = () => {
     <div class="card list">
       <div class="srow"><span class="grow"><b>How you use MotionPlus</b><small>${s.mode === "solo" ? "Just you: your name goes on reports." : "A clinic: the clinic name and branch go on reports."}</small></span></div>
       <div class="segc" role="group" aria-label="How you use MotionPlus">${[["clinic", "Clinic"], ["solo", "Individual"]].map(([v, l]) => `<button data-act="setMode" data-v="${v}" aria-pressed="${(s.mode || "clinic") === v}">${l}</button>`).join("")}</div>
+      <div class="srow"><span class="grow"><b>Assessment style</b><small>One question per page with tips, or every question on one page.</small></span></div>
+      <div class="segc" role="group" aria-label="Assessment style">${[["guided", "One per page"], ["list", "All on one page"]].map(([v, l]) => `<button data-act="formMode" data-v="${v}" aria-pressed="${(s.formMode || "guided") === v}">${l}</button>`).join("")}</div>
       <div class="srow"><span class="grow"><b>Haptics</b><small>A short pulse when something is saved or needs attention. Android phones only; iPhone browsers don't allow it.</small></span>
         <button class="switch" role="switch" aria-checked="${s.haptics !== false}" data-act="haptics" data-v="${s.haptics === false ? "on" : "off"}" aria-label="Haptics"><i></i></button></div>
       <div class="srow"><span class="grow"><b>Text size</b><small>Makes every screen larger or smaller.</small></span></div>
@@ -1138,6 +1146,7 @@ async function removePin() {
 const ACT = {
   ...GZ_ACT,
   ...UX_ACT,
+  ...SESS_ACT,
   toastAct: () => { const fn = toast.fn; $("#toast").hidden = true; toast.fn = null; fn?.(); },
   about: () => go("about"),
   lockNow: () => lockNow(),
@@ -1166,12 +1175,14 @@ const ACT = {
   startForm: d => d.pid ? startForm(d.pid, d.tid) : db.patients.length ? go("pickPatient", d.tid) : go("editPatient", null, d.tid),
   pick: (d, b) => { const t = getTpl(draft), f = t.fields.find(x => x.id === d.f), v = f.t === "scale" ? +d.v : d.v;
     const same = String(draft.values[d.f]) === String(v); setVal(d.f, null, same ? "" : v);
-    b.parentNode.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", !same && x === b)); },
+    b.parentNode.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", !same && x === b));
+    if (!same && draft.g != null && view.name === "form") { hz("tick"); const g = draft.g; setTimeout(() => { if (draft?.g === g && view.name === "form") gMove(g + 1); }, 280); } },
   toggle: (d, b) => { const cur = draft.values[d.f] || [], on = cur.includes(d.v); const nx = on ? cur.filter(x => x !== d.v) : [...cur, d.v]; setVal(d.f, null, nx.length ? nx : ""); b.setAttribute("aria-pressed", !on); },
   saveA: () => { draft.date = $("#adate").value || today(); draft.notes = $("#anotes").value.trim();
     if (!Object.keys(draft.values).some(k => { const f = getTpl(draft).fields.find(x => x.id === k); return f?.def == null || String(draft.values[k]) !== String(f.def); }) && !draft.notes) { toast("Record at least one item before saving."); return; }
     const i = db.assessments.findIndex(a => a.id === draft.id); if (i >= 0) db.assessments[i] = draft; else db.assessments.push(draft);
-    db.draft = null; if (!save()) return; celebrate("Assessment saved"); const id = draft.id; draft = null; go("result", id); },
+    db.draft = null; if (!save()) return; celebrate("Assessment saved"); const id = draft.id, sid = draft.sid, tid = draft.tid, pid = draft.pid; draft = null; tmStop();
+    if (!(sid && sessNote(tid, pid, id, sid))) go("result", id); },
   result: d => go("result", d.id),
   editA: d => startForm(null, null, d.id),
   delA: d => { const a = A(d.id), snap = { a: db.assessments.slice(), r: db.reports.slice() }; db.assessments = db.assessments.filter(x => x.id !== d.id); db.reports = db.reports.filter(r => !r.aids.includes(d.id) || r.kind === "progress"); save();
