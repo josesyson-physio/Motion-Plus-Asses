@@ -53,3 +53,13 @@ It is a plain static site, so any web host serves it. With GitHub Pages turned o
 | `build.py` | Rebuilds `index.html` and `posture/index.html` from `src/` |
 
 To rebuild after editing `src/`, run `python3 build.py`.
+
+## App feel (premium redesign, stage 1)
+
+- **Welcome:** three screens on first open: clinic or individual use, the privacy promise, and the details printed on reports.
+- **Today:** the home tab. It shows the assessment in progress, re-tests due (same test 4+ weeks ago), weekly counts and recent results. The gold **+** in the tab bar opens a sheet to start anything.
+- **Native feel:** screen slides (forward, back, tab fade), remembered scroll, the phone's back button steps back inside the app, edge-swipe back in the installed iPhone app, bottom sheets instead of drop-downs, segmented controls, count-ups, chart draw-in, and a save tick. Everything follows the phone's Reduce Motion setting.
+- **Haptics:** single short pulses on save, warnings and deletes (Android; iPhone browsers don't allow vibration). They can be turned off in Settings.
+- **Reliability:** every answer autosaves as a draft, deletes can be undone for 5 seconds, and a banner offers a restart when a new version has installed.
+- **Accessibility:** brighter secondary text, a text-size setting (Small to Largest), live score announcements for screen readers.
+- **Tests:** `tests/smoke.mjs` walks the main path on a phone-sized screen. CI runs it on every pull request and checks that `index.html` was rebuilt from `src/`.

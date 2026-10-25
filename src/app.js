@@ -64,7 +64,9 @@ const fmtShort = d => new Date(d + "T00:00").toLocaleDateString(undefined, { day
 const byDate = (a, b) => a.date.localeCompare(b.date) || (a.created || 0) - (b.created || 0);
 const P = id => db.patients.find(p => p.id === id);
 const A = id => db.assessments.find(a => a.id === id);
-function toast(m) { const t = $("#toast"); t.textContent = m; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 2600); }
+function toast(m, action) { const t = $("#toast"); t.textContent = m; toast.fn = action?.fn || null;
+  if (action) { const b = document.createElement("button"); b.className = "tbtn"; b.dataset.act = "toastAct"; b.textContent = action.label; t.append(b); }
+  t.classList.toggle("act", !!action); t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => { t.hidden = true; toast.fn = null; }, action ? 5000 : 2600); }
 
 const hydCache = new Map();
 function hydrate(raw) { if (!raw) return null; const k = raw.id + ":" + (raw.v || 0); if (!hydCache.has(k)) hydCache.set(k, T(JSON.parse(JSON.stringify(raw)))); return hydCache.get(k); }
@@ -137,7 +139,9 @@ async function previewPdf(filename, blob) {
 
 /* ---------- Chrome ---------- */
 let view = {};
-function go(name, ...args) { if (name !== "tool") { document.body.classList.remove("toolmode"); toolCtx = null; } if (name !== "gonio") gzStop(); view = { name, args }; render(); window.scrollTo(0, 0); const h = $("#app h1")?.textContent.trim(); document.title = h && h !== "Home" ? `${h} · MotionPlus Pro` : "MotionPlus Pro"; }
+function go(name, ...args) { if (name !== "tool") { document.body.classList.remove("toolmode"); toolCtx = null; } if (name !== "gonio") gzStop(); closeSheet(true);
+  const was = navKey(); if (was) navScroll[was] = scrollY; const dir = navDir(name);
+  view = { name, args }; render(); window.scrollTo(0, dir === "back" ? navScroll[navKey()] || 0 : 0); animateNav(dir); const h = $("#app h1")?.textContent.trim(); document.title = h && h !== "Home" ? `${h} · MotionPlus Pro` : "MotionPlus Pro"; }
 function render() { (VIEWS[view.name] || VIEWS.patients)(...(view.args || [])); }
 function chrome(tab, barHtml) {
   $("#tabs").hidden = !tab; $("#bar").hidden = !barHtml; $("#barIn").innerHTML = barHtml || "";
@@ -147,24 +151,21 @@ function chrome(tab, barHtml) {
 const back = (act, extra = "") => `<button class="back" data-act="${act}" ${extra} aria-label="Back">‹</button>`;
 const brand = () => `<div class="brand">MOTIONPLUS <b class="pro">PRO</b>${db.settings.clinic ? " · " + esc(db.settings.clinic).toUpperCase() : ""}</div>`;
 const LOCK_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
-const topHead = (title, right = "") => `<header><img class="mark" src="${MP_LOGO}" alt="MotionPlus Physio"><div class="grow">${brand()}<h1>${title}</h1></div>${right}${pinKey ? `<button class="ghost headlock" data-act="lockNow" aria-label="Lock the app">${LOCK_IC}</button>` : ""}</header>`;
-const IC = { up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 18v-6M9 15l3-3 3 3"/></svg>', user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.6-3.6 3.2-5.5 6.5-5.5 1.6 0 3 .4 4.1 1.2M18 14v6M15 17h6"/></svg>', clip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 3.5V2.5h6v1M8.5 9h7M8.5 12.5h7M8.5 16h4"/></svg>', cam: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>' };
+const topHead = (title, right = "") => `<header>${RP_MARK("rpmark hm")}<div class="grow">${brand()}<h1>${title}</h1></div>${right}${pinKey ? `<button class="ghost headlock" data-act="lockNow" aria-label="Lock the app">${LOCK_IC}</button>` : ""}</header>`;
+const IC = { up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 18v-6M9 15l3-3 3 3"/></svg>', user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.6-3.6 3.2-5.5 6.5-5.5 1.6 0 3 .4 4.1 1.2M18 14v6M15 17h6"/></svg>', clip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 3.5V2.5h6v1M8.5 9h7M8.5 12.5h7M8.5 16h4"/></svg>', cam: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>' };
 
 /* ---------- Views ---------- */
 const VIEWS = {};
+/*UX*/
 let q = "", libQ = "", libDisc = "All";
 
 VIEWS.patients = () => {
   chrome("patients");
   $("#app").innerHTML = `
-  ${topHead("Home", `<button class="ghost" data-act="about">About</button>`)}
+  ${topHead("Patients", `<button class="ghost" data-act="newPatient">+ New</button>`)}
   <div class="stack">
-    <section class="hero"><div><div class="label">${esc(db.settings.branch || "MotionPlus Pro")}</div><h2>Assess. Track. <em>Report.</em></h2><p class="note">${db.settings.therapist ? `Signed in as ${esc(db.settings.therapist)}` : "Digital rehab assessments for every discipline."}</p></div><img src="${MP_LOGO}" alt=""></section>
-    <div class="stats"><div class="stat"><b>${db.patients.length}</b><span>Patients</span></div><div class="stat"><b>${db.assessments.filter(a => a.date >= daysAgo(30)).length}</b><span>Tests, 30 days</span></div><div class="stat"><b>${db.reports.length}</b><span>AI reports</span></div></div>
-    <div class="quick"><button class="primary" data-act="newPatient">${IC.user}New patient</button><button data-act="tab" data-tab="library">${IC.clip}Start a test</button><button data-act="builder" data-pid="">${IC.cam}Form from photo</button><label class="qfile">${IC.up}<span>Upload old report</span><input type="file" class="oldrep" accept="application/pdf,.pdf" aria-label="Upload an old MotionPlus PDF report"></label></div>
-    ${toolsPromo()}
-    <h2 class="sec">Patients</h2>
-    <input id="q" type="search" placeholder="Search by code or diagnosis" value="${esc(q)}" aria-label="Search patients">
+    <input id="q" type="search" placeholder="Search ${db.patients.length} patients by code or diagnosis" value="${esc(q)}" aria-label="Search patients">
     <div class="stack" id="plist"></div>
   </div>`;
   listPatients();
@@ -191,7 +192,7 @@ VIEWS.editPatient = (id, thenTid) => {
     <p class="note">Patients are identified by code only. Don't enter names or contact details.</p>
     <div class="field"><label class="label" for="pcode">Patient code</label><input id="pcode" value="${esc(p.code)}" autocomplete="off"></div>
     <div class="row2"><div class="field"><label class="label" for="page">Age (years)</label><input id="page" type="number" inputmode="decimal" min="0" max="120" value="${esc(p.age)}"></div>
-      <div class="field"><label class="label" for="psex">Sex</label><select id="psex">${["F", "M", "Other"].map(s => `<option ${p.sex === s ? "selected" : ""}>${s}</option>`).join("")}</select></div></div>
+      <div class="field"><span class="label" id="psexl">Sex</span><input type="hidden" id="psex" value="${esc(p.sex)}"><div class="segc" role="group" aria-labelledby="psexl">${[["F", "Female"], ["M", "Male"], ["Other", "Other"]].map(([v, l]) => `<button type="button" data-act="setSex" data-v="${v}" aria-pressed="${p.sex === v}">${l}</button>`).join("")}</div></div></div>
     <div class="field"><label class="label" for="pdx">Diagnosis or reason for referral</label><input id="pdx" value="${esc(p.dx)}" placeholder="e.g. Right TKR, post-op week 2"></div>
     <div class="row2"><div class="field"><label class="label" for="pref">Referred by</label><input id="pref" value="${esc(p.ref)}"></div>
       <div class="field"><label class="label" for="pbr">Branch</label><input id="pbr" value="${esc(p.branch)}"></div></div>
@@ -201,7 +202,7 @@ VIEWS.editPatient = (id, thenTid) => {
 function nextCodePreview() { const s = db.settings; let n = s.next, c; do { c = `${s.prefix || "MP"}-${String(n++).padStart(4, "0")}`; } while (db.patients.some(p => p.code === c)); return c; }
 
 VIEWS.patient = id => {
-  const p = P(id); if (!p) return go("patients");
+  const p = P(id); if (!p) return go("today");
   const as = db.assessments.filter(a => a.pid === id).sort(byDate).reverse();
   const reps = db.reports.filter(r => r.pid === id).sort((a, b) => b.date.localeCompare(a.date));
   const tids = [...new Set(as.map(a => a.tid))];
@@ -247,7 +248,7 @@ function chartSVG(s, t) {
   const area = line + ` L${pts.at(-1)[0]},${y(lo)} L${pts[0][0]},${y(lo)} Z`;
   const dots = pts.map((p, i) => `<circle cx="${p[0]}" cy="${p[1]}" r="${i === pts.length - 1 ? 5 : 3.5}" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>${i === 0 || i === pts.length - 1 || s.length <= 5 ? `<text x="${p[0]}" y="${H - 8}" text-anchor="${i === 0 ? "start" : i === pts.length - 1 ? "end" : "middle"}" class="ax">${fmtShort(p[2].date)}</text>` : ""}`).join("");
   const last = pts.at(-1);
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t.name)} over time">${grid}<path d="${area}" fill="var(--accent)" opacity=".1"/><path d="${line}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>${dots}<text x="${last[0] - 9}" y="${last[1] - 9}" text-anchor="end" class="ax strong">${nice(last[2].val)}</text></svg>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t.name)} over time">${grid}<path d="${area}" fill="var(--accent)" opacity=".1"/><path class="cline" d="${line}" pathLength="1" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>${dots}<text x="${last[0] - 9}" y="${last[1] - 9}" text-anchor="end" class="ax strong">${nice(last[2].val)}</text></svg>`;
 }
 
 VIEWS.library = pid => {
@@ -406,14 +407,15 @@ function startForm(pid, tid, aid) {
 }
 VIEWS.form = () => {
   const t = getTpl(draft), p = P(draft.pid);
-  chrome(null, `<div class="score" id="live"></div><button class="primary" data-act="saveA">Save</button>`);
+  chrome(null, `<div class="score" id="live" aria-live="polite" aria-atomic="true"></div><button class="primary" data-act="saveA">Save</button>`);
   $("#app").innerHTML = `
   <header>${back(draft.created && A(draft.id) ? "result" : "library", A(draft.id) ? `data-id="${draft.id}"` : `data-pid="${draft.pid}"`)}<h1>${esc(t.name)}</h1></header>
   <div class="stack">
     <div class="psub">${esc(p.code)} · ${esc(p.age)} yrs · ${esc(p.sex)}</div>
     ${t.lic ? `<p class="note lic">${esc(t.lic)}</p>` : ""}
-    <div class="field"><label class="label" for="adate">Assessment date</label><input id="adate" type="date" value="${draft.date}" max="${today()}"></div>
-    <p class="note">${esc(t.desc)} You can backdate this to enter a paper form later.</p>
+    <div class="field"><span class="label" id="adatel">Assessment date</span><div class="segc dates" role="group" aria-labelledby="adatel">${[[today(), "Today"], [daysAgo(1), "Yesterday"]].map(([v, l]) => `<button type="button" data-act="pickDate" data-v="${v}" aria-pressed="${draft.date === v}">${l}</button>`).join("")}
+      <label id="adatelab" class="${[today(), daysAgo(1)].includes(draft.date) ? "" : "on"}"><span>${[today(), daysAgo(1)].includes(draft.date) ? "Earlier…" : fmtShort(draft.date)}</span><input id="adate" type="date" value="${draft.date}" max="${today()}" aria-label="Choose an earlier date"></label></div></div>
+    <p class="note">${esc(t.desc)} Pick an earlier date to enter a paper form later. Every answer is saved as you go.</p>
   </div>
   <div class="form">${formFields(t, draft.values)}</div>
   <div class="field" style="margin-top:18px"><label class="label" for="anotes">Clinical notes and observations</label><textarea id="anotes" rows="4" placeholder="Quality of movement, compensations, patient comments, safety">${esc(draft.notes)}</textarea></div>`;
@@ -432,7 +434,7 @@ function fieldHTML(f, x) {
   if (f.t === "lrnum" || f.t === "lrsel") {
     const v = x || {}; const ctl = side => f.t === "lrnum"
       ? `<input id="i_${id}_${side}" data-f="${id}" data-k="${side}" type="number" inputmode="decimal" step="any" value="${esc(v[side] ?? "")}" aria-label="${esc(f.label)} ${side === "L" ? "left" : "right"}">`
-      : `<select id="i_${id}_${side}" data-f="${id}" data-k="${side}" aria-label="${esc(f.label)} ${side === "L" ? "left" : "right"}"><option value="">–</option>${f.opts.map(o => `<option ${v[side] === o ? "selected" : ""}>${esc(o)}</option>`).join("")}</select>`;
+      : `<button type="button" class="lrbtn${v[side] ? " set" : ""}" id="i_${id}_${side}" data-act="lrPick" data-f="${id}" data-k="${side}" aria-label="${esc(f.label)} ${side === "L" ? "left" : "right"}">${esc(v[side] || "–")}</button>`;
     return `<div class="lrrow"><span>${esc(f.label)}${f.normal != null ? `<small>Normal ${f.normal}${esc(f.unit)}</small>` : f.unit ? `<small>${esc(f.unit)}</small>` : ""}</span>${ctl("L")}${ctl("R")}</div>`;
   }
   if (f.t === "text") return `<div class="item"><label class="ilabel" for="i_${id}">${esc(f.label)}</label><input id="i_${id}" data-f="${id}" value="${esc(x ?? "")}"></div>`;
@@ -449,7 +451,7 @@ function setVal(fid, k, val) {
   const v = draft.values;
   if (k) { const o = { ...(v[fid] || {}) }; if (val === "") delete o[k]; else o[k] = val; if (Object.keys(o).length) v[fid] = o; else delete v[fid]; }
   else if (val === "" || val == null) delete v[fid]; else v[fid] = val;
-  updateLive();
+  updateLive(); keepDraft();
 }
 
 // Tool records read as findings, focus areas and measures instead of an item table.
@@ -461,7 +463,7 @@ function toolResult(a) {
     ${me.length ? `<h2 class="sec">Key measures</h2><div class="measures">${me.map(x => { const m = x.match(/^(.*?): (.*?) \((\w+)\)$/); return m ? `<div class="mrow"><span>${esc(m[1])}</span><b>${esc(m[2])}</b><i class="mdot ${st(x) === "neutral" ? (m[3] === "Treat" ? "bad" : "warn") : st(x)}" title="${esc(m[3])}"></i></div>` : `<div class="mrow"><span>${esc(x)}</span></div>`; }).join("")}</div>` : ""}`;
 }
 VIEWS.result = aid => {
-  const a = A(aid); if (!a) return go("patients"); const t = getTpl(a), p = P(a.pid), r = runScore(t, a.values, p), c = compare(t, a, p);
+  const a = A(aid); if (!a) return go("today"); const t = getTpl(a), p = P(a.pid), r = runScore(t, a.values, p), c = compare(t, a, p);
   const s = series(a.pid, a.tid), rep = db.reports.find(x => x.kind === "single" && x.aids[0] === aid);
   const pv = c?.prev?.values || {};
   chrome(null, `<button data-act="editA" data-id="${aid}">${t.tool ? "Open in Tools" : "Edit"}</button><button data-act="aiSingle" data-id="${aid}">✦ AI report</button><button class="primary" data-act="pdfA" data-id="${aid}">PDF</button>`);
@@ -612,7 +614,7 @@ function md(s) {
 }
 let editingReport = false;
 VIEWS.report = rid => {
-  const rep = db.reports.find(r => r.id === rid); if (!rep) return go("patients"); const p = P(rep.pid), s = db.settings;
+  const rep = db.reports.find(r => r.id === rid); if (!rep) return go("today"); const p = P(rep.pid), s = db.settings;
   const live = streaming?.id === rid;
   chrome(null, live ? `<div class="score"><b>Writing…</b><span>Claude is drafting the report</span></div><button data-act="stopAI">Stop</button>`
     : editingReport ? `<button data-act="cancelEdit">Cancel</button><button class="primary" data-act="saveEdit" data-id="${rid}">Save text</button>`
@@ -804,8 +806,8 @@ VIEWS.settings = () => {
   $("#app").innerHTML = `
   ${topHead("Settings")}
   <div class="stack">
-    <h2 class="sec">Clinic</h2>
-    <div class="field"><label class="label" for="sclinic">Clinic name (shown on reports)</label><input id="sclinic" data-s="clinic" value="${esc(s.clinic)}" placeholder="e.g. Sunrise Rehab Centre"></div>
+    <h2 class="sec">${s.mode === "solo" ? "Your practice" : "Clinic"}</h2>
+    <div class="field"><label class="label" for="sclinic">${s.mode === "solo" ? "Practice name (shown on reports)" : "Clinic name (shown on reports)"}</label><input id="sclinic" data-s="clinic" value="${esc(s.clinic)}" placeholder="e.g. Sunrise Rehab Centre"></div>
     <div class="row2"><div class="field"><label class="label" for="sbranch">Branch</label><input id="sbranch" data-s="branch" value="${esc(s.branch)}"></div>
       <div class="field"><label class="label" for="sther">Clinician name</label><input id="sther" data-s="therapist" value="${esc(s.therapist)}" placeholder="Shown as assessor"></div></div>
     <div class="logo-row">${s.logo ? `<img src="${s.logo}" alt="Clinic logo" class="logo-prev">` : `<div class="logo-prev empty-logo">No logo</div>`}
@@ -816,6 +818,16 @@ VIEWS.settings = () => {
     <div class="field"><label class="label" for="saddr">Clinic address</label><input id="saddr" data-s="address" autocomplete="off" value="${esc(s.address)}"></div>
     <p class="note">Phone, email and address are printed in the footer of every PDF report page. Leave them empty to keep them off.</p>
     <div class="field"><label class="label" for="sprefix">Patient code prefix</label><input id="sprefix" data-s="prefix" value="${esc(s.prefix)}" maxlength="10"><span class="note">Next code: ${esc(nextCodePreview())}. Use a branch prefix like MP-B2 to keep codes unique across branches.</span></div>
+
+    <h2 class="sec">Experience</h2>
+    <div class="card list">
+      <div class="srow"><span class="grow"><b>How you use MotionPlus</b><small>${s.mode === "solo" ? "Just you: your name goes on reports." : "A clinic: the clinic name and branch go on reports."}</small></span></div>
+      <div class="segc" role="group" aria-label="How you use MotionPlus">${[["clinic", "Clinic"], ["solo", "Individual"]].map(([v, l]) => `<button data-act="setMode" data-v="${v}" aria-pressed="${(s.mode || "clinic") === v}">${l}</button>`).join("")}</div>
+      <div class="srow"><span class="grow"><b>Haptics</b><small>A short pulse when something is saved or needs attention. Android phones only; iPhone browsers don't allow it.</small></span>
+        <button class="switch" role="switch" aria-checked="${s.haptics !== false}" data-act="haptics" data-v="${s.haptics === false ? "on" : "off"}" aria-label="Haptics"><i></i></button></div>
+      <div class="srow"><span class="grow"><b>Text size</b><small>Makes every screen larger or smaller.</small></span></div>
+      <div class="segc" role="group" aria-label="Text size">${[[0.92, "Small"], [1, "Default"], [1.12, "Large"], [1.25, "Largest"]].map(([v, l]) => `<button data-act="textSize" data-v="${v}" aria-pressed="${(s.textSize || 1) === v}" style="font-size:${Math.round(14 * v)}px">${l}</button>`).join("")}</div>
+    </div>
 
     <h2 class="sec">PIN lock</h2>
     <p class="note">${pinKey ? "On. Records on this device are encrypted and the app asks for the PIN when it opens, after 5 minutes in the background, or after 10 minutes without use." : "Off. Anyone holding this device can open the records. Turn on a PIN to encrypt them on this device."} If the PIN is forgotten, records can only come back from a backup file.</p>
@@ -990,7 +1002,7 @@ function pdfChart(doc, x, y, w, h, s, t, C) {
 
 /* ---------- Events ---------- */
 const confirmArm = {};
-function armed(key, btn, label) { if (confirmArm[key] && Date.now() - confirmArm[key] < 4000) return true; confirmArm[key] = Date.now(); btn.textContent = label; return false; }
+function armed(key, btn, label) { if (confirmArm[key] && Date.now() - confirmArm[key] < 4000) return true; confirmArm[key] = Date.now(); hz("warn"); btn.textContent = label; return false; }
 /* ---------- Checking imported records ---------- */
 // Backup files and uploaded PDF reports can come from anywhere, so each record is checked before it is stored:
 // ids and dates must be plain, text stays text, numbers stay numbers, and anything else is left out.
@@ -1074,7 +1086,7 @@ async function importReport(file) {
 let lockMsg = "";
 VIEWS.lock = () => {
   chrome(null);
-  $("#app").innerHTML = `<div class="lock"><img src="${MP_LOGO}" alt="MotionPlus Physio"><h1>MotionPlus <span class="pro-word">Pro</span></h1><p class="note">Enter your PIN to open the patient records on this device.</p>
+  $("#app").innerHTML = `<div class="lock">${RP_MARK("rpmark lockmark")}<h1>MotionPlus <span class="pro-word">Pro</span></h1><p class="note">Enter your PIN to open the patient records on this device.</p>
     <form id="lockform"><label class="label" for="pinin">PIN</label><input id="pinin" type="password" inputmode="numeric" autocomplete="off" maxlength="16" required>
     <p class="err" role="alert">${esc(lockMsg)}</p><button class="primary" type="submit">Unlock</button></form>
     <button class="link-danger" data-act="forgotPin">Forgot PIN?</button></div>`;
@@ -1087,7 +1099,7 @@ async function tryUnlock() {
   $("#lockform button").disabled = true;
   try { const o = await openLock(pin); pinKey = o.key; pinSalt = o.salt; db = o.data; locked = false; lockMsg = ""; localStorage.removeItem(TRIES);
     const pd = db.pendingDraft; delete db.pendingDraft;
-    if (pd) { draft = pd; go("form"); } else go("patients"); }
+    applyPrefs(); if (pd) { draft = pd; go("form"); } else home(); }
   catch (e) { const n = (t.n || 0) + 1; localStorage.setItem(TRIES, JSON.stringify({ n, until: n >= 5 ? Date.now() + 30000 * 2 ** (n - 5) : 0 }));
     lockMsg = n >= 5 ? "Wrong PIN. Too many tries, wait 30 seconds." : `Wrong PIN. ${5 - n} tr${5 - n === 1 ? "y" : "ies"} left before a short wait.`; render(); }
 }
@@ -1125,12 +1137,14 @@ async function removePin() {
 
 const ACT = {
   ...GZ_ACT,
+  ...UX_ACT,
+  toastAct: () => { const fn = toast.fn; $("#toast").hidden = true; toast.fn = null; fn?.(); },
   about: () => go("about"),
   lockNow: () => lockNow(),
   setPin: () => setPin(),
   removePin: () => removePin(),
   forgotPin: (d, b) => { if (!armed("fp", b, "Tap again to erase this device's records and start again")) return;
-    localStorage.removeItem(LOCK); localStorage.removeItem(STORE); localStorage.removeItem(TRIES); locked = false; pinKey = null; db = emptyDb(); db.settings.next = 1; save(); toast("Records erased. Restore a backup file in Settings to bring them back."); go("patients"); },
+    localStorage.removeItem(LOCK); localStorage.removeItem(STORE); localStorage.removeItem(TRIES); locked = false; pinKey = null; db = emptyDb(); db.settings.next = 1; save(); toast("Records erased. Restore a backup file in Settings to bring them back."); home(); },
   tab: d => go(d.tab),
   patient: d => go("patient", d.id),
   newPatient: d => go("editPatient", null, d.then),
@@ -1142,10 +1156,11 @@ const ACT = {
     if ($("#page").validity.badInput) { toast("Enter the age as a number."); $("#page").focus(); return; }
     const vals = { code, age: $("#page").value, sex: $("#psex").value, dx: $("#pdx").value.trim(), ref: $("#pref").value.trim(), branch: $("#pbr").value.trim(), notes: $("#pnotes").value.trim() };
     let p; if (d.id) { p = P(d.id); Object.assign(p, vals); } else { p = { id: uid(), created: Date.now(), ...vals }; if (code === nextCodePreview()) nextCode(); db.patients.unshift(p); }
-    if (!save()) return; toast(d.id ? "Changes saved" : "Patient added"); d.then ? startForm(p.id, d.then) : go("patient", p.id);
+    if (!save()) return; d.id ? toast("Changes saved") : celebrate("Patient added"); d.then ? startForm(p.id, d.then) : go("patient", p.id);
   },
-  delPatient: (d, b) => { if (!armed("dp" + d.id, b, "Tap again to delete permanently")) return;
-    db.assessments = db.assessments.filter(a => a.pid !== d.id); db.reports = db.reports.filter(r => r.pid !== d.id); db.patients = db.patients.filter(p => p.id !== d.id); save(); toast("Patient deleted"); go("patients"); },
+  delPatient: d => { const snap = { p: db.patients.slice(), a: db.assessments.slice(), r: db.reports.slice(), dr: db.draft };
+    db.assessments = db.assessments.filter(a => a.pid !== d.id); db.reports = db.reports.filter(r => r.pid !== d.id); db.patients = db.patients.filter(p => p.id !== d.id); if (db.draft?.pid === d.id) db.draft = null; save();
+    navNext = "back"; go("patients"); undoable("Patient deleted", () => { db.patients = snap.p; db.assessments = snap.a; db.reports = snap.r; db.draft = snap.dr; }); },
   library: d => go("library", d.pid || null),
   disc: d => { libDisc = d.d; document.querySelectorAll("[data-act=disc]").forEach(b => b.setAttribute("aria-pressed", b.dataset.d === libDisc)); listTemplates(view.args?.[0]); },
   startForm: d => d.pid ? startForm(d.pid, d.tid) : db.patients.length ? go("pickPatient", d.tid) : go("editPatient", null, d.tid),
@@ -1156,10 +1171,11 @@ const ACT = {
   saveA: () => { draft.date = $("#adate").value || today(); draft.notes = $("#anotes").value.trim();
     if (!Object.keys(draft.values).some(k => { const f = getTpl(draft).fields.find(x => x.id === k); return f?.def == null || String(draft.values[k]) !== String(f.def); }) && !draft.notes) { toast("Record at least one item before saving."); return; }
     const i = db.assessments.findIndex(a => a.id === draft.id); if (i >= 0) db.assessments[i] = draft; else db.assessments.push(draft);
-    if (!save()) return; toast("Assessment saved"); const id = draft.id; draft = null; go("result", id); },
+    db.draft = null; if (!save()) return; celebrate("Assessment saved"); const id = draft.id; draft = null; go("result", id); },
   result: d => go("result", d.id),
   editA: d => startForm(null, null, d.id),
-  delA: (d, b) => { if (!armed("da" + d.id, b, "Tap again to delete")) return; const a = A(d.id); db.assessments = db.assessments.filter(x => x.id !== d.id); db.reports = db.reports.filter(r => !r.aids.includes(d.id) || r.kind === "progress"); save(); toast("Assessment deleted"); go("patient", a.pid); },
+  delA: d => { const a = A(d.id), snap = { a: db.assessments.slice(), r: db.reports.slice() }; db.assessments = db.assessments.filter(x => x.id !== d.id); db.reports = db.reports.filter(r => !r.aids.includes(d.id) || r.kind === "progress"); save();
+    navNext = "back"; go("patient", a.pid); undoable("Assessment deleted", () => { db.assessments = snap.a; db.reports = snap.r; }); },
   aiSingle: d => startReport(A(d.id).pid, [d.id], "single"),
   aiProgress: d => startReport(d.id, db.assessments.filter(a => a.pid === d.id).sort(byDate).map(a => a.id), "progress"),
   report: d => { editingReport = false; go("report", d.id); },
@@ -1186,19 +1202,19 @@ const ACT = {
     if (tdraft.pid && P(tdraft.pid)) { toast("Template saved. Starting the assessment."); startForm(tdraft.pid, c.id); } else { toast("Template saved. Find it under Custom."); go("library", null); } },
   delTpl: (d, b) => { if (!armed("dt", b, "Tap again to delete template")) return; db.templates = db.templates.filter(t => t.id !== tdraft.id); save(); toast("Template deleted. Past assessments keep their copy."); go("library", tdraft.pid || null); },
   backToBuilder: () => go("builder"),
-  pdfBack: () => { const b = pdfPreview?.back; pdfPreview = null; b?.name ? go(b.name, ...(b.args || [])) : go("patients"); },
+  pdfBack: () => { const b = pdfPreview?.back; pdfPreview = null; b?.name ? go(b.name, ...(b.args || [])) : go("today"); },
   rmLogo: () => { db.settings.logo = null; save(); render(); },
   backup: () => doBackup(),
   restore: () => doRestore(),
   clearEx: (d, b) => { if (!armed("cx", b, "Tap again to remove examples")) return; const ids = new Set(db.patients.filter(p => p.ex).map(p => p.id));
     db.patients = db.patients.filter(p => !ids.has(p.id)); db.assessments = db.assessments.filter(a => !ids.has(a.pid)); db.reports = db.reports.filter(r => !ids.has(r.pid)); save(); toast("Examples removed"); render(); },
-  wipe: (d, b) => { if (!armed("wipe", b, "Tap again to erase everything on this device")) return; pinKey = null; localStorage.removeItem(LOCK); db = { ...seed(), patients: [], assessments: [] }; db.settings.next = 1; save(); toast("All data deleted"); go("patients"); },
+  wipe: (d, b) => { if (!armed("wipe", b, "Tap again to erase everything on this device")) return; pinKey = null; localStorage.removeItem(LOCK); db = { ...seed(), patients: [], assessments: [] }; db.settings.next = 1; save(); toast("All data deleted"); home(); },
 };
 let previewTpl = null;
 VIEWS.about = () => {
   chrome(null);
   if (!document.getElementById("isiFonts")) document.head.insertAdjacentHTML("beforeend", '<link id="isiFonts" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap">');
-  $("#app").innerHTML = `<header>${back("tab", 'data-tab="patients"')}<h1>About</h1></header>`;
+  $("#app").innerHTML = `<header>${back("tab", 'data-tab="settings"')}<h1>About</h1></header>`;
   $("#app").append($("#aboutTpl").content.cloneNode(true));
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) document.querySelectorAll("#isi-about svg").forEach(s => s.pauseAnimations?.());
 };
@@ -1214,7 +1230,10 @@ VIEWS.preview = () => {
 };
 
 document.addEventListener("click", e => {
+  if (e.target.closest("[data-close]")) { closeSheet(); return; }
   const b = e.target.closest("[data-act]"); if (!b || b.disabled) return;
+  if (b.classList.contains("back")) navNext = "back";
+  if (sheetEl && b.closest(".sheet") && b.dataset.act !== "lrPick") closeSheet();
   if (view.name === "preview" && (b.dataset.act === "pick" || b.dataset.act === "toggle")) { b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") !== "true"); return; }
   const fn = ACT[b.dataset.act]; if (fn) { e.preventDefault(); fn(b.dataset, b, e); }
 });
@@ -1224,14 +1243,14 @@ document.addEventListener("input", e => {
   if (el.id === "libq") { libQ = el.value; listTemplates(view.args?.[0]); return; }
   if (el.dataset.f && draft && view.name === "form") { setVal(el.dataset.f, el.dataset.k, el.value); return; }
   if (el.dataset.s) { db.settings[el.dataset.s] = el.value.trim(); clearTimeout(save.t); save.t = setTimeout(save, 400); return; }
-  if (el.id === "adate" && draft) draft.date = el.value;
-  if (el.id === "anotes" && draft) draft.notes = el.value;
+  if (el.id === "adate" && draft && el.value) ACT.pickDate({ v: el.value > today() ? today() : el.value });
+  if (el.id === "anotes" && draft) { draft.notes = el.value; keepDraft(); }
 });
 document.addEventListener("change", e => {
   const el = e.target;
   if (el.dataset.f && draft && view.name === "form") setVal(el.dataset.f, el.dataset.k, el.value);
   if (el.id === "slogo" && el.files[0]) setLogo(el.files[0]);
-  if (el.classList.contains("oldrep") && el.files[0]) { const f = el.files[0]; el.value = ""; importReport(f); }
+  if (el.classList.contains("oldrep") && el.files[0]) { const f = el.files[0]; el.value = ""; closeSheet(true); importReport(f); }
   if (el.id === "tplfile" && el.files.length) { syncBuilder(); upFiles.push(...el.files); tplStatus = null; render(); }
   if (el.dataset.tk === "type") { syncBuilder(); render(); }
   if (el.id === "sprefix") render();
@@ -1239,8 +1258,12 @@ document.addEventListener("change", e => {
 
 document.addEventListener("submit", e => { if (e.target.id === "lockform") { e.preventDefault(); tryUnlock(); } });
 document.documentElement.lang = "en";
-go(locked ? "lock" : "patients");
+function home() { go(db.settings.welcomed || db.patients.some(p => !p.ex) ? "today" : "welcome", 0); }
+applyPrefs(); splash();
+if (locked) go("lock"); else { home(); if (!db.settings.welcomed && view.name === "today") db.settings.welcomed = 1; }
+// Home-screen shortcuts open straight into a task.
+{ const sc = new URLSearchParams(location.search).get("go"); if (sc && !locked && view.name === "today") { if (sc === "newPatient") go("editPatient", null); else if (sc === "gonio") ACT.startForm({ tid: GONIO }); } }
 // Load the PDF tool once the first screen is up, so reports still work if the connection drops later.
 setTimeout(() => need("jspdf").catch(() => {}), 1500);
 // Offline and fast reopen when served from the web (the Claude viewer has its own caching).
-if ("serviceWorker" in navigator && !window.claude && (location.protocol === "https:" || location.hostname === "localhost")) navigator.serviceWorker.register("sw.js").catch(() => {});
+if ("serviceWorker" in navigator && !window.claude && (location.protocol === "https:" || location.hostname === "localhost")) navigator.serviceWorker.register("sw.js").then(watchUpdates).catch(() => {});

@@ -1,0 +1,23 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - name: Built pages match src/
+        run: python3 build.py && git diff --exit-code -- index.html posture/index.html
+      - name: Install Chromium for the smoke test
+        run: npm install --no-save playwright@1.48.2 && npx playwright install --with-deps chromium
+      - name: Smoke test on a phone-sized screen
+        run: |
+          python3 -m http.server 8765 >/dev/null 2>&1 &
+          sleep 1
+          node tests/smoke.mjs

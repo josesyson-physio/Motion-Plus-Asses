@@ -4,7 +4,12 @@
 <title>MotionPlus Pro</title>
 <meta name="theme-color" content="#0a0a0a">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/favicon-32.png" sizes="32x32">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MotionPlus">
+<meta name="format-detection" content="telephone=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="description" content="MotionPlus Pro: digital rehab assessments, posture and gait analysis, progress charts and professional reports for physiotherapy, occupational therapy, speech, sensory and behavioural care.">
@@ -15,7 +20,7 @@
 /* Layout: one-column app (max 720px for tablets), sticky header, bottom tab bar on top-level screens, bottom action bar in task flows.
    Single committed look: MotionPlus black with signal yellow, logo red reserved for alerts. */
 :root{
-  --bg:#0a0a0a; --surface:#141414; --raised:#1b1b1b; --sunk:#202020; --ink:#f6f4ec; --muted:#a19d90; --line:#2a2925;
+  --bg:#0a0a0a; --surface:#141414; --raised:#1b1b1b; --sunk:#202020; --ink:#f6f4ec; --muted:#b5b1a4; --line:#2a2925;
   --accent:#ffd60a; --accent-ink:#0a0a0a; --accent-soft:#2b2608; --accent-line:#5c4f0a;
   --good:#5bd38b; --good-soft:#12291b; --warn:#ff9f43; --warn-soft:#2f1e0c; --bad:#ff5a4e; --bad-soft:#341412;
   --display:"Archivo",ui-sans-serif,system-ui,sans-serif;
@@ -32,9 +37,6 @@ body.has-tabs .app{padding-bottom:calc(var(--tabh) + 28px)}
 body.has-bar .app{padding-bottom:112px}
 .app{max-width:720px;margin:0 auto;padding-inline:16px;padding-block:0 40px}
 @media (prefers-reduced-motion:no-preference){
-  .app>*{animation:rise .28s cubic-bezier(.2,.7,.2,1) both}
-  .app>*:nth-child(2){animation-delay:.04s}
-  @keyframes rise{from{opacity:.001;transform:translateY(8px)}}
   button{transition:transform .12s ease,background .15s,border-color .15s,color .15s}
   button:active:not(:disabled){transform:scale(.97)}
 }
@@ -61,7 +63,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .note.lic{background:var(--warn-soft);color:var(--warn);padding:9px 12px;border-radius:10px;border:1px solid #4a2f12}
 .empty{color:var(--muted);font-size:14px;padding:20px;text-align:center;border:1px dashed var(--line);border-radius:14px}
 input,select,textarea{font:inherit;width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);min-height:46px}
-input::placeholder,textarea::placeholder{color:#6f6c63}
+input::placeholder,textarea::placeholder{color:#8a867b}
 textarea{resize:vertical;line-height:1.45}
 .field{display:flex;flex-direction:column;gap:5px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -719,12 +721,193 @@ body.toolmode .app>*{animation:none}
   .tbar{animation:load 1.3s ease-in-out infinite}
   @keyframes load{from{background-position:-80px 0,0 0}to{background-position:240px 0,0 0}}
 }
+/* ---------- Native feel (stage 1 of the premium redesign) ---------- */
+html,body{overflow-x:clip}
+html{overscroll-behavior-y:none;-webkit-touch-callout:none}
+body{-webkit-user-select:none;user-select:none;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+input,textarea,.notes,.repbody,.repbody *,td,[contenteditable]{-webkit-user-select:text;user-select:text}
+img,svg{-webkit-user-drag:none}
+.app,.tabs .in,.bar .in,.sheet,.toast,.update{zoom:var(--z,1)}
+.rpmark{width:36px;height:36px;flex:none;color:var(--ink)}
+.rpmark.hm{width:38px;height:38px;padding:5px;border-radius:12px;background:#111;border:1px solid var(--line)}
+.rpmark.sm{width:26px;height:26px}
+.rpmark.lockmark{width:92px;height:92px;padding:14px;border-radius:26px;background:#0d0d0d;border:1px solid var(--line);box-shadow:0 20px 50px -20px rgba(255,214,10,.35)}
+.wordmark{display:flex;align-items:center;gap:8px}
+.wordmark b{font:850 34px/0.95 var(--display);font-stretch:72%;text-transform:uppercase;letter-spacing:.01em}
+.wordmark b span{color:var(--accent)}
+.tagline{font:600 11px var(--mono);letter-spacing:.28em;text-transform:uppercase;color:var(--muted)}
+.gold{color:var(--accent)!important}
+.card{background:linear-gradient(180deg,#171717,#111);border:1px solid var(--line);border-radius:20px;padding:14px}
+.card.list{padding:2px 14px}
+.trow{display:flex;align-items:center;gap:12px;width:100%;padding:11px 0;border:none;border-bottom:1px solid var(--line);border-radius:0;background:none;text-align:left;min-height:56px}
+.trow:last-child{border-bottom:none}
+.trow small,.sitem small,.srow small,.prom small,.choice small{display:block;color:var(--muted);font-size:12.5px;font-weight:400;line-height:1.4}
+.trow b{font-weight:650}
+.sic{width:38px;height:38px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex:none}
+.sic svg{width:20px;height:20px}
+.avatar.sm{width:40px;height:40px;border-radius:12px;font-size:11px;letter-spacing:-.02em}
+.trow .grow{min-width:0}
+.trow .chip{white-space:normal;max-width:38%;text-align:center;line-height:1.25;font-size:11px}
+.stat b i{font-style:normal}
+
+/* splash */
+#splash{position:fixed;inset:0;z-index:50;background:radial-gradient(70% 45% at 50% 42%,rgba(255,214,10,.12),transparent 70%),var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;transition:opacity .35s ease}
+#splash.out{opacity:0}
+#splash .rpdraw{width:112px;height:112px}
+.rpdraw path{stroke-dasharray:1;stroke-dashoffset:0}
+@media (prefers-reduced-motion:no-preference){
+  .rpdraw g path{stroke-dashoffset:1;animation:draw .38s cubic-bezier(.3,.7,.2,1) forwards;animation-delay:calc(.08s + var(--i) * .07s)}
+  .rpdraw .arc{stroke-dashoffset:1;animation:draw .5s cubic-bezier(.3,.7,.2,1) .5s forwards}
+  .rpdraw .dot{transform-box:fill-box;transform-origin:center;transform:scale(0);animation:popin .45s cubic-bezier(.3,1.6,.5,1) .38s forwards}
+  #splash .wordmark,#splash .tagline,.wbrand .wordmark,.wbrand .tagline{animation:rise .5s cubic-bezier(.2,.7,.2,1) .55s both}
+  #splash .tagline,.wbrand .tagline{animation-delay:.68s}
+  @keyframes draw{to{stroke-dashoffset:0}}
+  @keyframes popin{to{transform:scale(1)}}
+  @keyframes rise{from{opacity:.001;transform:translateY(10px)}}
+}
+
+/* screen transitions */
+@media (prefers-reduced-motion:no-preference){
+  .nav-fwd{animation:navf .32s cubic-bezier(.2,.75,.2,1) both}
+  .nav-back{animation:navb .3s cubic-bezier(.2,.75,.2,1) both}
+  .nav-fade{animation:navx .22s ease-out both}
+  @keyframes navf{from{opacity:.001;transform:translateX(28px)}}
+  @keyframes navb{from{opacity:.001;transform:translateX(-28px)}}
+  @keyframes navx{from{opacity:.001;transform:translateY(6px)}}
+  .nav-fwd .stack>*,.nav-fade .stack>*{animation:rise .42s cubic-bezier(.2,.7,.2,1) both}
+  .nav-fwd .stack>:nth-child(2),.nav-fade .stack>:nth-child(2){animation-delay:.03s}
+  .nav-fwd .stack>:nth-child(3),.nav-fade .stack>:nth-child(3){animation-delay:.06s}
+  .nav-fwd .stack>:nth-child(4),.nav-fade .stack>:nth-child(4){animation-delay:.09s}
+  .nav-fwd .stack>:nth-child(n+5),.nav-fade .stack>:nth-child(n+5){animation-delay:.12s}
+  .cline{stroke-dasharray:1;stroke-dashoffset:1;animation:draw .9s cubic-bezier(.4,.1,.2,1) .15s forwards}
+  .pbar i{animation:grow .8s cubic-bezier(.2,.7,.2,1) .15s both}
+  @keyframes grow{from{width:0}}
+  .pro-chip{background-size:220% 100%;animation:shine 1.6s ease .5s 1 both}
+  @keyframes shine{from{background-position:100% 0}to{background-position:0 0}}
+  .tabs button[aria-current="page"] svg{animation:tabpop .38s cubic-bezier(.3,1.6,.5,1)}
+  @keyframes tabpop{40%{transform:scale(1.18) translateY(-1px)}}
+  .toast:not([hidden]){animation:toastin .3s cubic-bezier(.2,.8,.2,1)}
+  @keyframes toastin{from{opacity:0;transform:translate(-50%,14px)}}
+}
+
+/* tab bar: floating, with the gold + in the middle */
+.tabs{left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));padding-bottom:0;border:1px solid #2c2b27;border-radius:24px;background:color-mix(in srgb,#181818 90%,transparent);max-width:560px;margin:0 auto;box-shadow:0 18px 40px -18px #000}
+.tabs .in{align-items:center;padding:6px 8px}
+.tabs button{font-size:10.5px;height:52px;border-radius:16px}
+.tabs button[aria-current="page"]{color:var(--accent);background:var(--accent-soft)}
+.tabs .fab{flex:0 0 58px;width:58px;height:58px;min-height:58px;margin:-26px 6px 0;border-radius:20px;background:var(--accent);color:var(--accent-ink);border:4px solid var(--bg);box-shadow:0 12px 26px -8px rgba(255,214,10,.7);padding:0}
+.tabs .fab svg{width:26px;height:26px}
+.tabs .fab:active{transform:scale(.92)}
+body.has-tabs .app{padding-bottom:calc(var(--tabh) + 44px + env(safe-area-inset-bottom,0px))}
+.tabs .tab-pro::after{top:9px}
+
+/* today */
+.thead{border-bottom:none;padding-block:14px 8px}
+.thead h1{font-size:26px}
+.cont{position:relative;overflow:hidden;border-radius:22px;border:1px solid var(--accent-line);padding:16px;display:flex;flex-direction:column;gap:8px;background:radial-gradient(90% 120% at 100% 0%,#2a2408,#121212 60%)}
+.cont.idle{background:radial-gradient(90% 120% at 100% 0%,#211d07,#121212 60%)}
+.crow{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ctitle{font:800 21px/1.15 var(--display);font-stretch:88%}
+.pbar{height:7px;border-radius:5px;background:#262521;overflow:hidden;margin:2px 0 4px}
+.pbar i{display:block;height:100%;width:var(--w);border-radius:5px;background:linear-gradient(90deg,#ffe866,#ffd60a 60%,#ffa920)}
+.stat b{font-size:26px}
+.stat b small{font-size:14px;color:var(--muted)}
+.warnnum{color:var(--warn)!important}.goodnum{color:var(--good)!important}
+
+/* bottom sheets */
+.sheet-wrap{position:fixed;inset:0;z-index:30;display:flex;align-items:flex-end;justify-content:center}
+.sheet-bg{position:absolute;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);opacity:0;transition:opacity .25s ease}
+.sheet{position:relative;width:min(560px,100%);max-height:86vh;display:flex;flex-direction:column;background:#151515;border:1px solid #2c2b27;border-bottom:none;border-radius:26px 26px 0 0;padding:6px 14px calc(14px + env(safe-area-inset-bottom,0px));transform:translateY(100%);transition:transform .32s cubic-bezier(.2,.8,.2,1);box-shadow:0 -20px 50px -20px #000}
+.sheet-wrap.open .sheet{transform:none}.sheet-wrap.open .sheet-bg{opacity:1}
+.grab{width:40px;height:5px;border-radius:3px;background:#3a3833;margin:4px auto 8px;flex:none}
+.sheet-t{font:800 18px var(--display);font-stretch:88%;margin:0 4px 8px}
+.sheet-body{overflow:auto;display:flex;flex-direction:column;gap:8px;padding:2px}
+.sitem{position:relative;display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 12px;border-radius:16px;background:var(--surface);border:1px solid var(--line);min-height:62px;cursor:pointer}
+.sitem b{font-weight:650}
+.sitem input{position:absolute;inset:0;opacity:0;cursor:pointer;min-height:0;padding:0}
+.sitem:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.chev{font-size:22px;color:var(--muted)}
+.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stool{display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 6px;border-radius:16px;background:radial-gradient(120% 120% at 50% 0%,#231f08,#151515 70%);border-color:var(--accent-line)}
+.stool svg{width:24px;height:24px;color:var(--accent)}
+.stool b{font-size:13.5px}
+.sopts{display:flex;flex-direction:column;gap:6px}
+.sopt{text-align:left;padding:13px 14px;background:var(--surface)}
+.sopt[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+body.sheet-open{overflow:hidden}
+
+/* segmented controls */
+.segc{display:flex;gap:4px;padding:4px;border-radius:14px;background:var(--sunk);border:1px solid var(--line)}
+.segc>button,.segc>label{flex:1;min-height:40px;border:none;background:none;border-radius:10px;padding:8px 6px;color:var(--muted);font-weight:600;font-size:14px;text-align:center}
+.segc>button[aria-pressed="true"],.segc>label.on{background:var(--raised);color:var(--ink);box-shadow:0 2px 8px rgba(0,0,0,.4),inset 0 0 0 1px #3a3833}
+.segc>button[aria-pressed="true"]{color:var(--accent)}
+.segc.dates>label{position:relative;display:grid;place-items:center;cursor:pointer}
+.segc.dates>label input{position:absolute;inset:0;opacity:0;min-height:0;padding:0;cursor:pointer}
+.segc.dates>label.on{color:var(--accent)}
+.lrbtn{min-height:42px;padding:8px;font:500 14px var(--mono);background:var(--surface);color:var(--muted);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lrbtn.set{color:var(--ink);border-color:var(--accent-line);background:var(--accent-soft)}
+
+/* settings rows */
+.srow{display:flex;align-items:center;gap:12px;padding:12px 0 8px}
+.card.list .segc{margin-bottom:10px}
+.switch{width:52px;height:32px;min-height:32px;padding:0;border-radius:999px;background:#2b2a26;border:none;position:relative;flex:none}
+.switch i{position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#f6f4ec;transition:transform .2s cubic-bezier(.3,1.4,.5,1)}
+.switch[aria-checked="true"]{background:var(--accent)}
+.switch[aria-checked="true"] i{transform:translateX(20px);background:#0a0a0a}
+
+/* welcome */
+.welcome{position:relative;min-height:calc(100vh - 210px);display:flex;flex-direction:column;gap:14px;padding-top:28px}
+.wglow{position:absolute;inset:-40px -16px auto;height:380px;background:radial-gradient(60% 60% at 50% 35%,rgba(255,214,10,.16),transparent 70%);pointer-events:none}
+.wbrand{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;padding:18px 0 8px}
+.wbrand .rpdraw{width:118px;height:118px;color:var(--ink)}
+.wq{font:800 24px/1.15 var(--display);font-stretch:88%;margin:6px 0 2px;text-align:center}
+.wq.left{text-align:left;font-size:28px}
+.whead{border-bottom:none}
+.choices{display:flex;flex-direction:column;gap:10px}
+.choice{display:flex;gap:12px;align-items:flex-start;text-align:left;padding:15px;border-radius:20px;background:var(--surface)}
+.choice b{font:800 17px var(--display)}
+.choice[aria-checked="true"]{border-color:var(--accent);background:linear-gradient(140deg,#2a2408,#141414 60%)}
+.radio{width:22px;height:22px;border-radius:50%;border:2px solid #5a574f;flex:none;margin-top:1px;transition:border .2s}
+.choice[aria-checked="true"] .radio{border:7px solid var(--accent)}
+.wdots{display:flex;gap:6px;justify-content:center;margin-top:auto;padding-top:12px}
+.wdots i{width:8px;height:6px;border-radius:3px;background:#333;transition:width .3s}
+.wdots i.on{width:24px;background:var(--accent)}
+.promise{display:flex;flex-direction:column;gap:10px}
+.prom{display:flex;gap:12px;align-items:flex-start;padding:14px;border-radius:18px;background:var(--surface);border:1px solid var(--line)}
+.prom b{font-weight:700}
+@media (prefers-reduced-motion:no-preference){.prom{animation:rise .45s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(.08s + var(--k) * .08s)}}
+
+/* save tick */
+.done{position:fixed;inset:0;z-index:40;display:grid;place-items:center;pointer-events:none;animation:fadeout 1.3s ease forwards}
+.done-card{display:flex;flex-direction:column;align-items:center;gap:10px;padding:22px 26px;border-radius:24px;background:rgba(20,20,20,.92);border:1px solid var(--accent-line);box-shadow:0 30px 60px -20px #000;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.done svg{width:64px;height:64px}
+.done circle{fill:none;stroke:var(--accent);stroke-width:4;stroke-dasharray:1}
+.done path{fill:none;stroke:var(--accent);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1}
+.done b{font-weight:700}
+@keyframes fadeout{0%,70%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion:no-preference){
+  .done-card{animation:popcard .4s cubic-bezier(.3,1.5,.5,1) both}
+  .done circle{stroke-dashoffset:1;animation:draw .45s ease-out forwards}
+  .done path{stroke-dashoffset:1;animation:draw .35s ease-out .32s forwards}
+  @keyframes popcard{from{transform:scale(.85);opacity:0}}
+}
+
+/* toast with action, update prompt */
+.toast{display:flex;align-items:center;gap:12px;bottom:calc(var(--tabh) + 58px + env(safe-area-inset-bottom,0px));width:max-content}
+body.has-bar:not(.has-tabs) .toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+.toast.act{background:#f6f4ec}
+.tbtn{min-height:32px;padding:4px 12px;border:none;border-radius:9px;background:#0a0a0a;color:var(--accent);font-weight:700}
+.update{position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:35;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 12px;border-radius:16px;background:#181818;border:1px solid var(--accent-line);box-shadow:0 16px 40px -14px #000;width:max-content;max-width:calc(100% - 24px);font-size:14px}
+
 </style>
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="rpGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe866"/><stop offset=".5" stop-color="#ffd60a"/><stop offset="1" stop-color="#ffa920"/></linearGradient></defs></svg>
+<div id="splash" hidden aria-hidden="true"><svg class="rpdraw" viewBox="0 0 100 100"><g stroke="#f6f4ec" stroke-width="11" stroke-linecap="round" fill="none"><path d="M50 50V12" pathLength="1" style="--i:0"/><path d="M50 50H88" pathLength="1" style="--i:1"/><path d="M50 50V88" pathLength="1" style="--i:2"/><path d="M50 50H12" pathLength="1" style="--i:3"/></g><path class="arc" d="M55.57 27.67A23 23 0 0 1 72.33 44.43" pathLength="1" fill="none" stroke="url(#rpGold)" stroke-width="6.5" stroke-linecap="round"/><circle class="dot" cx="50" cy="50" r="7" fill="url(#rpGold)"/></svg><div class="wordmark"><b>Motion<span>Plus</span></b><span class="pro-chip">PRO</span></div><div class="tagline">Measure what moves</div></div>
 <main class="app" id="app"></main>
 <nav class="tabs" id="tabs" aria-label="Main"><div class="in">
-  <button data-act="tab" data-tab="patients"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .7 3.2 2.4 3.5 5.2"/></svg>Home</button>
-  <button data-act="tab" data-tab="library"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 3.5V2.5h6v1M8.5 9h7M8.5 12.5h7M8.5 16h4"/></svg>Assessments</button>
+  <button data-act="tab" data-tab="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V20H4z"/><path d="M10 20v-5h4v5"/></svg>Today</button>
+  <button data-act="tab" data-tab="patients"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .7 3.2 2.4 3.5 5.2"/></svg>Patients</button>
+  <button class="fab" data-act="fab" aria-label="Start something new" aria-haspopup="dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
   <button data-act="tab" data-tab="tools" class="tab-pro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="4.6" r="2.1"/><path d="M12 7.2v6.3l-2.2 7M12 13.5l2.2 7M12 9.3l-3.6 2.4M12 9.3l3.6 2.4"/><path d="M4.5 3.5v17" stroke-dasharray="1.6 2.6"/></svg>Tools</button>
   <button data-act="tab" data-tab="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Settings</button>
 </div></nav>
@@ -1714,7 +1897,9 @@ const fmtShort = d => new Date(d + "T00:00").toLocaleDateString(undefined, { day
 const byDate = (a, b) => a.date.localeCompare(b.date) || (a.created || 0) - (b.created || 0);
 const P = id => db.patients.find(p => p.id === id);
 const A = id => db.assessments.find(a => a.id === id);
-function toast(m) { const t = $("#toast"); t.textContent = m; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 2600); }
+function toast(m, action) { const t = $("#toast"); t.textContent = m; toast.fn = action?.fn || null;
+  if (action) { const b = document.createElement("button"); b.className = "tbtn"; b.dataset.act = "toastAct"; b.textContent = action.label; t.append(b); }
+  t.classList.toggle("act", !!action); t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => { t.hidden = true; toast.fn = null; }, action ? 5000 : 2600); }
 
 const hydCache = new Map();
 function hydrate(raw) { if (!raw) return null; const k = raw.id + ":" + (raw.v || 0); if (!hydCache.has(k)) hydCache.set(k, T(JSON.parse(JSON.stringify(raw)))); return hydCache.get(k); }
@@ -1787,7 +1972,9 @@ async function previewPdf(filename, blob) {
 
 /* ---------- Chrome ---------- */
 let view = {};
-function go(name, ...args) { if (name !== "tool") { document.body.classList.remove("toolmode"); toolCtx = null; } if (name !== "gonio") gzStop(); view = { name, args }; render(); window.scrollTo(0, 0); const h = $("#app h1")?.textContent.trim(); document.title = h && h !== "Home" ? `${h} · MotionPlus Pro` : "MotionPlus Pro"; }
+function go(name, ...args) { if (name !== "tool") { document.body.classList.remove("toolmode"); toolCtx = null; } if (name !== "gonio") gzStop(); closeSheet(true);
+  const was = navKey(); if (was) navScroll[was] = scrollY; const dir = navDir(name);
+  view = { name, args }; render(); window.scrollTo(0, dir === "back" ? navScroll[navKey()] || 0 : 0); animateNav(dir); const h = $("#app h1")?.textContent.trim(); document.title = h && h !== "Home" ? `${h} · MotionPlus Pro` : "MotionPlus Pro"; }
 function render() { (VIEWS[view.name] || VIEWS.patients)(...(view.args || [])); }
 function chrome(tab, barHtml) {
   $("#tabs").hidden = !tab; $("#bar").hidden = !barHtml; $("#barIn").innerHTML = barHtml || "";
@@ -1797,24 +1984,269 @@ function chrome(tab, barHtml) {
 const back = (act, extra = "") => `<button class="back" data-act="${act}" ${extra} aria-label="Back">‹</button>`;
 const brand = () => `<div class="brand">MOTIONPLUS <b class="pro">PRO</b>${db.settings.clinic ? " · " + esc(db.settings.clinic).toUpperCase() : ""}</div>`;
 const LOCK_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
-const topHead = (title, right = "") => `<header><img class="mark" src="${MP_LOGO}" alt="MotionPlus Physio"><div class="grow">${brand()}<h1>${title}</h1></div>${right}${pinKey ? `<button class="ghost headlock" data-act="lockNow" aria-label="Lock the app">${LOCK_IC}</button>` : ""}</header>`;
-const IC = { up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 18v-6M9 15l3-3 3 3"/></svg>', user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.6-3.6 3.2-5.5 6.5-5.5 1.6 0 3 .4 4.1 1.2M18 14v6M15 17h6"/></svg>', clip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 3.5V2.5h6v1M8.5 9h7M8.5 12.5h7M8.5 16h4"/></svg>', cam: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>' };
+const topHead = (title, right = "") => `<header>${RP_MARK("rpmark hm")}<div class="grow">${brand()}<h1>${title}</h1></div>${right}${pinKey ? `<button class="ghost headlock" data-act="lockNow" aria-label="Lock the app">${LOCK_IC}</button>` : ""}</header>`;
+const IC = { up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 18v-6M9 15l3-3 3 3"/></svg>', user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.6-3.6 3.2-5.5 6.5-5.5 1.6 0 3 .4 4.1 1.2M18 14v6M15 17h6"/></svg>', clip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 3.5V2.5h6v1M8.5 9h7M8.5 12.5h7M8.5 16h4"/></svg>', cam: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>' };
 
 /* ---------- Views ---------- */
 const VIEWS = {};
+/* ---------- Native feel ----------
+   Brand mark, haptics, bottom sheets, screen transitions, back gestures, count-ups, the save tick and the update prompt.
+   Motion follows the phone's Reduce Motion setting. Haptics are short single pulses at moments that matter (save, warning,
+   a timer event), never on every tap, and only on phones that support them (Android); iPhone gets the visual feedback alone. */
+const RP_MARK = (cls = "rpmark") => `<svg class="${cls}" viewBox="0 0 100 100" aria-hidden="true"><path d="M50 50V12M50 50V88M50 50H12M50 50H88" stroke="currentColor" stroke-width="11" stroke-linecap="round" fill="none"/><path d="M72.33 44.43A23 23 0 0 0 55.57 27.67" fill="none" stroke="url(#rpGold)" stroke-width="6.5" stroke-linecap="round"/><circle cx="50" cy="50" r="7" fill="url(#rpGold)"/></svg>`;
+// The mark drawn stroke by stroke: four arms grow from the centre, then the angle arc sweeps open.
+const RP_DRAW = `<svg class="rpdraw" viewBox="0 0 100 100" aria-hidden="true"><g stroke="currentColor" stroke-width="11" stroke-linecap="round" fill="none">${["M50 50V12", "M50 50H88", "M50 50V88", "M50 50H12"].map((d, i) => `<path d="${d}" pathLength="1" style="--i:${i}"/>`).join("")}</g><path class="arc" d="M55.57 27.67A23 23 0 0 1 72.33 44.43" pathLength="1" fill="none" stroke="url(#rpGold)" stroke-width="6.5" stroke-linecap="round"/><circle class="dot" cx="50" cy="50" r="7" fill="url(#rpGold)"/></svg>`;
+const WORDMARK = `<div class="wordmark"><b>Motion<span>Plus</span></b><span class="pro-chip">PRO</span></div>`;
+
+const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+const HZ = { tap: 8, tick: 5, success: [12, 70, 20], warn: [26, 60, 26] };
+function hz(kind) { if (db?.settings?.haptics === false) return; try { navigator.vibrate?.(HZ[kind] || 8); } catch (e) {} }
+
+function applyPrefs() {
+  const s = db.settings || {};
+  document.documentElement.style.setProperty("--z", String(s.textSize || 1));
+  document.documentElement.dataset.mode = s.mode || "";
+}
+
+/* Bottom sheets: used for the + menu and for any pick-one list, so nothing opens a browser drop-down. */
+let sheetEl = null, sheetReturn = null;
+const sitem = (icon, label, sub, attrs) => `<button class="sitem" ${attrs}><span class="sic">${icon}</span><span class="grow"><b>${label}</b>${sub ? `<small>${sub}</small>` : ""}</span><span class="chev" aria-hidden="true">›</span></button>`;
+function openSheet(title, body) {
+  closeSheet(true); sheetReturn = document.activeElement;
+  const w = document.createElement("div"); w.className = "sheet-wrap";
+  w.innerHTML = `<div class="sheet-bg" data-close></div><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetT"><div class="grab" aria-hidden="true"></div><h2 class="sheet-t" id="sheetT">${esc(title)}</h2><div class="sheet-body">${body}</div></div>`;
+  document.body.append(w); sheetEl = w; document.body.classList.add("sheet-open");
+  requestAnimationFrame(() => w.classList.add("open"));
+  setTimeout(() => (w.querySelector("[aria-pressed=true]") || w.querySelector(".sheet-body button,.sheet-body input,.sheet-body label"))?.focus({ preventScroll: true }), 40);
+  dragToClose(w.querySelector(".sheet"));
+}
+function closeSheet(now) {
+  const w = sheetEl; if (!w) return; sheetEl = null; document.body.classList.remove("sheet-open");
+  if (now === true || reduced()) w.remove(); else { w.classList.remove("open"); setTimeout(() => w.remove(), 280); }
+  if (sheetReturn?.isConnected) sheetReturn.focus({ preventScroll: true }); sheetReturn = null;
+}
+function dragToClose(sh) {
+  let y0 = null, dy = 0;
+  sh.addEventListener("pointerdown", e => { if (e.pointerType === "mouse" || sh.querySelector(".sheet-body").scrollTop > 0 || e.target.closest("input,textarea")) return; y0 = e.clientY; dy = 0; });
+  sh.addEventListener("pointermove", e => { if (y0 == null) return; dy = Math.max(0, e.clientY - y0); if (dy > 6) { sh.style.transition = "none"; sh.style.transform = `translateY(${dy}px)`; } });
+  const end = () => { if (y0 == null) return; y0 = null; sh.style.transition = ""; sh.style.transform = ""; if (dy > 90) closeSheet(); };
+  sh.addEventListener("pointerup", end); sh.addEventListener("pointercancel", end);
+}
+document.addEventListener("keydown", e => {
+  if (!sheetEl) return;
+  if (e.key === "Escape") { e.preventDefault(); closeSheet(); return; }
+  if (e.key !== "Tab") return;
+  const f = [...sheetEl.querySelectorAll("button,input,label.sitem,[tabindex='0']")].filter(x => !x.disabled && x.offsetParent);
+  if (!f.length) return; const i = f.indexOf(document.activeElement);
+  if (e.shiftKey && i <= 0) { e.preventDefault(); f.at(-1).focus(); } else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+});
+function plusSheet() {
+  const T = TOOLS, pro = '<span class="pro-chip">PRO</span>';
+  openSheet("Start something", `
+    ${sitem(IC.clip, "Start an assessment", "Choose from the test library", 'data-act="library" data-pid=""')}
+    ${sitem(IC.user, "New patient", "Add a patient by code", 'data-act="newPatient"')}
+    <div class="sgrid">${Object.values(T).map(k => `<button class="stool" data-act="startForm" data-tid="${k.id}">${k.icon}<b>${k.name.split(" ")[0]}</b>${pro}</button>`).join("")}</div>
+    ${sitem(IC.cam, "Form from a photo", "Turn a paper form into a template", 'data-act="builder" data-pid=""')}
+    <label class="sitem">${`<span class="sic">${IC.up}</span>`}<span class="grow"><b>Upload an old report</b><small>A MotionPlus PDF, to compare</small></span><span class="chev" aria-hidden="true">›</span><input type="file" class="oldrep" accept="application/pdf,.pdf" aria-label="Upload an old MotionPlus PDF report"></label>`);
+}
+
+/* Screen transitions: forward slides in from the right, back from the left, tab switches cross-fade.
+   Each screen's scroll position is remembered, so going back lands where you left it. */
+let navNext = null; const navScroll = {};
+const TAB_VIEWS = ["today", "patients", "tools", "settings", "library"];
+const navKey = () => view.name ? view.name + JSON.stringify(view.args || []) : "";
+function navDir(name) { const d = navNext || (TAB_VIEWS.includes(name) && TAB_VIEWS.includes(view.name) ? "fade" : "fwd"); navNext = null; return d; }
+function animateNav(dir) {
+  const app = $("#app"); app.classList.remove("nav-fwd", "nav-back", "nav-fade");
+  if (reduced()) return; void app.offsetWidth; app.classList.add("nav-" + dir);
+  countUp(app);
+}
+// Edge swipe to go back, like a native app. Only in the installed iPhone app: browsers and Android already have their own back gesture.
+const IS_IOS = /iP(hone|ad|od)/.test(navigator.platform) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const STANDALONE = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+if (IS_IOS && STANDALONE) {
+  let sx = 0, sy = 0, dx = 0, t0 = 0, on = false;
+  const app = () => $("#app"), reset = () => { const a = app(); a.style.transition = "transform .2s ease, opacity .2s ease"; a.style.transform = ""; a.style.opacity = ""; setTimeout(() => a.style.transition = "", 220); };
+  document.addEventListener("touchstart", e => { const t = e.touches[0]; on = e.touches.length === 1 && t.clientX < 24 && !sheetEl && !!$("#app header .back") && view.name !== "gonio" && !document.body.classList.contains("toolmode"); if (on) { sx = t.clientX; sy = t.clientY; dx = 0; t0 = Date.now(); } }, { passive: true });
+  document.addEventListener("touchmove", e => { if (!on) return; const t = e.touches[0]; dx = Math.max(0, t.clientX - sx); if (Math.abs(t.clientY - sy) > 40 && dx < 30) { on = false; reset(); return; } app().style.transform = `translateX(${dx}px)`; app().style.opacity = String(1 - Math.min(dx / 700, .35)); }, { passive: true });
+  document.addEventListener("touchend", () => { if (!on) return; on = false; const go_ = dx > 110 || (dx > 50 && dx / (Date.now() - t0) > .45); reset(); if (go_) { hz("tick"); $("#app header .back")?.click(); } });
+}
+// The phone's back button and back gesture step back through the app instead of leaving it.
+const OWN_HISTORY = !window.claude && window.top === window;
+function backStep() {
+  if (sheetEl) { closeSheet(); return true; }
+  if (view.name === "lock" || view.name === "welcome" && !(view.args?.[0] > 0)) return false;
+  const b = $("#app header .back"); if (b) { b.click(); return true; }
+  if (view.name === "welcome") { navNext = "back"; go("welcome", view.args[0] - 1); return true; }
+  if (view.name !== "today") { navNext = "back"; go("today"); return true; }
+  return false;
+}
+if (OWN_HISTORY) {
+  history.replaceState({ mp: 0 }, ""); history.pushState({ mp: 1 }, "");
+  addEventListener("popstate", () => { if (backStep()) history.pushState({ mp: 1 }, ""); else history.back(); });
+}
+
+/* Numbers count up when a screen opens. The final value is in the page from the start, for screen readers and Reduce Motion. */
+function countUp(root) {
+  if (reduced()) return;
+  root.querySelectorAll("[data-count]").forEach(el => {
+    const end = +el.dataset.count; if (!isFinite(end) || end === 0) return;
+    const dec = (el.dataset.count.split(".")[1] || "").length, pre = el.dataset.pre || "", suf = el.dataset.suf || "", t0 = performance.now(), D = 750;
+    const step = now => { const k = Math.min(1, (now - t0) / D), e = 1 - Math.pow(1 - k, 3); el.textContent = pre + (end * e).toFixed(dec) + suf; if (k < 1) requestAnimationFrame(step); };
+    el.textContent = pre + (0).toFixed(dec) + suf; requestAnimationFrame(step);
+  });
+}
+const cnum = (n, cls = "", pre = "", suf = "") => `<b class="${cls}" data-count="${n}" data-pre="${esc(pre)}" data-suf="${esc(suf)}">${esc(pre)}${n}${esc(suf)}</b>`;
+
+/* The save tick: a gold circle draws a check, with one short success pulse. It sits over the next screen and never blocks taps. */
+function celebrate(msg) {
+  hz("success");
+  const d = document.createElement("div"); d.className = "done"; d.setAttribute("aria-hidden", "true");
+  d.innerHTML = `<div class="done-card"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="28" pathLength="1"/><path d="M20 33l8 8 16-17" pathLength="1"/></svg><b>${esc(msg)}</b></div>`;
+  document.body.append(d); setTimeout(() => d.remove(), reduced() ? 900 : 1300);
+}
+
+/* Undo: deletes happen at once and can be taken back for a few seconds. */
+function undoable(msg, restore) { hz("warn"); toast(msg, { label: "Undo", fn: () => { restore(); save(); hz("tap"); toast("Restored"); render(); } }); }
+
+/* Updates: when a new version has installed in the background, offer a restart. Answers in progress are autosaved first. */
+function watchUpdates(reg) {
+  let had = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener("controllerchange", () => { if (!had) { had = true; return; } showUpdate(); });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) reg.update().catch(() => {}); });
+}
+function showUpdate() {
+  if ($("#update")) return;
+  document.body.insertAdjacentHTML("beforeend", `<div class="update" id="update" role="status">${RP_MARK("rpmark sm")}<span>A new version of MotionPlus is ready.</span><button class="sm primary" data-act="reload">Restart</button></div>`);
+}
+
+/* Autosave: every answer in an open assessment is kept, so a call, a lock or a closed tab never loses work. */
+function keepDraft() { if (!draft || view.name !== "form") return; db.draft = draft; clearTimeout(keepDraft.t); keepDraft.t = setTimeout(save, 300); }
+function draftInfo() {
+  const d = db.draft, p = d && P(d.pid), t = d && getTpl(d); if (!p || !t) return null;
+  const r = runScore(t, d.values, p), n = Object.keys(d.values).length, of = t.fields.filter(f => f.t !== "head").length;
+  return { d, p, t, pct: Math.round(100 * Math.min(1, (r.of ? r.done / r.of : n / Math.max(1, of)))), editing: !!A(d.id) };
+}
+
+/* Splash: the mark draws itself once per launch. */
+function splash() {
+  const s = $("#splash"); if (!s) return;
+  let seen = false; try { seen = sessionStorage.getItem("mp-splash") === "1"; sessionStorage.setItem("mp-splash", "1"); } catch (e) {}
+  if (seen || reduced() || window.claude) { s.remove(); return; }
+  s.hidden = false; setTimeout(() => s.classList.add("out"), 1150); setTimeout(() => s.remove(), 1500);
+}
+
+/* ---------- Welcome ----------
+   Three short screens on first open: how the app will be used (clinic or individual), the privacy promise, and the details for reports. */
+VIEWS.welcome = (step = 0) => {
+  const s = db.settings, mode = s.mode || "clinic", dots = `<div class="wdots" aria-hidden="true">${[0, 1, 2].map(i => `<i class="${i === step ? "on" : ""}"></i>`).join("")}</div>`;
+  const backBtn = step ? `<header class="whead">${back("welcome", `data-step="${step - 1}"`)}<span class="grow"></span><span class="label">Step ${step + 1} of 3</span></header>` : "";
+  if (step === 0) {
+    chrome(null, `<button class="primary wide" data-act="welcome" data-step="1">Continue</button>`);
+    $("#app").innerHTML = `<div class="welcome"><div class="wglow" aria-hidden="true"></div>
+      <div class="wbrand">${RP_DRAW}${WORDMARK}<div class="tagline">Measure what moves</div></div>
+      <h1 class="wq">How will you use MotionPlus?</h1>
+      <div class="choices" role="radiogroup" aria-label="How you will use MotionPlus">
+        ${[["clinic", "Clinic", "Several therapists or branches. The clinic name and logo go on reports, and each therapist adds their name."], ["solo", "Individual practitioner", "Just you. Your own name and practice go on reports, with a simpler home screen."]].map(([v, h, p]) =>
+          `<button class="choice" role="radio" aria-checked="${mode === v}" data-act="setMode" data-v="${v}"><span class="radio" aria-hidden="true"></span><span><b>${h}</b><small>${p}</small></span></button>`).join("")}
+      </div>${dots}</div>`;
+    if (!s.mode) s.mode = mode;
+  } else if (step === 1) {
+    chrome(null, `<button class="primary wide" data-act="welcome" data-step="2">I understand</button>`);
+    $("#app").innerHTML = `${backBtn}<div class="welcome">
+      <h1 class="wq left">Built for clinical trust</h1>
+      <div class="promise">
+        ${[[LOCK_IC, "Records stay on this device", "Nothing is sent to a server. Turn on a PIN and every record is encrypted."],
+           [IC.cam, "Photos and video are never kept", "They are analysed on the phone, then discarded. Only the measurements are saved."],
+           [IC.clip, "It informs, you decide", "Findings are worded as what may be contributing. Diagnosis and treatment stay your clinical call."],
+           [IC.up, "Works offline", "After the first visit the app opens and saves without a connection."]].map(([i, h, p], k) => `<div class="prom" style="--k:${k}"><span class="sic">${i}</span><span><b>${h}</b><small>${p}</small></span></div>`).join("")}
+      </div>${dots}</div>`;
+  } else {
+    const solo = mode === "solo";
+    chrome(null, `<button class="primary wide" data-act="welcomeDone">Start using MotionPlus</button>`);
+    $("#app").innerHTML = `${backBtn}<div class="welcome">
+      <h1 class="wq left">${solo ? "Your details for reports" : "Your clinic on every report"}</h1>
+      <p class="note">${solo ? "These print on the PDF reports you share with patients and referrers." : "The clinic name prints on every PDF report. Add your logo later in Settings."} You can change them any time in Settings.</p>
+      <div class="stack">
+        ${solo ? "" : `<div class="field"><label class="label" for="wclinic">Clinic name</label><input id="wclinic" data-s="clinic" value="${esc(s.clinic)}" placeholder="e.g. Sunrise Rehab Centre" autocomplete="organization"></div>
+        <div class="field"><label class="label" for="wbranch">Branch</label><input id="wbranch" data-s="branch" value="${esc(s.branch)}" placeholder="e.g. Main branch"></div>`}
+        <div class="field"><label class="label" for="wther">Your name, as the assessor</label><input id="wther" data-s="therapist" value="${esc(s.therapist)}" placeholder="e.g. PT, MSc Sports Physiotherapy" autocomplete="name"></div>
+        ${solo ? `<div class="field"><label class="label" for="wclinic">Practice name (optional)</label><input id="wclinic" data-s="clinic" value="${esc(s.clinic)}" placeholder="Leave empty to show only your name"></div>` : ""}
+      </div>${dots}</div>`;
+  }
+};
+
+/* ---------- Today ----------
+   The day comes first: the assessment in progress, who is due for a re-test, and what changed recently. */
+const greet = () => { const h = new Date().getHours(); return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening"; };
+function retestsDue() {
+  const last = new Map();
+  for (const a of db.assessments) { if (!P(a.pid)) continue; const k = a.pid + "|" + a.tid; if (!last.has(k) || byDate(last.get(k), a) < 0) last.set(k, a); }
+  return [...last.values()].filter(a => a.date <= daysAgo(28)).sort(byDate).slice(0, 6);
+}
+function improving() {
+  let up = 0, n = 0;
+  for (const p of db.patients) { const as = db.assessments.filter(a => a.pid === p.id).sort(byDate), a = as.at(-1); if (!a) continue;
+    const t = getTpl(a), c = t && compare(t, a, p); if (!c || c.d == null || c.better === null) continue; n++; if (c.better && c.d !== 0) up++; }
+  return { up, n };
+}
+VIEWS.today = () => {
+  chrome("today");
+  const s = db.settings, di = draftInfo(), due = retestsDue(), imp = improving(), wk = db.assessments.filter(a => a.date >= daysAgo(6)).length;
+  const recent = db.assessments.filter(a => P(a.pid)).sort(byDate).reverse().slice(0, 4);
+  const where = [s.mode === "solo" ? s.therapist : s.clinic, s.mode === "solo" ? "" : s.branch, new Date().toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })].filter(Boolean).map(esc).join(" · ");
+  $("#app").innerHTML = `
+  <header class="thead">${RP_MARK("rpmark hm")}<div class="grow"><div class="psub">${where}</div><h1>${greet()}</h1></div>${pinKey ? `<button class="ghost headlock" data-act="lockNow" aria-label="Lock the app">${LOCK_IC}</button>` : ""}</header>
+  <div class="stack">
+    ${di ? `<section class="cont">
+      <div class="crow"><span class="label gold">${di.editing ? "Continue editing" : "Continue assessment"}</span><span class="psub">${di.pct}% done</span></div>
+      <b class="ctitle">${esc(di.p.code)} · ${esc(di.t.name)}</b>
+      <div class="pbar" role="progressbar" aria-valuenow="${di.pct}" aria-valuemin="0" aria-valuemax="100" aria-label="Progress"><i style="--w:${di.pct}%"></i></div>
+      <div class="actions"><button class="primary" data-act="resume">Continue</button><button data-act="discardDraft">Discard</button></div>
+    </section>` : `<section class="cont idle">
+      <span class="label gold">Ready when you are</span><b class="ctitle">Start with a patient</b>
+      <div class="actions"><button class="primary" data-act="fab">Start something</button><button data-act="tab" data-tab="patients">Patients</button></div>
+    </section>`}
+    <div class="stats">
+      <div class="stat">${cnum(wk)}<span>Tests this week</span></div>
+      <div class="stat">${cnum(due.length, due.length ? "warnnum" : "")}<span>Re-tests due</span></div>
+      <div class="stat">${imp.n ? `<b class="goodnum"><i data-count="${imp.up}">${imp.up}</i><small>/${imp.n}</small></b>` : "<b>–</b>"}<span>Patients improving</span></div>
+    </div>
+    ${due.length ? `<h2 class="sec">Re-tests due</h2><div class="card list">${due.map(a => { const p = P(a.pid), t = getTpl(a), wks = Math.round((Date.now() - new Date(a.date + "T00:00")) / 6048e5);
+      return `<div class="trow"><span class="sic">${IC.clock}</span><span class="grow"><b>${esc(p.code)}</b><small>${esc(t?.short || t?.name || "")} · last ${wks} weeks ago</small></span><button class="sm" data-act="startForm" data-tid="${a.tid}" data-pid="${a.pid}" aria-label="Re-test ${esc(p.code)} ${esc(t?.short || "")}">Start</button></div>`; }).join("")}</div>` : ""}
+    ${toolsPromo()}
+    <h2 class="sec">Recent</h2>
+    <div class="card list">${recent.map(a => { const p = P(a.pid), t = getTpl(a), r = runScore(t, a.values, p);
+      return `<button class="trow" data-act="result" data-id="${a.id}"><span class="avatar sm">${esc(p.code.split("-").pop())}</span><span class="grow"><b>${esc(t?.short || t?.name || "")} · ${esc(p.code)}</b><small>${fmtShort(a.date)} · ${esc(r.txt)}</small></span>${chip(r.band)}</button>`; }).join("") || `<div class="empty">Assessments you save show up here.</div>`}</div>
+  </div>`;
+};
+
+const UX_ACT = {
+  fab: () => { hz("tap"); plusSheet(); },
+  reload: () => { if (draft && view.name === "form") { db.draft = draft; save(); } encQueue.then(() => location.reload()); },
+  setMode: d => { db.settings.mode = d.v; save(); applyPrefs(); if (view.name === "settings") return render(); document.querySelectorAll("[data-act=setMode]").forEach(b => b.setAttribute("aria-checked", b.dataset.v === d.v)); },
+  welcome: d => { navNext = +d.step < (view.args?.[0] || 0) ? "back" : "fwd"; go("welcome", +d.step); },
+  welcomeDone: () => { db.settings.welcomed = 1; save(); celebrate("All set"); go("today"); },
+  resume: () => { draft = JSON.parse(JSON.stringify(db.draft)); go("form"); },
+  discardDraft: (d, b) => { const old = db.draft; db.draft = null; save(); undoable("Draft discarded", () => { db.draft = old; }); render(); },
+  textSize: d => { db.settings.textSize = +d.v; save(); applyPrefs(); render(); },
+  haptics: d => { db.settings.haptics = d.v === "on"; save(); if (d.v === "on") hz("success"); render(); },
+  lrPick: d => { if (view.name !== "form" || !draft) return; const t = getTpl(draft), f = t.fields.find(x => x.id === d.f), cur = (draft.values[d.f] || {})[d.k];
+    openSheet(`${f.label} · ${d.k === "L" ? "Left" : "Right"}`, `<div class="sopts">${["", ...f.opts].map(o => `<button class="sopt" data-act="lrSet" data-f="${d.f}" data-k="${d.k}" data-v="${esc(o)}" aria-pressed="${(cur || "") === o}">${o ? esc(o) : "Not tested"}</button>`).join("")}</div>`); },
+  lrSet: d => { setVal(d.f, d.k, d.v); const b = document.getElementById(`i_${d.f}_${d.k}`); if (b) { b.textContent = d.v || "–"; b.classList.toggle("set", !!d.v); } },
+  pickDate: d => { draft.date = d.v; keepDraft(); document.querySelectorAll("[data-act=pickDate]").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === d.v)); const o = $("#adate"); if (o) o.value = d.v; $("#adatelab")?.classList.toggle("on", ![today(), daysAgo(1)].includes(d.v)); },
+  setSex: d => { $("#psex").value = d.v; document.querySelectorAll("[data-act=setSex]").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === d.v)); },
+};
+
 let q = "", libQ = "", libDisc = "All";
 
 VIEWS.patients = () => {
   chrome("patients");
   $("#app").innerHTML = `
-  ${topHead("Home", `<button class="ghost" data-act="about">About</button>`)}
+  ${topHead("Patients", `<button class="ghost" data-act="newPatient">+ New</button>`)}
   <div class="stack">
-    <section class="hero"><div><div class="label">${esc(db.settings.branch || "MotionPlus Pro")}</div><h2>Assess. Track. <em>Report.</em></h2><p class="note">${db.settings.therapist ? `Signed in as ${esc(db.settings.therapist)}` : "Digital rehab assessments for every discipline."}</p></div><img src="${MP_LOGO}" alt=""></section>
-    <div class="stats"><div class="stat"><b>${db.patients.length}</b><span>Patients</span></div><div class="stat"><b>${db.assessments.filter(a => a.date >= daysAgo(30)).length}</b><span>Tests, 30 days</span></div><div class="stat"><b>${db.reports.length}</b><span>AI reports</span></div></div>
-    <div class="quick"><button class="primary" data-act="newPatient">${IC.user}New patient</button><button data-act="tab" data-tab="library">${IC.clip}Start a test</button><button data-act="builder" data-pid="">${IC.cam}Form from photo</button><label class="qfile">${IC.up}<span>Upload old report</span><input type="file" class="oldrep" accept="application/pdf,.pdf" aria-label="Upload an old MotionPlus PDF report"></label></div>
-    ${toolsPromo()}
-    <h2 class="sec">Patients</h2>
-    <input id="q" type="search" placeholder="Search by code or diagnosis" value="${esc(q)}" aria-label="Search patients">
+    <input id="q" type="search" placeholder="Search ${db.patients.length} patients by code or diagnosis" value="${esc(q)}" aria-label="Search patients">
     <div class="stack" id="plist"></div>
   </div>`;
   listPatients();
@@ -1841,7 +2273,7 @@ VIEWS.editPatient = (id, thenTid) => {
     <p class="note">Patients are identified by code only. Don't enter names or contact details.</p>
     <div class="field"><label class="label" for="pcode">Patient code</label><input id="pcode" value="${esc(p.code)}" autocomplete="off"></div>
     <div class="row2"><div class="field"><label class="label" for="page">Age (years)</label><input id="page" type="number" inputmode="decimal" min="0" max="120" value="${esc(p.age)}"></div>
-      <div class="field"><label class="label" for="psex">Sex</label><select id="psex">${["F", "M", "Other"].map(s => `<option ${p.sex === s ? "selected" : ""}>${s}</option>`).join("")}</select></div></div>
+      <div class="field"><span class="label" id="psexl">Sex</span><input type="hidden" id="psex" value="${esc(p.sex)}"><div class="segc" role="group" aria-labelledby="psexl">${[["F", "Female"], ["M", "Male"], ["Other", "Other"]].map(([v, l]) => `<button type="button" data-act="setSex" data-v="${v}" aria-pressed="${p.sex === v}">${l}</button>`).join("")}</div></div></div>
     <div class="field"><label class="label" for="pdx">Diagnosis or reason for referral</label><input id="pdx" value="${esc(p.dx)}" placeholder="e.g. Right TKR, post-op week 2"></div>
     <div class="row2"><div class="field"><label class="label" for="pref">Referred by</label><input id="pref" value="${esc(p.ref)}"></div>
       <div class="field"><label class="label" for="pbr">Branch</label><input id="pbr" value="${esc(p.branch)}"></div></div>
@@ -1851,7 +2283,7 @@ VIEWS.editPatient = (id, thenTid) => {
 function nextCodePreview() { const s = db.settings; let n = s.next, c; do { c = `${s.prefix || "MP"}-${String(n++).padStart(4, "0")}`; } while (db.patients.some(p => p.code === c)); return c; }
 
 VIEWS.patient = id => {
-  const p = P(id); if (!p) return go("patients");
+  const p = P(id); if (!p) return go("today");
   const as = db.assessments.filter(a => a.pid === id).sort(byDate).reverse();
   const reps = db.reports.filter(r => r.pid === id).sort((a, b) => b.date.localeCompare(a.date));
   const tids = [...new Set(as.map(a => a.tid))];
@@ -1897,7 +2329,7 @@ function chartSVG(s, t) {
   const area = line + ` L${pts.at(-1)[0]},${y(lo)} L${pts[0][0]},${y(lo)} Z`;
   const dots = pts.map((p, i) => `<circle cx="${p[0]}" cy="${p[1]}" r="${i === pts.length - 1 ? 5 : 3.5}" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>${i === 0 || i === pts.length - 1 || s.length <= 5 ? `<text x="${p[0]}" y="${H - 8}" text-anchor="${i === 0 ? "start" : i === pts.length - 1 ? "end" : "middle"}" class="ax">${fmtShort(p[2].date)}</text>` : ""}`).join("");
   const last = pts.at(-1);
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t.name)} over time">${grid}<path d="${area}" fill="var(--accent)" opacity=".1"/><path d="${line}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>${dots}<text x="${last[0] - 9}" y="${last[1] - 9}" text-anchor="end" class="ax strong">${nice(last[2].val)}</text></svg>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t.name)} over time">${grid}<path d="${area}" fill="var(--accent)" opacity=".1"/><path class="cline" d="${line}" pathLength="1" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>${dots}<text x="${last[0] - 9}" y="${last[1] - 9}" text-anchor="end" class="ax strong">${nice(last[2].val)}</text></svg>`;
 }
 
 VIEWS.library = pid => {
@@ -2464,14 +2896,15 @@ function startForm(pid, tid, aid) {
 }
 VIEWS.form = () => {
   const t = getTpl(draft), p = P(draft.pid);
-  chrome(null, `<div class="score" id="live"></div><button class="primary" data-act="saveA">Save</button>`);
+  chrome(null, `<div class="score" id="live" aria-live="polite" aria-atomic="true"></div><button class="primary" data-act="saveA">Save</button>`);
   $("#app").innerHTML = `
   <header>${back(draft.created && A(draft.id) ? "result" : "library", A(draft.id) ? `data-id="${draft.id}"` : `data-pid="${draft.pid}"`)}<h1>${esc(t.name)}</h1></header>
   <div class="stack">
     <div class="psub">${esc(p.code)} · ${esc(p.age)} yrs · ${esc(p.sex)}</div>
     ${t.lic ? `<p class="note lic">${esc(t.lic)}</p>` : ""}
-    <div class="field"><label class="label" for="adate">Assessment date</label><input id="adate" type="date" value="${draft.date}" max="${today()}"></div>
-    <p class="note">${esc(t.desc)} You can backdate this to enter a paper form later.</p>
+    <div class="field"><span class="label" id="adatel">Assessment date</span><div class="segc dates" role="group" aria-labelledby="adatel">${[[today(), "Today"], [daysAgo(1), "Yesterday"]].map(([v, l]) => `<button type="button" data-act="pickDate" data-v="${v}" aria-pressed="${draft.date === v}">${l}</button>`).join("")}
+      <label id="adatelab" class="${[today(), daysAgo(1)].includes(draft.date) ? "" : "on"}"><span>${[today(), daysAgo(1)].includes(draft.date) ? "Earlier…" : fmtShort(draft.date)}</span><input id="adate" type="date" value="${draft.date}" max="${today()}" aria-label="Choose an earlier date"></label></div></div>
+    <p class="note">${esc(t.desc)} Pick an earlier date to enter a paper form later. Every answer is saved as you go.</p>
   </div>
   <div class="form">${formFields(t, draft.values)}</div>
   <div class="field" style="margin-top:18px"><label class="label" for="anotes">Clinical notes and observations</label><textarea id="anotes" rows="4" placeholder="Quality of movement, compensations, patient comments, safety">${esc(draft.notes)}</textarea></div>`;
@@ -2490,7 +2923,7 @@ function fieldHTML(f, x) {
   if (f.t === "lrnum" || f.t === "lrsel") {
     const v = x || {}; const ctl = side => f.t === "lrnum"
       ? `<input id="i_${id}_${side}" data-f="${id}" data-k="${side}" type="number" inputmode="decimal" step="any" value="${esc(v[side] ?? "")}" aria-label="${esc(f.label)} ${side === "L" ? "left" : "right"}">`
-      : `<select id="i_${id}_${side}" data-f="${id}" data-k="${side}" aria-label="${esc(f.label)} ${side === "L" ? "left" : "right"}"><option value="">–</option>${f.opts.map(o => `<option ${v[side] === o ? "selected" : ""}>${esc(o)}</option>`).join("")}</select>`;
+      : `<button type="button" class="lrbtn${v[side] ? " set" : ""}" id="i_${id}_${side}" data-act="lrPick" data-f="${id}" data-k="${side}" aria-label="${esc(f.label)} ${side === "L" ? "left" : "right"}">${esc(v[side] || "–")}</button>`;
     return `<div class="lrrow"><span>${esc(f.label)}${f.normal != null ? `<small>Normal ${f.normal}${esc(f.unit)}</small>` : f.unit ? `<small>${esc(f.unit)}</small>` : ""}</span>${ctl("L")}${ctl("R")}</div>`;
   }
   if (f.t === "text") return `<div class="item"><label class="ilabel" for="i_${id}">${esc(f.label)}</label><input id="i_${id}" data-f="${id}" value="${esc(x ?? "")}"></div>`;
@@ -2507,7 +2940,7 @@ function setVal(fid, k, val) {
   const v = draft.values;
   if (k) { const o = { ...(v[fid] || {}) }; if (val === "") delete o[k]; else o[k] = val; if (Object.keys(o).length) v[fid] = o; else delete v[fid]; }
   else if (val === "" || val == null) delete v[fid]; else v[fid] = val;
-  updateLive();
+  updateLive(); keepDraft();
 }
 
 // Tool records read as findings, focus areas and measures instead of an item table.
@@ -2519,7 +2952,7 @@ function toolResult(a) {
     ${me.length ? `<h2 class="sec">Key measures</h2><div class="measures">${me.map(x => { const m = x.match(/^(.*?): (.*?) \((\w+)\)$/); return m ? `<div class="mrow"><span>${esc(m[1])}</span><b>${esc(m[2])}</b><i class="mdot ${st(x) === "neutral" ? (m[3] === "Treat" ? "bad" : "warn") : st(x)}" title="${esc(m[3])}"></i></div>` : `<div class="mrow"><span>${esc(x)}</span></div>`; }).join("")}</div>` : ""}`;
 }
 VIEWS.result = aid => {
-  const a = A(aid); if (!a) return go("patients"); const t = getTpl(a), p = P(a.pid), r = runScore(t, a.values, p), c = compare(t, a, p);
+  const a = A(aid); if (!a) return go("today"); const t = getTpl(a), p = P(a.pid), r = runScore(t, a.values, p), c = compare(t, a, p);
   const s = series(a.pid, a.tid), rep = db.reports.find(x => x.kind === "single" && x.aids[0] === aid);
   const pv = c?.prev?.values || {};
   chrome(null, `<button data-act="editA" data-id="${aid}">${t.tool ? "Open in Tools" : "Edit"}</button><button data-act="aiSingle" data-id="${aid}">✦ AI report</button><button class="primary" data-act="pdfA" data-id="${aid}">PDF</button>`);
@@ -2670,7 +3103,7 @@ function md(s) {
 }
 let editingReport = false;
 VIEWS.report = rid => {
-  const rep = db.reports.find(r => r.id === rid); if (!rep) return go("patients"); const p = P(rep.pid), s = db.settings;
+  const rep = db.reports.find(r => r.id === rid); if (!rep) return go("today"); const p = P(rep.pid), s = db.settings;
   const live = streaming?.id === rid;
   chrome(null, live ? `<div class="score"><b>Writing…</b><span>Claude is drafting the report</span></div><button data-act="stopAI">Stop</button>`
     : editingReport ? `<button data-act="cancelEdit">Cancel</button><button class="primary" data-act="saveEdit" data-id="${rid}">Save text</button>`
@@ -2862,8 +3295,8 @@ VIEWS.settings = () => {
   $("#app").innerHTML = `
   ${topHead("Settings")}
   <div class="stack">
-    <h2 class="sec">Clinic</h2>
-    <div class="field"><label class="label" for="sclinic">Clinic name (shown on reports)</label><input id="sclinic" data-s="clinic" value="${esc(s.clinic)}" placeholder="e.g. Sunrise Rehab Centre"></div>
+    <h2 class="sec">${s.mode === "solo" ? "Your practice" : "Clinic"}</h2>
+    <div class="field"><label class="label" for="sclinic">${s.mode === "solo" ? "Practice name (shown on reports)" : "Clinic name (shown on reports)"}</label><input id="sclinic" data-s="clinic" value="${esc(s.clinic)}" placeholder="e.g. Sunrise Rehab Centre"></div>
     <div class="row2"><div class="field"><label class="label" for="sbranch">Branch</label><input id="sbranch" data-s="branch" value="${esc(s.branch)}"></div>
       <div class="field"><label class="label" for="sther">Clinician name</label><input id="sther" data-s="therapist" value="${esc(s.therapist)}" placeholder="Shown as assessor"></div></div>
     <div class="logo-row">${s.logo ? `<img src="${s.logo}" alt="Clinic logo" class="logo-prev">` : `<div class="logo-prev empty-logo">No logo</div>`}
@@ -2874,6 +3307,16 @@ VIEWS.settings = () => {
     <div class="field"><label class="label" for="saddr">Clinic address</label><input id="saddr" data-s="address" autocomplete="off" value="${esc(s.address)}"></div>
     <p class="note">Phone, email and address are printed in the footer of every PDF report page. Leave them empty to keep them off.</p>
     <div class="field"><label class="label" for="sprefix">Patient code prefix</label><input id="sprefix" data-s="prefix" value="${esc(s.prefix)}" maxlength="10"><span class="note">Next code: ${esc(nextCodePreview())}. Use a branch prefix like MP-B2 to keep codes unique across branches.</span></div>
+
+    <h2 class="sec">Experience</h2>
+    <div class="card list">
+      <div class="srow"><span class="grow"><b>How you use MotionPlus</b><small>${s.mode === "solo" ? "Just you: your name goes on reports." : "A clinic: the clinic name and branch go on reports."}</small></span></div>
+      <div class="segc" role="group" aria-label="How you use MotionPlus">${[["clinic", "Clinic"], ["solo", "Individual"]].map(([v, l]) => `<button data-act="setMode" data-v="${v}" aria-pressed="${(s.mode || "clinic") === v}">${l}</button>`).join("")}</div>
+      <div class="srow"><span class="grow"><b>Haptics</b><small>A short pulse when something is saved or needs attention. Android phones only; iPhone browsers don't allow it.</small></span>
+        <button class="switch" role="switch" aria-checked="${s.haptics !== false}" data-act="haptics" data-v="${s.haptics === false ? "on" : "off"}" aria-label="Haptics"><i></i></button></div>
+      <div class="srow"><span class="grow"><b>Text size</b><small>Makes every screen larger or smaller.</small></span></div>
+      <div class="segc" role="group" aria-label="Text size">${[[0.92, "Small"], [1, "Default"], [1.12, "Large"], [1.25, "Largest"]].map(([v, l]) => `<button data-act="textSize" data-v="${v}" aria-pressed="${(s.textSize || 1) === v}" style="font-size:${Math.round(14 * v)}px">${l}</button>`).join("")}</div>
+    </div>
 
     <h2 class="sec">PIN lock</h2>
     <p class="note">${pinKey ? "On. Records on this device are encrypted and the app asks for the PIN when it opens, after 5 minutes in the background, or after 10 minutes without use." : "Off. Anyone holding this device can open the records. Turn on a PIN to encrypt them on this device."} If the PIN is forgotten, records can only come back from a backup file.</p>
@@ -3048,7 +3491,7 @@ function pdfChart(doc, x, y, w, h, s, t, C) {
 
 /* ---------- Events ---------- */
 const confirmArm = {};
-function armed(key, btn, label) { if (confirmArm[key] && Date.now() - confirmArm[key] < 4000) return true; confirmArm[key] = Date.now(); btn.textContent = label; return false; }
+function armed(key, btn, label) { if (confirmArm[key] && Date.now() - confirmArm[key] < 4000) return true; confirmArm[key] = Date.now(); hz("warn"); btn.textContent = label; return false; }
 /* ---------- Checking imported records ---------- */
 // Backup files and uploaded PDF reports can come from anywhere, so each record is checked before it is stored:
 // ids and dates must be plain, text stays text, numbers stay numbers, and anything else is left out.
@@ -3132,7 +3575,7 @@ async function importReport(file) {
 let lockMsg = "";
 VIEWS.lock = () => {
   chrome(null);
-  $("#app").innerHTML = `<div class="lock"><img src="${MP_LOGO}" alt="MotionPlus Physio"><h1>MotionPlus <span class="pro-word">Pro</span></h1><p class="note">Enter your PIN to open the patient records on this device.</p>
+  $("#app").innerHTML = `<div class="lock">${RP_MARK("rpmark lockmark")}<h1>MotionPlus <span class="pro-word">Pro</span></h1><p class="note">Enter your PIN to open the patient records on this device.</p>
     <form id="lockform"><label class="label" for="pinin">PIN</label><input id="pinin" type="password" inputmode="numeric" autocomplete="off" maxlength="16" required>
     <p class="err" role="alert">${esc(lockMsg)}</p><button class="primary" type="submit">Unlock</button></form>
     <button class="link-danger" data-act="forgotPin">Forgot PIN?</button></div>`;
@@ -3145,7 +3588,7 @@ async function tryUnlock() {
   $("#lockform button").disabled = true;
   try { const o = await openLock(pin); pinKey = o.key; pinSalt = o.salt; db = o.data; locked = false; lockMsg = ""; localStorage.removeItem(TRIES);
     const pd = db.pendingDraft; delete db.pendingDraft;
-    if (pd) { draft = pd; go("form"); } else go("patients"); }
+    applyPrefs(); if (pd) { draft = pd; go("form"); } else home(); }
   catch (e) { const n = (t.n || 0) + 1; localStorage.setItem(TRIES, JSON.stringify({ n, until: n >= 5 ? Date.now() + 30000 * 2 ** (n - 5) : 0 }));
     lockMsg = n >= 5 ? "Wrong PIN. Too many tries, wait 30 seconds." : `Wrong PIN. ${5 - n} tr${5 - n === 1 ? "y" : "ies"} left before a short wait.`; render(); }
 }
@@ -3183,12 +3626,14 @@ async function removePin() {
 
 const ACT = {
   ...GZ_ACT,
+  ...UX_ACT,
+  toastAct: () => { const fn = toast.fn; $("#toast").hidden = true; toast.fn = null; fn?.(); },
   about: () => go("about"),
   lockNow: () => lockNow(),
   setPin: () => setPin(),
   removePin: () => removePin(),
   forgotPin: (d, b) => { if (!armed("fp", b, "Tap again to erase this device's records and start again")) return;
-    localStorage.removeItem(LOCK); localStorage.removeItem(STORE); localStorage.removeItem(TRIES); locked = false; pinKey = null; db = emptyDb(); db.settings.next = 1; save(); toast("Records erased. Restore a backup file in Settings to bring them back."); go("patients"); },
+    localStorage.removeItem(LOCK); localStorage.removeItem(STORE); localStorage.removeItem(TRIES); locked = false; pinKey = null; db = emptyDb(); db.settings.next = 1; save(); toast("Records erased. Restore a backup file in Settings to bring them back."); home(); },
   tab: d => go(d.tab),
   patient: d => go("patient", d.id),
   newPatient: d => go("editPatient", null, d.then),
@@ -3200,10 +3645,11 @@ const ACT = {
     if ($("#page").validity.badInput) { toast("Enter the age as a number."); $("#page").focus(); return; }
     const vals = { code, age: $("#page").value, sex: $("#psex").value, dx: $("#pdx").value.trim(), ref: $("#pref").value.trim(), branch: $("#pbr").value.trim(), notes: $("#pnotes").value.trim() };
     let p; if (d.id) { p = P(d.id); Object.assign(p, vals); } else { p = { id: uid(), created: Date.now(), ...vals }; if (code === nextCodePreview()) nextCode(); db.patients.unshift(p); }
-    if (!save()) return; toast(d.id ? "Changes saved" : "Patient added"); d.then ? startForm(p.id, d.then) : go("patient", p.id);
+    if (!save()) return; d.id ? toast("Changes saved") : celebrate("Patient added"); d.then ? startForm(p.id, d.then) : go("patient", p.id);
   },
-  delPatient: (d, b) => { if (!armed("dp" + d.id, b, "Tap again to delete permanently")) return;
-    db.assessments = db.assessments.filter(a => a.pid !== d.id); db.reports = db.reports.filter(r => r.pid !== d.id); db.patients = db.patients.filter(p => p.id !== d.id); save(); toast("Patient deleted"); go("patients"); },
+  delPatient: d => { const snap = { p: db.patients.slice(), a: db.assessments.slice(), r: db.reports.slice(), dr: db.draft };
+    db.assessments = db.assessments.filter(a => a.pid !== d.id); db.reports = db.reports.filter(r => r.pid !== d.id); db.patients = db.patients.filter(p => p.id !== d.id); if (db.draft?.pid === d.id) db.draft = null; save();
+    navNext = "back"; go("patients"); undoable("Patient deleted", () => { db.patients = snap.p; db.assessments = snap.a; db.reports = snap.r; db.draft = snap.dr; }); },
   library: d => go("library", d.pid || null),
   disc: d => { libDisc = d.d; document.querySelectorAll("[data-act=disc]").forEach(b => b.setAttribute("aria-pressed", b.dataset.d === libDisc)); listTemplates(view.args?.[0]); },
   startForm: d => d.pid ? startForm(d.pid, d.tid) : db.patients.length ? go("pickPatient", d.tid) : go("editPatient", null, d.tid),
@@ -3214,10 +3660,11 @@ const ACT = {
   saveA: () => { draft.date = $("#adate").value || today(); draft.notes = $("#anotes").value.trim();
     if (!Object.keys(draft.values).some(k => { const f = getTpl(draft).fields.find(x => x.id === k); return f?.def == null || String(draft.values[k]) !== String(f.def); }) && !draft.notes) { toast("Record at least one item before saving."); return; }
     const i = db.assessments.findIndex(a => a.id === draft.id); if (i >= 0) db.assessments[i] = draft; else db.assessments.push(draft);
-    if (!save()) return; toast("Assessment saved"); const id = draft.id; draft = null; go("result", id); },
+    db.draft = null; if (!save()) return; celebrate("Assessment saved"); const id = draft.id; draft = null; go("result", id); },
   result: d => go("result", d.id),
   editA: d => startForm(null, null, d.id),
-  delA: (d, b) => { if (!armed("da" + d.id, b, "Tap again to delete")) return; const a = A(d.id); db.assessments = db.assessments.filter(x => x.id !== d.id); db.reports = db.reports.filter(r => !r.aids.includes(d.id) || r.kind === "progress"); save(); toast("Assessment deleted"); go("patient", a.pid); },
+  delA: d => { const a = A(d.id), snap = { a: db.assessments.slice(), r: db.reports.slice() }; db.assessments = db.assessments.filter(x => x.id !== d.id); db.reports = db.reports.filter(r => !r.aids.includes(d.id) || r.kind === "progress"); save();
+    navNext = "back"; go("patient", a.pid); undoable("Assessment deleted", () => { db.assessments = snap.a; db.reports = snap.r; }); },
   aiSingle: d => startReport(A(d.id).pid, [d.id], "single"),
   aiProgress: d => startReport(d.id, db.assessments.filter(a => a.pid === d.id).sort(byDate).map(a => a.id), "progress"),
   report: d => { editingReport = false; go("report", d.id); },
@@ -3244,19 +3691,19 @@ const ACT = {
     if (tdraft.pid && P(tdraft.pid)) { toast("Template saved. Starting the assessment."); startForm(tdraft.pid, c.id); } else { toast("Template saved. Find it under Custom."); go("library", null); } },
   delTpl: (d, b) => { if (!armed("dt", b, "Tap again to delete template")) return; db.templates = db.templates.filter(t => t.id !== tdraft.id); save(); toast("Template deleted. Past assessments keep their copy."); go("library", tdraft.pid || null); },
   backToBuilder: () => go("builder"),
-  pdfBack: () => { const b = pdfPreview?.back; pdfPreview = null; b?.name ? go(b.name, ...(b.args || [])) : go("patients"); },
+  pdfBack: () => { const b = pdfPreview?.back; pdfPreview = null; b?.name ? go(b.name, ...(b.args || [])) : go("today"); },
   rmLogo: () => { db.settings.logo = null; save(); render(); },
   backup: () => doBackup(),
   restore: () => doRestore(),
   clearEx: (d, b) => { if (!armed("cx", b, "Tap again to remove examples")) return; const ids = new Set(db.patients.filter(p => p.ex).map(p => p.id));
     db.patients = db.patients.filter(p => !ids.has(p.id)); db.assessments = db.assessments.filter(a => !ids.has(a.pid)); db.reports = db.reports.filter(r => !ids.has(r.pid)); save(); toast("Examples removed"); render(); },
-  wipe: (d, b) => { if (!armed("wipe", b, "Tap again to erase everything on this device")) return; pinKey = null; localStorage.removeItem(LOCK); db = { ...seed(), patients: [], assessments: [] }; db.settings.next = 1; save(); toast("All data deleted"); go("patients"); },
+  wipe: (d, b) => { if (!armed("wipe", b, "Tap again to erase everything on this device")) return; pinKey = null; localStorage.removeItem(LOCK); db = { ...seed(), patients: [], assessments: [] }; db.settings.next = 1; save(); toast("All data deleted"); home(); },
 };
 let previewTpl = null;
 VIEWS.about = () => {
   chrome(null);
   if (!document.getElementById("isiFonts")) document.head.insertAdjacentHTML("beforeend", '<link id="isiFonts" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap">');
-  $("#app").innerHTML = `<header>${back("tab", 'data-tab="patients"')}<h1>About</h1></header>`;
+  $("#app").innerHTML = `<header>${back("tab", 'data-tab="settings"')}<h1>About</h1></header>`;
   $("#app").append($("#aboutTpl").content.cloneNode(true));
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) document.querySelectorAll("#isi-about svg").forEach(s => s.pauseAnimations?.());
 };
@@ -3272,7 +3719,10 @@ VIEWS.preview = () => {
 };
 
 document.addEventListener("click", e => {
+  if (e.target.closest("[data-close]")) { closeSheet(); return; }
   const b = e.target.closest("[data-act]"); if (!b || b.disabled) return;
+  if (b.classList.contains("back")) navNext = "back";
+  if (sheetEl && b.closest(".sheet") && b.dataset.act !== "lrPick") closeSheet();
   if (view.name === "preview" && (b.dataset.act === "pick" || b.dataset.act === "toggle")) { b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") !== "true"); return; }
   const fn = ACT[b.dataset.act]; if (fn) { e.preventDefault(); fn(b.dataset, b, e); }
 });
@@ -3282,14 +3732,14 @@ document.addEventListener("input", e => {
   if (el.id === "libq") { libQ = el.value; listTemplates(view.args?.[0]); return; }
   if (el.dataset.f && draft && view.name === "form") { setVal(el.dataset.f, el.dataset.k, el.value); return; }
   if (el.dataset.s) { db.settings[el.dataset.s] = el.value.trim(); clearTimeout(save.t); save.t = setTimeout(save, 400); return; }
-  if (el.id === "adate" && draft) draft.date = el.value;
-  if (el.id === "anotes" && draft) draft.notes = el.value;
+  if (el.id === "adate" && draft && el.value) ACT.pickDate({ v: el.value > today() ? today() : el.value });
+  if (el.id === "anotes" && draft) { draft.notes = el.value; keepDraft(); }
 });
 document.addEventListener("change", e => {
   const el = e.target;
   if (el.dataset.f && draft && view.name === "form") setVal(el.dataset.f, el.dataset.k, el.value);
   if (el.id === "slogo" && el.files[0]) setLogo(el.files[0]);
-  if (el.classList.contains("oldrep") && el.files[0]) { const f = el.files[0]; el.value = ""; importReport(f); }
+  if (el.classList.contains("oldrep") && el.files[0]) { const f = el.files[0]; el.value = ""; closeSheet(true); importReport(f); }
   if (el.id === "tplfile" && el.files.length) { syncBuilder(); upFiles.push(...el.files); tplStatus = null; render(); }
   if (el.dataset.tk === "type") { syncBuilder(); render(); }
   if (el.id === "sprefix") render();
@@ -3297,10 +3747,14 @@ document.addEventListener("change", e => {
 
 document.addEventListener("submit", e => { if (e.target.id === "lockform") { e.preventDefault(); tryUnlock(); } });
 document.documentElement.lang = "en";
-go(locked ? "lock" : "patients");
+function home() { go(db.settings.welcomed || db.patients.some(p => !p.ex) ? "today" : "welcome", 0); }
+applyPrefs(); splash();
+if (locked) go("lock"); else { home(); if (!db.settings.welcomed && view.name === "today") db.settings.welcomed = 1; }
+// Home-screen shortcuts open straight into a task.
+{ const sc = new URLSearchParams(location.search).get("go"); if (sc && !locked && view.name === "today") { if (sc === "newPatient") go("editPatient", null); else if (sc === "gonio") ACT.startForm({ tid: GONIO }); } }
 // Load the PDF tool once the first screen is up, so reports still work if the connection drops later.
 setTimeout(() => need("jspdf").catch(() => {}), 1500);
 // Offline and fast reopen when served from the web (the Claude viewer has its own caching).
-if ("serviceWorker" in navigator && !window.claude && (location.protocol === "https:" || location.hostname === "localhost")) navigator.serviceWorker.register("sw.js").catch(() => {});
+if ("serviceWorker" in navigator && !window.claude && (location.protocol === "https:" || location.hostname === "localhost")) navigator.serviceWorker.register("sw.js").then(watchUpdates).catch(() => {});
 
 </script>
