@@ -63,3 +63,12 @@ To rebuild after editing `src/`, run `python3 build.py`.
 - **Reliability:** every answer autosaves as a draft, deletes can be undone for 5 seconds, and a banner offers a restart when a new version has installed.
 - **Accessibility:** brighter secondary text, a text-size setting (Small to Largest), live score announcements for screen readers.
 - **Tests:** `tests/smoke.mjs` walks the main path on a phone-sized screen. CI runs it on every pull request and checks that `index.html` was rebuilt from `src/`.
+
+## Guided sessions (premium redesign, stage 2)
+
+- **Plan:** "Start session" on a patient suggests tests from the diagnosis and earlier visits. For example, a knee diagnosis suggests pain, LEFS, the Goniometer and gait. Tap a test to leave it out, or add one.
+- **One question per page:** each item has its own page with a how-to-test tip and safety cues. Some cues come from earlier answers, such as a low Berg item or PHQ-9 item 9 above zero. Choosing an answer moves on, numbered dots jump back to any page, and the last page reviews every answer before saving. Settings can switch back to all questions on one page.
+- **Timers:** TUG, 5xSTS and 10MWT get a stopwatch that fills in the time. The 6MWT gets a 6-minute countdown that shows the standard encouragement each minute. A single pulse marks start, stop and each minute.
+- **Summary:** each test saves into the record as it is finished. The summary shows the change since last time, and a gold star marks changes beyond the test's MCID.
+- **Explain to patient:** a light page in plain words with a body graphic (knee, spine, shoulder, balance, swallowing, heart). It shows "better / about the same / a little harder" and what to work on, and can be sent to the patient. It has no scores or diagnoses, and mood screens are left off it. The PDF stays professional.
+- **Timeline:** the patient page groups assessments by visit date.

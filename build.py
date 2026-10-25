@@ -4,7 +4,7 @@ from pathlib import Path
 src = Path(__file__).parent / "src"
 html = (src / "shell.html").read_text(encoding="utf-8")
 html = html.replace("/*TEMPLATES*/", (src / "templates.js").read_text(encoding="utf-8"))
-html = html.replace("/*APP*/", (src / "app.js").read_text(encoding="utf-8").replace("/*GONIO*/", (src / "gonio.js").read_text(encoding="utf-8")).replace("/*UX*/", (src / "ux.js").read_text(encoding="utf-8")))
+html = html.replace("/*APP*/", (src / "app.js").read_text(encoding="utf-8").replace("/*GONIO*/", (src / "gonio.js").read_text(encoding="utf-8")).replace("/*UX*/", (src / "ux.js").read_text(encoding="utf-8")).replace("/*SESSION*/", (src / "session.js").read_text(encoding="utf-8")))
 (Path(__file__).parent / "index.html").write_text(html, encoding="utf-8")
 print("Built index.html")
 

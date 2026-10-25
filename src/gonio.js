@@ -374,7 +374,7 @@ function gzSave() {
   rec.notes = (rec.notes ? rec.notes + "\n" : "") + "Goniometer: " + lines.join("; ") + ".";
   if (old) db.assessments[db.assessments.indexOf(old)] = rec; else db.assessments.push(rec);
   if (!save()) return;
-  const n = GZ.readings.length; GZ = null; toast(`${n} movement${n > 1 ? "s" : ""} saved to ${P(rec.pid).code}`); go("result", rec.id);
+  const n = GZ.readings.length; GZ = null; toast(`${n} movement${n > 1 ? "s" : ""} saved to ${P(rec.pid).code}`); if (!sessNote(GONIO, rec.pid, rec.id)) go("result", rec.id);
 }
 
 const GZ_ACT = {
