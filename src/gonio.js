@@ -363,7 +363,7 @@ function gzReviewHTML() {
 }
 function gzSave() {
   if (!GZ?.readings.length) return;
-  const old = gzRecToday(GZ.pid), rec = old ? JSON.parse(JSON.stringify(old)) : { id: uid(), pid: GZ.pid, tid: "rom", date: today(), values: {}, notes: "", created: Date.now() };
+  const old = gzRecToday(GZ.pid), rec = old ? JSON.parse(JSON.stringify(old)) : { id: uid(), pid: GZ.pid, tid: "rom", date: today(), values: {}, notes: "", created: Date.now(), ...(db.settings.therapist ? { by: db.settings.therapist } : {}) };
   const meth = new Map((rec.values.gonio || "").split(";").filter(Boolean).map(x => x.split(":"))), lines = [];
   for (const r of GZ.readings) {
     const id = gzField(r.mi), cur = rec.values[id] && typeof rec.values[id] === "object" ? rec.values[id] : {};
@@ -373,7 +373,7 @@ function gzSave() {
   rec.values.gonio = [...meth].map(x => x.join(":")).join(";");
   rec.notes = (rec.notes ? rec.notes + "\n" : "") + "Goniometer: " + lines.join("; ") + ".";
   if (old) db.assessments[db.assessments.indexOf(old)] = rec; else db.assessments.push(rec);
-  if (!save()) return;
+  if (!save()) return; checkGoals(rec.pid);
   const n = GZ.readings.length; GZ = null; toast(`${n} movement${n > 1 ? "s" : ""} saved to ${P(rec.pid).code}`); if (!sessNote(GONIO, rec.pid, rec.id)) go("result", rec.id);
 }
 

@@ -72,3 +72,11 @@ To rebuild after editing `src/`, run `python3 build.py`.
 - **Summary:** each test saves into the record as it is finished. The summary shows the change since last time, and a gold star marks changes beyond the test's MCID.
 - **Explain to patient:** a light page in plain words with a body graphic (knee, spine, shoulder, balance, swallowing, heart). It shows "better / about the same / a little harder" and what to work on, and can be sent to the patient. It has no scores or diagnoses, and mood screens are left off it. The PDF stays professional.
 - **Timeline:** the patient page groups assessments by visit date.
+
+## Clinical reasoning and goals (premium redesign, stage 3)
+
+- **Goals you write and edit:** on a patient, "+ Write" starts a goal in your own words; "Suggest" offers goals drawn from the latest results (an MCID or cut-off, or +15° for limited range) that you can reword before adding. Every goal can be edited: wording, the test that measures it (or none, if you mark it yourself), start, target, reach-by date and notes. Linked goals update their progress and mark themselves reached when a test is saved. Delete has undo.
+- **Possible contributing factors:** findings that need two or more tests pointing the same way (for example leg weakness with poor balance) are listed as possibilities to check, never a diagnosis.
+- **Is this change real?:** each result explains whether a change is beyond the MCID or measurement error, whether every item was scored, and whether the assessor or Goniometer method changed. Session summaries label each change.
+- **Clinic vs individual:** in clinic mode, Today shows who is assessing (switch from the team list in Settings) and every record and PDF line carries the assessor. Camera tools ask for consent once per patient.
+- **Offline:** Today shows when the phone is offline; everything still saves on the device.

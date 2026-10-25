@@ -206,8 +206,9 @@ VIEWS.today = () => {
   const recent = db.assessments.filter(a => P(a.pid)).sort(byDate).reverse().slice(0, 4);
   const where = [s.mode === "solo" ? s.therapist : s.clinic, s.mode === "solo" ? "" : s.branch, new Date().toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })].filter(Boolean).map(esc).join(" · ");
   $("#app").innerHTML = `
-  <header class="thead">${RP_MARK("rpmark hm")}<div class="grow"><div class="psub">${where}</div><h1>${greet()}</h1></div>${pinKey ? `<button class="ghost headlock" data-act="lockNow" aria-label="Lock the app">${LOCK_IC}</button>` : ""}</header>
+  <header class="thead">${RP_MARK("rpmark hm")}<div class="grow"><div class="psub">${where}${navigator.onLine === false ? ' <span class="offl">Offline · saving on this device</span>' : ""}</div><h1>${greet()}</h1></div>${pinKey ? `<button class="ghost headlock" data-act="lockNow" aria-label="Lock the app">${LOCK_IC}</button>` : ""}</header>
   <div class="stack">
+    ${s.mode !== "solo" && (s.team || "").trim() ? `<button class="assessor" data-act="assessor">${IC.user}<span class="grow"><small>Assessing now</small><b>${esc(s.therapist || "Choose")}</b></span><span class="chev" aria-hidden="true">›</span></button>` : ""}
     ${sx ? `<section class="cont">
       <div class="crow"><span class="label gold">Session in progress</span><span class="psub">${sx.n} of ${sx.of} tests</span></div>
       <b class="ctitle">${esc(sx.p.code)}${sx.p.dx ? ` · ${esc(sx.p.dx.slice(0, 40))}` : ""}</b>

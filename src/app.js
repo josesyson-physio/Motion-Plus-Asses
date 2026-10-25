@@ -215,6 +215,7 @@ VIEWS.patient = id => {
   <div class="stack">
     <div class="psub">${esc(p.age)} yrs · ${esc(p.sex)} · ${esc(p.dx)}${p.ref ? ` · Referred by ${esc(p.ref)}` : ""}${p.branch ? ` · ${esc(p.branch)}` : ""}</div>
     ${p.notes ? `<p class="note">${esc(p.notes)}</p>` : ""}
+    ${p.consent?.media ? `<p class="note">Photo and video consent recorded ${fmt(p.consent.media)}.</p>` : ""}
     <div class="actions">
       <button data-act="aiProgress" data-id="${id}" ${as.length ? "" : "disabled"}>✦ AI progress report</button>
       <button data-act="pdfPatient" data-id="${id}" ${as.length ? "" : "disabled"}>PDF summary</button>
@@ -223,6 +224,9 @@ VIEWS.patient = id => {
     </div>
     <div class="ptools" role="group" aria-label="MotionPlus Tools">${Object.values(TOOLS).map(k => `<button class="ptool" data-act="startForm" data-tid="${k.id}" data-pid="${id}">${k.icon}<span><b>${k.name.split(" ")[0]}</b><small>${k.tag}</small></span><span class="pro-chip">PRO</span></button>`).join("")}</div>
     <label class="filebtn">${IC.up}<span>Upload old report to compare</span><input type="file" class="oldrep" accept="application/pdf,.pdf" aria-label="Upload an old MotionPlus PDF report"></label>
+    <div class="lrow sechead"><h2 class="sec">Goals</h2><span class="grow"></span><button class="ghost" data-act="goalNew" data-pid="${id}">+ Write</button><button class="ghost" data-act="goalSuggest" data-pid="${id}">Suggest</button></div>
+    ${goalsHTML(id)}
+    ${reasonHTML(id)}
     ${charts ? `<h2 class="sec">Progress</h2>${charts}` : ""}
     <h2 class="sec">Timeline</h2>
     <div class="tl">${[...new Set(as.map(a => a.date))].map(d => `<section class="tlv"><h3><span>${fmt(d)}</span><small>${as.filter(a => a.date === d).length} test${as.filter(a => a.date === d).length > 1 ? "s" : ""}</small></h3>${as.filter(a => a.date === d).map(a => { const t = getTpl(a), r = runScore(t, a.values, p); return `<button class="hist" data-act="result" data-id="${a.id}">
@@ -377,9 +381,9 @@ function toolSaved(m) {
   if (m.kind !== kind || !(n >= 0 && n <= 100) || typeof m.session !== "string" || m.session.length > 3e6) { toast("That result could not be read. Try saving again."); return; }
   const values = { score: String(Math.round(n)), rating: typeof sm.rating === "string" ? sm.rating.slice(0, 80) : "", findings: toolLines(sm.findings), focus: toolLines(sm.focus), measures: toolLines(sm.measures, 40), session: m.session };
   const old = aid && A(aid), date = okDate(m.date) && m.date <= today() ? m.date : today();
-  const rec = old ? { ...old, values, date } : { id: uid(), pid, tid: kind, date, values, notes: "", created: Date.now() };
+  const rec = old ? { ...old, values, date } : { id: uid(), pid, tid: kind, date, values, notes: "", created: Date.now(), ...(db.settings.therapist ? { by: db.settings.therapist } : {}) };
   if (old) db.assessments[db.assessments.indexOf(old)] = rec; else db.assessments.push(rec);
-  if (!save()) return;
+  if (!save()) return; checkGoals(pid);
   toast(`${TOOLS[kind].name} saved to ${P(pid).code}`); if (!sessNote(kind, pid, rec.id)) go("result", rec.id);
 }
 addEventListener("message", e => {
@@ -394,11 +398,13 @@ addEventListener("message", e => {
 
 /*GONIO*/
 /*SESSION*/
+/*REASON*/
 
 /* ---------- Assessment form ---------- */
 let draft = null;
 function startForm(pid, tid, aid) {
   if (tid === "session") return go("plan", pid);
+  if (!aid && (tid === GONIO || TPLMAP[tid]?.tool) && needConsent(pid, () => startForm(pid, tid))) return;
   if (tid === GONIO) return go("gonio", pid);
   const tt = TPLMAP[aid ? A(aid)?.tid : tid];
   if (tt?.tool) return go("tool", tt.tool, aid ? A(aid).pid : pid, aid || null);
@@ -485,6 +491,7 @@ VIEWS.result = aid => {
       ${r.lines.filter((l, i) => !(r.alert && i === 0)).map(l => `<div class="psub">${esc(l)}</div>`).join("")}
       ${c && c.d != null ? `<div class="change ${c.better === null || c.d === 0 ? "" : c.better ? "up" : "down"}">${c.d > 0 ? "+" : ""}${c.d}${t.unit ? " " + esc(t.unit) : ""} since ${fmt(c.prev.date)}${c.meaningful == null || c.d === 0 ? "" : c.meaningful ? ` · clinically meaningful (≥${t.mcid})` : ` · within measurement error (<${t.mcid})`}</div>` : ""}
     </div>
+    ${realityHTML(a)}
     ${s.length > 1 ? `<div class="chart">${chartSVG(s, t)}</div>` : ""}
     ${rep ? `<button class="hist" data-act="report" data-id="${rep.id}"><span class="grow"><b>AI report</b><span class="psub">Written ${fmt(rep.date)}${rep.edited ? " · edited" : ""}</span></span><span class="chip neutral">Open</span></button>` : ""}
     ${t.id === "rom" ? `<button class="ptool gz-again" data-act="startForm" data-tid="${GONIO}" data-pid="${a.pid}">${TOOLS.goniometer.icon}<span><b>Measure with Goniometer</b><small>Camera or phone tilt · adds to today's record</small></span><span class="pro-chip">PRO</span></button>` : ""}
@@ -815,7 +822,8 @@ VIEWS.settings = () => {
     <h2 class="sec">${s.mode === "solo" ? "Your practice" : "Clinic"}</h2>
     <div class="field"><label class="label" for="sclinic">${s.mode === "solo" ? "Practice name (shown on reports)" : "Clinic name (shown on reports)"}</label><input id="sclinic" data-s="clinic" value="${esc(s.clinic)}" placeholder="e.g. Sunrise Rehab Centre"></div>
     <div class="row2"><div class="field"><label class="label" for="sbranch">Branch</label><input id="sbranch" data-s="branch" value="${esc(s.branch)}"></div>
-      <div class="field"><label class="label" for="sther">Clinician name</label><input id="sther" data-s="therapist" value="${esc(s.therapist)}" placeholder="Shown as assessor"></div></div>
+      <div class="field"><label class="label" for="sther">${s.mode === "solo" ? "Your name" : "Assessor now"}</label><input id="sther" data-s="therapist" value="${esc(s.therapist)}" placeholder="Shown as assessor"></div></div>
+    ${s.mode === "solo" ? "" : `<div class="field"><label class="label" for="steam">Therapists at this clinic</label><textarea id="steam" data-s="team" rows="3" placeholder="One name per line. Switch the assessor from the Today screen.">${esc(s.team || "")}</textarea><span class="note">Each assessment records who assessed it, and the change check warns when testers differ.</span></div>`}
     <div class="logo-row">${s.logo ? `<img src="${s.logo}" alt="Clinic logo" class="logo-prev">` : `<div class="logo-prev empty-logo">No logo</div>`}
       <div class="stack tight"><label class="filebtn"><input id="slogo" type="file" accept="image/png,image/jpeg,image/webp"><span>${s.logo ? "Change logo" : "Upload clinic logo"}</span></label>${s.logo ? `<button class="ghost" data-act="rmLogo">Remove logo</button>` : ""}</div></div>
     <p class="note">Reports always carry the MotionPlus Physio watermark. Your logo appears in the report header.</p>
@@ -964,7 +972,7 @@ async function makePdf({ pid, aids, report, title }) {
     const t = getTpl(a), r = runScore(t, a.values, p), c = compare(t, a, p);
     ensure(22);
     doc.setFont("helvetica", "bold"); doc.setFontSize(11); doc.setTextColor(...INK); doc.text(pdfSafe(t.name), M, y + 3.5);
-    doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(...MUTED); doc.text(fmt(a.date), W - M, y + 3.5, { align: "right" }); y += 7;
+    doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(...MUTED); doc.text(pdfSafe(fmt(a.date) + (a.by ? "  ·  " + a.by : "")), W - M, y + 3.5, { align: "right" }); y += 7;
     doc.setFont("helvetica", "bold"); doc.setFontSize(16); doc.setTextColor(...INK); doc.text(pdfSafe(r.txt), M, y + 5);
     const tw = doc.getTextWidth(pdfSafe(r.txt)); doc.setFontSize(9.5); doc.setTextColor(...(LV[r.band[1]] || ACC)); doc.text(pdfSafe(r.band[0]), M + tw + 4, y + 5); y += 8.5;
     if (c && c.d != null) text(`${c.d > 0 ? "+" : ""}${c.d}${t.unit ? " " + t.unit : ""} since ${fmt(c.prev.date)}${c.meaningful == null || c.d === 0 ? "" : c.meaningful ? " (clinically meaningful)" : " (within measurement error)"}`, { size: 9, color: c.better ? LV.good : c.better === false ? LV.bad : MUTED });
@@ -1047,12 +1055,15 @@ function cleanPatient(p, needId = true) {
   if (!p || typeof p !== "object" || (needId && !okId(p.id)) || !txt(p.code).trim()) return null;
   const o = { code: txt(p.code).trim(), age: typeof p.age === "number" && isFinite(p.age) ? p.age : txt(p.age), sex: txt(p.sex), dx: txt(p.dx), ref: txt(p.ref), branch: txt(p.branch), notes: txt(p.notes), created: numOr(p.created) ?? Date.now() };
   if (needId) o.id = p.id; if (p.ex === true) o.ex = true;
+  if (p.consent && okDate(p.consent.media)) o.consent = { media: p.consent.media };
+  if (Array.isArray(p.goals)) o.goals = p.goals.filter(g => g && txt(g.text).trim() && okDate(g.by) && okDate(g.from) && (!g.tid || (okId(g.tid) && isFinite(g.base) && isFinite(g.target)))).slice(0, 30).map(g => ({ id: okId(g.id) ? g.id : uid(), tid: g.tid ? g.tid : "", ...(okId(g.f) ? { f: g.f } : {}), ...(g.s === "L" || g.s === "R" ? { s: g.s } : {}), ...(g.tid ? { base: +g.base, target: +g.target } : {}), hb: !!g.hb, note: txt(g.note).slice(0, 200), unit: txt(g.unit).slice(0, 12), by: g.by, from: g.from, text: txt(g.text).slice(0, 160), ...(okDate(g.met) ? { met: g.met } : {}), created: numOr(g.created) ?? Date.now() }));
   return o;
 }
 function cleanAssessment(a) {
   if (!a || typeof a !== "object" || !okId(a.id) || !okId(a.pid) || !okId(a.tid) || !okDate(a.date)) return null;
   const values = {}; if (a.values && typeof a.values === "object") for (const [k, v] of Object.entries(a.values)) { const c = okId(k) ? cleanVal(v) : undefined; if (c !== undefined) values[k] = c; }
   const o = { id: a.id, pid: a.pid, tid: a.tid, date: a.date, values, notes: txt(a.notes), created: numOr(a.created) ?? Date.now() };
+  if (txt(a.by).trim()) o.by = txt(a.by).trim().slice(0, 80);
   if (a.tpl != null) { o.tpl = cleanTpl(a.tpl); if (!o.tpl) return null; }
   return o;
 }
@@ -1147,6 +1158,7 @@ const ACT = {
   ...GZ_ACT,
   ...UX_ACT,
   ...SESS_ACT,
+  ...REASON_ACT,
   toastAct: () => { const fn = toast.fn; $("#toast").hidden = true; toast.fn = null; fn?.(); },
   about: () => go("about"),
   lockNow: () => lockNow(),
@@ -1178,10 +1190,10 @@ const ACT = {
     b.parentNode.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", !same && x === b));
     if (!same && draft.g != null && view.name === "form") { hz("tick"); const g = draft.g; setTimeout(() => { if (draft?.g === g && view.name === "form") gMove(g + 1); }, 280); } },
   toggle: (d, b) => { const cur = draft.values[d.f] || [], on = cur.includes(d.v); const nx = on ? cur.filter(x => x !== d.v) : [...cur, d.v]; setVal(d.f, null, nx.length ? nx : ""); b.setAttribute("aria-pressed", !on); },
-  saveA: () => { draft.date = $("#adate").value || today(); draft.notes = $("#anotes").value.trim();
+  saveA: () => { draft.date = $("#adate").value || today(); if (!draft.by && db.settings.therapist) draft.by = db.settings.therapist; draft.notes = $("#anotes").value.trim();
     if (!Object.keys(draft.values).some(k => { const f = getTpl(draft).fields.find(x => x.id === k); return f?.def == null || String(draft.values[k]) !== String(f.def); }) && !draft.notes) { toast("Record at least one item before saving."); return; }
     const i = db.assessments.findIndex(a => a.id === draft.id); if (i >= 0) db.assessments[i] = draft; else db.assessments.push(draft);
-    db.draft = null; if (!save()) return; celebrate("Assessment saved"); const id = draft.id, sid = draft.sid, tid = draft.tid, pid = draft.pid; draft = null; tmStop();
+    db.draft = null; if (!save()) return; celebrate("Assessment saved"); checkGoals(draft.pid); const id = draft.id, sid = draft.sid, tid = draft.tid, pid = draft.pid; draft = null; tmStop();
     if (!(sid && sessNote(tid, pid, id, sid))) go("result", id); },
   result: d => go("result", d.id),
   editA: d => startForm(null, null, d.id),

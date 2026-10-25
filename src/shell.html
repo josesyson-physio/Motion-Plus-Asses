@@ -996,6 +996,37 @@ body.lightpage .back{background:#ece7da;color:#16150f}
 .lwork .lcard{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px;text-align:center;font-size:13px;font-weight:600}
 .lwork svg{width:26px;height:26px;fill:none;stroke:#b07d00;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 
+/* ---------- Reasoning, goals, change check (stage 3) ---------- */
+.sechead{align-items:center;margin-top:8px}.sechead .sec{margin:0}
+.goal{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;cursor:pointer}
+.goal:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.goal b{font-weight:650;line-height:1.3}
+.goal.met{border-color:#1f4a2e;background:linear-gradient(140deg,#10241a,#141414 70%)}
+.goal.met .pbar i{background:var(--good)}
+.goal .lrow .chip{flex:none}
+.primary-soft{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent);font-weight:700}
+.cb{display:inline-block;margin-left:6px;font:700 10.5px var(--body);letter-spacing:.02em;padding:3px 8px;border-radius:999px;white-space:nowrap;vertical-align:1px}
+.cb.real{background:var(--accent);color:var(--accent-ink)}.cb.worse{background:var(--bad-soft);color:var(--bad)}.cb.noise,.cb.same{background:var(--sunk);color:var(--muted)}
+.sdelta .cb{display:block;margin:3px 0 0;text-align:center}
+.reality{display:flex;flex-direction:column;gap:8px}
+.reality .lrow{flex-wrap:wrap}
+.rrow{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--ink)}
+.rrow i{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;font-style:normal;font-weight:800;font-size:12px;flex:none;background:var(--sunk);color:var(--muted)}
+.rrow.good i{background:var(--good-soft);color:var(--good)}.rrow.warn i{background:var(--warn-soft);color:var(--warn)}
+details.why{padding:0}
+details.why summary{list-style:none;display:flex;gap:10px;align-items:center;padding:13px 14px;cursor:pointer}
+details.why summary::-webkit-details-marker{display:none}
+details.why summary b{flex:1;font-weight:650;line-height:1.35}
+details.why[open] .chev{transform:rotate(90deg)}
+details.why .chev{transition:transform .2s}
+details.why ul{margin:0 14px 12px;padding-left:18px;color:var(--muted);font-size:13.5px}
+.goalopt{display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.goalopt small{color:var(--muted);font-weight:400}
+.assessor{display:flex;align-items:center;gap:12px;text-align:left;padding:10px 14px;border-radius:16px;background:var(--surface)}
+.assessor svg{width:22px;height:22px;color:var(--accent)}
+.assessor small{display:block;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.offl{display:inline-block;margin-left:6px;font:700 10.5px var(--body);padding:2px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn)}
+
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="rpGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe866"/><stop offset=".5" stop-color="#ffd60a"/><stop offset="1" stop-color="#ffa920"/></linearGradient></defs></svg>

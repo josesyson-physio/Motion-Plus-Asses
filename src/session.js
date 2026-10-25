@@ -203,8 +203,10 @@ VIEWS.summary = () => {
   <div class="sumhead"><div class="wglow" aria-hidden="true"></div><div class="psub">Session · ${esc(p.code)} · ${fmt(s.date)}</div><h1>${head}</h1><p class="note">${rows.length} test${rows.length === 1 ? "" : "s"} saved to the patient's record.</p></div>
   <div class="stack">
     <div class="card list">${rows.map(x => { const d = x.c?.d, u = x.tp.unit && !x.tp.unit.startsWith("/") ? " " + x.tp.unit : "";
-      return `<button class="trow ${x.c?.better && x.c.meaningful ? "mcid" : ""}" data-act="result" data-id="${x.a.id}"><span class="grow"><b>${esc(x.tp.name)}</b><small>${esc(x.r.band[0])}</small></span><span class="sval">${esc(x.r.txt)}</span>${d != null && d !== 0 ? `<span class="sdelta ${x.c.better === null ? "" : x.c.better ? "up" : "down"}">${d > 0 ? "+" : ""}${d}${esc(u)}${x.c.better && x.c.meaningful ? " ★" : ""}</span>` : ""}</button>`; }).join("") || `<div class="empty">No tests were saved in this session.</div>`}</div>
+      return `<button class="trow ${x.c?.better && x.c.meaningful ? "mcid" : ""}" data-act="result" data-id="${x.a.id}"><span class="grow"><b>${esc(x.tp.name)}</b><small>${esc(x.r.band[0])}</small></span><span class="sval">${esc(x.r.txt)}</span>${d != null && d !== 0 ? `<span class="sdelta ${x.c.better === null ? "" : x.c.better ? "up" : "down"}">${d > 0 ? "+" : ""}${d}${esc(u)}${changeBadge(x.tp, x.c)}</span>` : ""}</button>`; }).join("") || `<div class="empty">No tests were saved in this session.</div>`}</div>
     ${stars.map(x => `<div class="star"><span aria-hidden="true">★</span><p><b>${esc(x.tp.short)} ${x.c.d > 0 ? "rose" : "fell"} by ${Math.abs(x.c.d)}${x.tp.unit && !x.tp.unit.startsWith("/") ? " " + esc(x.tp.unit) : " points"}.</b> That is more than the ${x.tp.mcid}-point change seen as clinically meaningful, so it is likely a real change, not measurement noise.</p></div>`).join("")}
+    ${(p.goals || []).length ? `<h2 class="sec">Goals</h2>${goalsHTML(p.id, true)}` : ""}
+    ${reasonHTML(p.id)}
     ${s.skip.length ? `<p class="note">Skipped: ${s.skip.map(planShort).map(esc).join(", ")}.</p>` : ""}
   </div>`;
   if (!s.cheered && rows.length) { s.cheered = 1; save(); if (stars.length) hz("success"); }
@@ -258,6 +260,7 @@ VIEWS.explain = pid => {
   <div class="stack">
     <div class="lcard body"><svg viewBox="0 0 130 192" class="bodyart" role="img" aria-label="${esc(B.h)}">${B.svg}</svg><div><div class="label">${esc(B.h)}</div><p>${esc(B.p)}</p></div></div>
     ${items.map(x => `<div class="lcard"><div class="lrow"><b>${esc(x.name)}</b><span class="pill ${x.pill[1]}">${esc(x.pill[0])}</span></div>${x.frac != null ? `<div class="lbar"><i style="--w:${Math.round(100 * Math.max(.04, Math.min(1, x.frac)))}%"></i></div>` : ""}<p>${esc(x.word)}</p></div>`).join("") || `<div class="lcard"><p>Nothing measured yet today.</p></div>`}
+    ${(p.goals || []).filter(g => !g.met).length ? `<div class="label">Your goals</div>${p.goals.filter(g => !g.met).slice(0, 3).map(g => { const pr = goalProgress(pid, g); return `<div class="lcard"><b>${esc(g.text)}</b>${g.tid ? `<div class="lbar"><i style="--w:${Math.round(100 * Math.max(.04, pr.pct))}%"></i></div><p>${pr.pct >= .5 ? "More than halfway there" : pr.pct > 0 ? "On the way" : "Just getting started"} · by ${fmt(g.by)}</p>` : `<p>By ${fmt(g.by)}</p>`}</div>`; }).join("")}` : ""}
     <div class="label">This week we'll work on</div>
     <div class="lwork">${WORK[reg].map(([w, d]) => `<div class="lcard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}"/></svg><span>${esc(w)}</span></div>`).join("")}</div>
     <p class="note center">Your therapist will talk you through what this means for you.</p>
