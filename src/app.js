@@ -152,7 +152,7 @@ const back = (act, extra = "") => `<button class="back" data-act="${act}" ${extr
 const brand = () => `<div class="brand">MOTIONPLUS <b class="pro">PRO</b>${db.settings.clinic ? " · " + esc(db.settings.clinic).toUpperCase() : ""}</div>`;
 const LOCK_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
 const topHead = (title, right = "") => `<header>${RP_MARK("rpmark hm")}<div class="grow">${brand()}<h1>${title}</h1></div>${right}${pinKey ? `<button class="ghost headlock" data-act="lockNow" aria-label="Lock the app">${LOCK_IC}</button>` : ""}</header>`;
-const IC = { up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 18v-6M9 15l3-3 3 3"/></svg>', user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.6-3.6 3.2-5.5 6.5-5.5 1.6 0 3 .4 4.1 1.2M18 14v6M15 17h6"/></svg>', clip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 3.5V2.5h6v1M8.5 9h7M8.5 12.5h7M8.5 16h4"/></svg>', cam: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+const IC = { msg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/><path d="M8.5 9.5h7M8.5 12.5h4"/></svg>', up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 18v-6M9 15l3-3 3 3"/></svg>', user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.6-3.6 3.2-5.5 6.5-5.5 1.6 0 3 .4 4.1 1.2M18 14v6M15 17h6"/></svg>', clip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 3.5V2.5h6v1M8.5 9h7M8.5 12.5h7M8.5 16h4"/></svg>', cam: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
   clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>' };
 
 /* ---------- Views ---------- */
@@ -399,6 +399,7 @@ addEventListener("message", e => {
 /*GONIO*/
 /*SESSION*/
 /*REASON*/
+/*PILOT*/
 
 /* ---------- Assessment form ---------- */
 let draft = null;
@@ -862,6 +863,8 @@ VIEWS.settings = () => {
     <button data-act="restore">Import records</button>
     <p class="note">Importing adds patients and assessments. It never deletes what's already here.</p>
 
+    ${pilotSettingsHTML()}
+
     <h2 class="sec">About</h2>
     <button data-act="about">About Inclusive.Si and MotionPlus Physio</button>
 
@@ -1159,6 +1162,7 @@ const ACT = {
   ...UX_ACT,
   ...SESS_ACT,
   ...REASON_ACT,
+  ...PILOT_ACT,
   toastAct: () => { const fn = toast.fn; $("#toast").hidden = true; toast.fn = null; fn?.(); },
   about: () => go("about"),
   lockNow: () => lockNow(),

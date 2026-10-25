@@ -1027,6 +1027,11 @@ details.why ul{margin:0 14px 12px;padding-left:18px;color:var(--muted);font-size
 .assessor small{display:block;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
 .offl{display:inline-block;margin-left:6px;font:700 10.5px var(--body);padding:2px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn)}
 
+/* ---------- Pilot kit ---------- */
+.pilotbar{display:flex;align-items:center;gap:12px;text-align:left;padding:10px 14px;border-radius:16px;background:var(--accent-soft);border-color:var(--accent-line)}
+.pilotbar svg{width:22px;height:22px;color:var(--accent)}
+.pilotbar small{display:block;font-size:11.5px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="rpGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe866"/><stop offset=".5" stop-color="#ffd60a"/><stop offset="1" stop-color="#ffa920"/></linearGradient></defs></svg>
@@ -2113,7 +2118,7 @@ const back = (act, extra = "") => `<button class="back" data-act="${act}" ${extr
 const brand = () => `<div class="brand">MOTIONPLUS <b class="pro">PRO</b>${db.settings.clinic ? " · " + esc(db.settings.clinic).toUpperCase() : ""}</div>`;
 const LOCK_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
 const topHead = (title, right = "") => `<header>${RP_MARK("rpmark hm")}<div class="grow">${brand()}<h1>${title}</h1></div>${right}${pinKey ? `<button class="ghost headlock" data-act="lockNow" aria-label="Lock the app">${LOCK_IC}</button>` : ""}</header>`;
-const IC = { up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 18v-6M9 15l3-3 3 3"/></svg>', user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.6-3.6 3.2-5.5 6.5-5.5 1.6 0 3 .4 4.1 1.2M18 14v6M15 17h6"/></svg>', clip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 3.5V2.5h6v1M8.5 9h7M8.5 12.5h7M8.5 16h4"/></svg>', cam: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+const IC = { msg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/><path d="M8.5 9.5h7M8.5 12.5h4"/></svg>', up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 18v-6M9 15l3-3 3 3"/></svg>', user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.6-3.6 3.2-5.5 6.5-5.5 1.6 0 3 .4 4.1 1.2M18 14v6M15 17h6"/></svg>', clip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 3.5V2.5h6v1M8.5 9h7M8.5 12.5h7M8.5 16h4"/></svg>', cam: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
   clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>' };
 
 /* ---------- Views ---------- */
@@ -2177,7 +2182,8 @@ function plusSheet() {
     ${sitem(IC.user, "New patient", "Add a patient by code", 'data-act="newPatient"')}
     <div class="sgrid">${Object.values(T).map(k => `<button class="stool" data-act="startForm" data-tid="${k.id}">${k.icon}<b>${k.name.split(" ")[0]}</b>${pro}</button>`).join("")}</div>
     ${sitem(IC.cam, "Form from a photo", "Turn a paper form into a template", 'data-act="builder" data-pid=""')}
-    <label class="sitem">${`<span class="sic">${IC.up}</span>`}<span class="grow"><b>Upload an old report</b><small>A MotionPlus PDF, to compare</small></span><span class="chev" aria-hidden="true">›</span><input type="file" class="oldrep" accept="application/pdf,.pdf" aria-label="Upload an old MotionPlus PDF report"></label>`);
+    <label class="sitem">${`<span class="sic">${IC.up}</span>`}<span class="grow"><b>Upload an old report</b><small>A MotionPlus PDF, to compare</small></span><span class="chev" aria-hidden="true">›</span><input type="file" class="oldrep" accept="application/pdf,.pdf" aria-label="Upload an old MotionPlus PDF report"></label>
+    ${sitem(IC.msg, "Send feedback", "Something broke, confusing, or an idea", 'data-act="feedback"')}`);
 }
 
 /* Screen transitions: forward slides in from the right, back from the left, tab switches cross-fade.
@@ -2328,6 +2334,7 @@ VIEWS.today = () => {
   $("#app").innerHTML = `
   <header class="thead">${RP_MARK("rpmark hm")}<div class="grow"><div class="psub">${where}${navigator.onLine === false ? ' <span class="offl">Offline · saving on this device</span>' : ""}</div><h1>${greet()}</h1></div>${pinKey ? `<button class="ghost headlock" data-act="lockNow" aria-label="Lock the app">${LOCK_IC}</button>` : ""}</header>
   <div class="stack">
+    ${s.pilot ? `<button class="pilotbar" data-act="feedback">${IC.msg}<span class="grow"><small>Pilot${pilotDay() ? ` · day ${pilotDay()} of 7` : ""}</small><b>Tell us what to fix</b></span><span class="chev" aria-hidden="true">›</span></button>` : ""}
     ${s.mode !== "solo" && (s.team || "").trim() ? `<button class="assessor" data-act="assessor">${IC.user}<span class="grow"><small>Assessing now</small><b>${esc(s.therapist || "Choose")}</b></span><span class="chev" aria-hidden="true">›</span></button>` : ""}
     ${sx ? `<section class="cont">
       <div class="crow"><span class="label gold">Session in progress</span><span class="psub">${sx.n} of ${sx.of} tests</span></div>
@@ -3314,7 +3321,7 @@ const SESS_ACT = {
   sessHub: () => { tmStop(); go("sess"); },
   sessFinish: () => go("summary"),
   sessPdf: () => { const s = db.session; makePdf({ pid: s.pid, aids: Object.values(s.done).filter(A), title: "Session Report" }); },
-  sessDone: () => { const pid = db.session.pid; db.session = null; save(); celebrate("Session saved"); go("patient", pid); },
+  sessDone: () => { const pid = db.session.pid; db.session = null; save(); celebrate("Session saved"); go("patient", pid); pilotAsk(); },
   resumeSess: () => go(sessNext() ? "sess" : "summary"),
   explain: d => go("explain", d.pid),
   explainDone: () => { document.body.classList.remove("lightpage"); navNext = "back"; const s = db.session; s && P(s.pid)?.id === view.args[0] ? go("summary") : go("patient", view.args[0]); },
@@ -3506,6 +3513,82 @@ VIEWS.goal = pid => {
 document.addEventListener("keydown", e => { const b = e.target.closest?.('[role="button"][data-act]'); if (b && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); b.click(); } });
 // Show when the phone is offline: everything still saves on the device.
 addEventListener("online", () => view.name === "today" && render()); addEventListener("offline", () => view.name === "today" && render());
+
+/* Pilot kit: in-app feedback for a real-phone pilot. Feedback stays on this device until the
+   therapist chooses to send it, and it never includes patient codes, names or results. */
+const APP_V = "2026-10-25d";
+const FB_KINDS = [["problem", "Something broke"], ["confusing", "Confusing"], ["idea", "Idea"], ["like", "I like this"]];
+let fbDraft = null;
+const fbList = () => (db.feedback ||= []);
+const pilotDay = () => { const s = db.settings.pilotStart; return s ? Math.min(99, Math.floor((Date.parse(today()) - Date.parse(s)) / 864e5) + 1) : 0; };
+// What we attach to each note: the screen and phone, nothing about patients.
+function fbContext(screen) {
+  const ua = navigator.userAgent, os = /iPhone|iPad/.test(ua) ? "iOS" : /Android/.test(ua) ? "Android" : /Mac/.test(ua) ? "Mac" : /Windows/.test(ua) ? "Windows" : "Other",
+    br = /CriOS|Chrome/.test(ua) ? "Chrome" : /FxiOS|Firefox/.test(ua) ? "Firefox" : /Safari/.test(ua) ? "Safari" : "Other";
+  return { screen, v: APP_V, os, browser: br, size: `${innerWidth}×${innerHeight}`, installed: matchMedia("(display-mode: standalone)").matches || navigator.standalone === true, mode: db.settings.mode || "clinic", day: pilotDay() };
+}
+function fbText(list) {
+  return `MotionPlus pilot feedback (${list.length})\n\n` + list.map(f => `${f.date} · ${FB_KINDS.find(k => k[0] === f.kind)?.[1] || { rating: "Session rating", error: "App error" }[f.kind] || f.kind}${f.rate ? ` · ${f.rate}/5` : ""}${f.text ? `\n${f.text}` : ""}\nScreen: ${f.ctx.screen} · ${f.ctx.os} ${f.ctx.browser} ${f.ctx.size}${f.ctx.installed ? " · installed" : ""} · v${f.ctx.v}${f.ctx.day ? ` · pilot day ${f.ctx.day}` : ""}`).join("\n\n");
+}
+async function fbSend() {
+  const list = fbList().filter(f => !f.sent); if (!list.length) { toast("Nothing new to send"); return; }
+  const text = fbText(list), to = (db.settings.pilotTo || "").trim(), mark = () => { list.forEach(f => f.sent = today()); save(); render(); };
+  try { if (navigator.share) { await navigator.share({ title: "MotionPlus feedback", text }); mark(); return; } } catch (e) { if (e.name === "AbortError") return; }
+  if (to) { location.href = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent("MotionPlus pilot feedback")}&body=${encodeURIComponent(text)}`; mark(); return; }
+  try { await navigator.clipboard.writeText(text); mark(); toast("Copied. Paste it into a message to the pilot lead."); } catch (e) { downloadFile("motionplus-feedback.txt", text, "text/plain"); mark(); }
+}
+VIEWS.feedback = () => {
+  const f = fbDraft || (fbDraft = { kind: "problem", rate: 0, text: "", screen: "today" });
+  chrome(null, `<button class="primary wide" data-act="fbSave">Save feedback</button>`);
+  $("#app").innerHTML = `
+  <header>${back(f.screen === "settings" ? "settings" : "today")}<div class="grow"><div class="psub">${db.settings.pilot ? `Pilot${pilotDay() ? ` · day ${pilotDay()}` : ""}` : "MotionPlus"}</div><h1>Send feedback</h1></div></header>
+  <div class="stack">
+    <div class="field"><span class="label" id="fbk">What is it about?</span>
+      <div class="chips" role="group" aria-labelledby="fbk">${FB_KINDS.map(([v, l]) => `<button class="fchip" data-act="fbKind" data-v="${v}" aria-pressed="${f.kind === v}">${l}</button>`).join("")}</div></div>
+    <div class="field"><label class="label" for="fbtext">Tell us more</label><textarea id="fbtext" rows="5" placeholder="${f.kind === "problem" ? "What were you doing, and what happened?" : f.kind === "idea" ? "What would make this better for you?" : "What did you notice?"}">${esc(f.text)}</textarea>
+      <span class="note">Please don't type patient names or details.</span></div>
+    <div class="field"><span class="label" id="fbr">How was MotionPlus today? (optional)</span>
+      <div class="segc" role="group" aria-labelledby="fbr">${[1, 2, 3, 4, 5].map(n => `<button data-act="fbRate" data-v="${n}" aria-pressed="${f.rate === n}" aria-label="${n} out of 5">${n}</button>`).join("")}</div>
+      <span class="note">1 is frustrating, 5 is excellent.</span></div>
+    <p class="note">Added for us: the screen you came from (${esc(f.screen)}), your phone type and screen size, and the app version. Feedback stays on this phone until you send it.</p>
+  </div>`;
+};
+const fbSync = () => { if (fbDraft && $("#fbtext")) fbDraft.text = $("#fbtext").value; };
+function openFeedback(kind) { fbDraft = { kind: kind || "problem", rate: 0, text: "", screen: view.name || "today" }; closeSheet(true); go("feedback"); }
+// After a session, ask once a day for a one-tap rating while the pilot runs.
+function pilotAsk() {
+  if (!db.settings.pilot || db.settings.fbAsked === today()) return; db.settings.fbAsked = today(); save();
+  setTimeout(() => openSheet("How did that session go?", `<p class="note">One tap helps the pilot. 1 is frustrating, 5 is excellent.</p><div class="segc" role="group" aria-label="Rating">${[1, 2, 3, 4, 5].map(n => `<button data-act="fbQuick" data-v="${n}">${n}</button>`).join("")}</div><button data-act="feedback">Write more</button>`), 700);
+}
+// While the pilot runs, unexpected errors are noted (message and screen only) so they can be sent with the feedback.
+addEventListener("error", e => { if (!db?.settings?.pilot) return; const l = fbList(); if (l.filter(f => f.kind === "error").length >= 20) return;
+  l.push({ id: uid(), kind: "error", date: today(), text: String(e.message || "Error").slice(0, 200), ctx: fbContext(view.name) }); save(); });
+const PILOT_ACT = {
+  feedback: d => openFeedback(d.v),
+  fbKind: d => { fbSync(); fbDraft.kind = d.v; render(); },
+  fbRate: d => { fbSync(); fbDraft.rate = fbDraft.rate === +d.v ? 0 : +d.v; render(); },
+  fbSave: () => { fbSync(); const f = fbDraft;
+    if (!f.text.trim() && !f.rate) { toast("Write a few words or pick a rating."); $("#fbtext")?.focus(); return; }
+    fbList().push({ id: uid(), kind: f.kind, rate: f.rate || undefined, text: f.text.trim().slice(0, 2000), date: today(), ctx: fbContext(f.screen) });
+    save(); fbDraft = null; navNext = "back"; go(f.screen === "settings" ? "settings" : "today"); celebrate("Thank you"); toast("Saved on this phone", { label: "Send now", fn: fbSend }); },
+  fbQuick: d => { fbList().push({ id: uid(), kind: "rating", rate: +d.v, text: "", date: today(), ctx: fbContext("session") }); save(); hz("tap"); toast("Thanks for rating", +d.v <= 2 ? { label: "Say why", fn: () => openFeedback("problem") } : null); },
+  fbSend: () => fbSend(),
+  fbExport: () => downloadFile(`motionplus-feedback-${today()}.txt`, fbText(fbList()), "text/plain"),
+  pilot: d => { const on = d.v === "on"; db.settings.pilot = on; if (on && !db.settings.pilotStart) db.settings.pilotStart = today(); save(); if (on) hz("success"); render(); },
+  pilotReset: () => { db.settings.pilotStart = today(); save(); toast("Pilot restarted from today"); render(); },
+};
+function pilotSettingsHTML() {
+  const s = db.settings, l = fbList(), unsent = l.filter(f => !f.sent).length;
+  return `<h2 class="sec">Pilot and feedback</h2>
+    <div class="card list">
+      <div class="srow"><span class="grow"><b>Pilot mode</b><small>${s.pilot ? `On${pilotDay() ? `, day ${pilotDay()}` : ""}. A feedback button shows on Today, and you're asked for a one-tap rating after your first session each day.` : "Turn on while you're trying MotionPlus with a group of physios."}</small></span>
+        <button class="switch" role="switch" aria-checked="${!!s.pilot}" data-act="pilot" data-v="${s.pilot ? "off" : "on"}" aria-label="Pilot mode"><i></i></button></div>
+    </div>
+    ${s.pilot ? `<div class="field"><label class="label" for="spto">Send feedback to (optional)</label><input id="spto" data-s="pilotTo" type="email" autocomplete="off" value="${esc(s.pilotTo || "")}" placeholder="The pilot lead's email"><span class="note">Used when this phone can't share directly. Feedback never leaves the phone until you tap Send.</span></div>` : ""}
+    <button data-act="feedback" data-v="problem">Send feedback</button>
+    ${l.length ? `<div class="actions"><button data-act="fbSend">${unsent ? `Send ${unsent} new` : "All sent"}</button><button data-act="fbExport">Save all as a file (${l.length})</button></div>` : ""}
+    ${s.pilot && pilotDay() > 1 ? `<button class="ghost" data-act="pilotReset">Restart the pilot from today</button>` : ""}`;
+}
 
 
 /* ---------- Assessment form ---------- */
@@ -3970,6 +4053,8 @@ VIEWS.settings = () => {
     <button data-act="restore">Import records</button>
     <p class="note">Importing adds patients and assessments. It never deletes what's already here.</p>
 
+    ${pilotSettingsHTML()}
+
     <h2 class="sec">About</h2>
     <button data-act="about">About Inclusive.Si and MotionPlus Physio</button>
 
@@ -4267,6 +4352,7 @@ const ACT = {
   ...UX_ACT,
   ...SESS_ACT,
   ...REASON_ACT,
+  ...PILOT_ACT,
   toastAct: () => { const fn = toast.fn; $("#toast").hidden = true; toast.fn = null; fn?.(); },
   about: () => go("about"),
   lockNow: () => lockNow(),

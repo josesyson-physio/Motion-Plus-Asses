@@ -57,7 +57,8 @@ function plusSheet() {
     ${sitem(IC.user, "New patient", "Add a patient by code", 'data-act="newPatient"')}
     <div class="sgrid">${Object.values(T).map(k => `<button class="stool" data-act="startForm" data-tid="${k.id}">${k.icon}<b>${k.name.split(" ")[0]}</b>${pro}</button>`).join("")}</div>
     ${sitem(IC.cam, "Form from a photo", "Turn a paper form into a template", 'data-act="builder" data-pid=""')}
-    <label class="sitem">${`<span class="sic">${IC.up}</span>`}<span class="grow"><b>Upload an old report</b><small>A MotionPlus PDF, to compare</small></span><span class="chev" aria-hidden="true">›</span><input type="file" class="oldrep" accept="application/pdf,.pdf" aria-label="Upload an old MotionPlus PDF report"></label>`);
+    <label class="sitem">${`<span class="sic">${IC.up}</span>`}<span class="grow"><b>Upload an old report</b><small>A MotionPlus PDF, to compare</small></span><span class="chev" aria-hidden="true">›</span><input type="file" class="oldrep" accept="application/pdf,.pdf" aria-label="Upload an old MotionPlus PDF report"></label>
+    ${sitem(IC.msg, "Send feedback", "Something broke, confusing, or an idea", 'data-act="feedback"')}`);
 }
 
 /* Screen transitions: forward slides in from the right, back from the left, tab switches cross-fade.
@@ -208,6 +209,7 @@ VIEWS.today = () => {
   $("#app").innerHTML = `
   <header class="thead">${RP_MARK("rpmark hm")}<div class="grow"><div class="psub">${where}${navigator.onLine === false ? ' <span class="offl">Offline · saving on this device</span>' : ""}</div><h1>${greet()}</h1></div>${pinKey ? `<button class="ghost headlock" data-act="lockNow" aria-label="Lock the app">${LOCK_IC}</button>` : ""}</header>
   <div class="stack">
+    ${s.pilot ? `<button class="pilotbar" data-act="feedback">${IC.msg}<span class="grow"><small>Pilot${pilotDay() ? ` · day ${pilotDay()} of 7` : ""}</small><b>Tell us what to fix</b></span><span class="chev" aria-hidden="true">›</span></button>` : ""}
     ${s.mode !== "solo" && (s.team || "").trim() ? `<button class="assessor" data-act="assessor">${IC.user}<span class="grow"><small>Assessing now</small><b>${esc(s.therapist || "Choose")}</b></span><span class="chev" aria-hidden="true">›</span></button>` : ""}
     ${sx ? `<section class="cont">
       <div class="crow"><span class="label gold">Session in progress</span><span class="psub">${sx.n} of ${sx.of} tests</span></div>
