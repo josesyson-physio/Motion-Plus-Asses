@@ -4362,7 +4362,9 @@ const ANAT_ACT = {
    The 3D body is one pack (assets/anatomy/body-2.bin): skin split into dermatomes, the brain split into areas,
    bones, muscle groups, heart and lungs, and the spinal cord, roots and main nerves drawn as tubes. */
 ANAT.body = { file: "body-2" };
-const NEURO_CREDIT = "3D anatomy: BodyParts3D, © The Database Center for Life Science (CC BY 4.0), via open-anatomy-3d";
+// Named muscles, arteries, vertebrae, discs and heart valves, loaded alongside the body (see assets/anatomy/ATTRIBUTION.md).
+ANAT.detail = { file: "detail-1" };
+const NEURO_CREDIT = "3D anatomy: BodyParts3D, © The Database Center for Life Science (CC BY 4.0), via open-anatomy-3d and Human Atlas";
 
 // What each nerve root supplies, in plain words, and the muscle groups (pack ids, without the side) it powers.
 const ROOTS = {
@@ -4513,7 +4515,7 @@ function neuroOf(p) {
     else if (weak.L.some(legW) && weak.R.some(legW) && !weak.L.some(armW) && !weak.R.some(armW)) pattern = "legsBoth";
     else if (roots.size && roots.size <= 2) pattern = "root"; }
   const gait = gaitOf(p, cond, side, ev), posture = postureOf(p, cond, side);
-  return { cond, side, weak, sens, tone, roots: [...roots], lvl, pattern, ev, gait, posture, neuro: !!(cond || pattern) };
+  return { cond, side, weak, sens, tone, roots: [...roots], lvl, pattern, ev, gait, posture, dx: p.dx || "", neuro: !!(cond || pattern) };
 }
 function gaitOf(p, cond, side, ev) {
   const tug = latestA(p.id, "tug"), mw = latestA(p.id, "mwt10"), gt = latestA(p.id, "gait"), obs = tug?.values.obs || [];
@@ -4550,12 +4552,13 @@ function postureOf(p, cond, side) {
 let NV = null;
 function nvStop() { if (!NV) return; cancelAnimationFrame(NV.raf); NV.ro?.disconnect(); try { NV.renderer.dispose(); NV.renderer.forceContextLoss?.(); } catch (e) {} NV.renderer.domElement.remove(); NV = null; }
 const NV_VIEWS = { body: [[0, 880, 0], 1900], head: [[0, 1640, -18], 300], neck: [[0, 1480, -30], 360], trunk: [[0, 1200, 0], 760], low: [[0, 1010, -40], 560],
-  armR: [[-210, 1100, 0], 820], armL: [[210, 1100, 0], 820], legR: [[-90, 470, 0], 1000], legL: [[90, 470, 0], 1000], footR: [[-100, 160, 20], 520], footL: [[100, 160, 20], 520] };
-function nvRootView(r, s) { const g = r[0], n = +r.slice(1); return g === "C" ? (n <= 4 ? "neck" : "arm" + s) : g === "T" ? (n === 1 ? "arm" + s : "trunk") : g === "L" ? (n <= 3 ? "leg" + s : "leg" + s) : (n === 1 ? "leg" + s : "low"); }
+  armR: [[-210, 1100, 0], 820], armL: [[210, 1100, 0], 820], legR: [[-90, 470, 0], 1000], legL: [[90, 470, 0], 1000], footR: [[-100, 160, 20], 520], footL: [[100, 160, 20], 520],
+  armNR: [[-150, 1200, 0], 900], armNL: [[150, 1200, 0], 900], legNR: [[-60, 730, 0], 1300], legNL: [[60, 730, 0], 1300] };
+function nvRootView(r, s) { const g = r[0], n = +r.slice(1); return g === "C" ? (n <= 4 ? "neck" : "armN" + s) : g === "T" ? (n === 1 ? "armN" + s : "trunk") : g === "L" || n === 1 ? "legN" + s : "low"; }
 async function nvStart(host, o) {
   nvStop(); const stage = host.querySelector(".anstage"), out = host.querySelector(".c3msg"), tok = nvStart.tok = (nvStart.tok || 0) + 1;
   try { await need("three"); } catch (e) { out.textContent = "The 3D body needs an internet connection the first time it opens."; return; }
-  let data; try { data = await anatLoad("body"); } catch (e) { out.textContent = "The 3D body could not load."; return; }
+  let data, det; try { [data, det] = await Promise.all([anatLoad("body"), anatLoad("detail").catch(() => null)]); } catch (e) { out.textContent = "The 3D body could not load."; return; }
   if (!host.isConnected || tok !== nvStart.tok) return; // a newer start has taken over
   nvStop(); const T = THREE; let renderer;
   try { renderer = new T.WebGLRenderer({ antialias: true, alpha: true }); } catch (e) { out.textContent = "This device can't show 3D."; return; }
@@ -4576,6 +4579,8 @@ async function nvStart(host, o) {
     const col = q.kind === "skin" ? (isDerm ? rootCol(q.id.slice(1)) : new T.Color(0xe9c3a8)) : q.kind === "brain" ? AREA_COL[area] : q.kind === "muscle" ? 0x9a2a20 : q.kind === "organ" ? (CV_COL[q.id] ?? 0xd99a9a) : q.kind === "nerve" ? 0xf2c94c : 0xe6d8bd;
     const p = add(q.id, q.kind, geo, col); p.area = area; if (q.kind === "skin") p.root = q.id.slice(1);
   }
+  for (const q of det?.parts || []) { const geo = new T.BufferGeometry(); geo.setAttribute("position", new T.BufferAttribute(q.pos, 3)); geo.setIndex(new T.BufferAttribute(q.idx, 1)); geo.computeVertexNormals();
+    const p = add(q.id, "hx", geo, HX_COL[q.g]); p.g = q.g; p.n = q.n; }
   const tube = (pts, r) => new T.TubeGeometry(new T.CatmullRomCurve3(pts.map(a => new T.Vector3(...a))), Math.max(16, pts.length * 10), r, 8, false);
   for (const [id, l] of Object.entries(data.lines)) { const p = add(id, "nerve", tube(l.p, l.r * (isDerm ? 1 : 1.25)), 0xf2c94c); p.m.material.emissive = new T.Color(0x6a4d00); p.line = l.p; }
   for (const [id, b] of Object.entries(data.blobs)) { const g = new T.SphereGeometry(1, 32, 20); g.scale(...b.s); g.translate(...b.c); const p = add(id, "brain", g, AREA_COL[id.startsWith("basal") ? "basal" : "thalamus"]); p.area = id.startsWith("basal") ? "basal" : "thalamus"; }
@@ -4624,12 +4629,14 @@ async function nvStart(host, o) {
       else if (p.kind === "muscle") want = hot ? .95 : 0;
       else if (p.kind === "organ") want = NV.organs ? .55 : 0;
       else if (p.kind === "brain") want = derm ? 0 : NV.focus && !hot ? .25 : 1;
+      else if (p.kind === "hx") want = hot ? (p.g === "muscle" ? .95 : 1) : 0;
       else want = derm ? (hot ? 1 : p.id === "cord" || p.id === "cauda" ? .5 : 0) : NV.focus && !hot ? .22 : 1;
       if (p.kind === "skin" && derm && !hot) { m.color.copy(p.base); if (sel) m.color.lerp(new T.Color(0x5b6675), .75); }
       if (Math.abs(p.op - want) > .003) { p.op = smooth(p.op, want, k * 1.4); if (Math.abs(p.op - want) < .01) p.op = want; m.opacity = p.op; m.transparent = p.op < 1; m.depthWrite = p.op >= 1 || (p.kind === "skin" && derm && p.op > .9); }
       p.m.visible = p.op > .01;
       if (p.kind === "brain" && !hot) { const full = NV.brainFull || NV.focus; m.color.copy(p.base); if (!full) m.color.lerp(new T.Color(0xe7b3ae), .55); }
-      if (hot) { m.color.set(p.kind === "skin" ? p.base : 0xff5f4c); m.emissive = m.emissive || new T.Color(); m.emissive.copy(p.kind === "skin" ? p.base : new T.Color(0xff3a26)); m.emissiveIntensity = (p.kind === "skin" ? .15 : .25) + (p.kind === "skin" ? .3 : .55) * pulse; }
+      const own = p.kind === "skin" || p.g === "vertebra";
+      if (hot) { m.color.set(own ? p.base : 0xff5f4c); m.emissive = m.emissive || new T.Color(); m.emissive.copy(own ? p.base : new T.Color(0xff3a26)); m.emissiveIntensity = (p.kind === "skin" ? .15 : .25) + (p.kind === "skin" ? .3 : .55) * pulse; }
       else if (p.kind !== "nerve" && m.emissive) m.emissiveIntensity = 0;
     }
     if (NV.hotC && !derm) { NV.halo.visible = true; NV.halo.position.copy(NV.hotC); NV.halo.scale.setScalar(NV.hotR * (1 + .5 * pulse)); NV.halo.material.opacity = .05 + .12 * (1 - pulse); } else NV.halo.visible = false;
@@ -4649,13 +4656,51 @@ async function nvStart(host, o) {
   };
   NV.raf = requestAnimationFrame(frame);
 }
-const NV_NAME = id => { const a = BRAIN_AREAS.find(b => id === b[0] || id.startsWith("b" + b[0]) || (b[0] === "basal" && id.startsWith("basal"))); if (a) return a[1];
+const NV_NAME = id => { if (NV?.byId[id]?.n) return hxName(NV.byId[id].n); const a = BRAIN_AREAS.find(b => id === b[0] || id.startsWith("b" + b[0]) || (b[0] === "basal" && id.startsWith("basal"))); if (a) return a[1];
   if (id === "thalamus") return "Relay centre"; if (id === "cord") return "Spinal cord"; if (id === "cauda") return "Nerve roots"; if (id === "cranialNerves") return "Face and head nerves";
   const m = /^(r|p|q)([CTLS]\d+)[RL]$/.exec(id); if (m) return `${m[2]} root`; const n = /^(median|ulnar|radial|musculo|axillary|femoral|saphenous|sciatic|tibial|peroneal)[RL]$/.exec(id);
   if (n) return { musculo: "Musculocutaneous", axillary: "Axillary", median: "Median", ulnar: "Ulnar", radial: "Radial", femoral: "Femoral", saphenous: "Saphenous", sciatic: "Sciatic", tibial: "Tibial", peroneal: "Peroneal" }[n[1]] + " nerve";
   if (CV_NAME[id]) return CV_NAME[id]; if (/^ic\d+/.test(id)) return `T${id.match(/\d+/)[0]} nerve`; if (id.startsWith("d")) return `${id.slice(1)} skin area`; const mu = { deltoid: "Deltoid", upper_arm_muscles: "Upper arm muscles", forearm_muscles: "Forearm muscles", hand_muscles: "Hand muscles", rotator_cuff: "Rotator cuff", iliopsoas: "Hip flexor (iliopsoas)",
     quadriceps: "Quadriceps", hamstrings: "Hamstrings", gluteal: "Buttock muscles", adductors: "Inner thigh muscles", shin_muscles: "Shin muscles", calf: "Calf", foot_muscles: "Foot muscles", diaphragm: "Diaphragm" };
   return mu[id.replace(/_[lr]$/, "")] || id.replace(/_[lr]$/, "").replace(/_/g, " "); };
+/* ---------- Detail parts: named muscles, arteries, vertebrae, discs and valves ---------- */
+const HX_COL = { muscle: 0xa8352a, artery: 0xd8443a, vertebra: 0xe6d8bd, disc: 0x6fb6e8, valve: 0xf0e0c8 };
+// The muscles each strength-test group checks, by their anatomical names.
+const MMT_MUSC = { "Neck flexors": ["sternocleidomastoid", "scalenus anterior"], "Shoulder flexors": ["clavicular part of # deltoid", "clavicular part of # pectoralis major", "coracobrachialis"],
+  "Shoulder abductors": ["acromial part of # deltoid", "supraspinatus"], "Shoulder external rotators": ["infraspinatus", "teres minor"], "Elbow flexors": ["biceps brachii", "brachialis", "brachioradialis"],
+  "Elbow extensors": ["triceps brachii", "anconeus"], "Wrist extensors": ["extensor carpi radialis longus", "extensor carpi radialis brevis", "extensor carpi ulnaris"],
+  Grip: ["flexor digitorum superficialis", "flexor digitorum profundus", "flexor pollicis longus"], "Trunk flexors": ["external oblique"], "Hip flexors": ["psoas major", "iliacus", "rectus femoris", "sartorius"],
+  "Hip abductors": ["gluteus medius", "gluteus minimus"], "Hip extensors": ["gluteus maximus", "long head of # biceps femoris", "semitendinosus", "semimembranosus"],
+  "Knee extensors": ["rectus femoris", "vastus lateralis", "vastus medialis", "vastus intermedius"], "Knee flexors": ["biceps femoris", "semitendinosus", "semimembranosus"],
+  "Ankle dorsiflexors": ["extensor digitorum longus", "extensor hallucis longus"], "Ankle plantarflexors": ["gastrocnemius", "soleus"] };
+const ORD = ["", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth", "eleventh", "twelfth"];
+function hxName(n) {
+  const v = /^(\w+) (cervical|thoracic|lumbar) vertebra$/i.exec(n), d = /^Intervertebral disk of (\w+) (cervical|thoracic|lumbar) vertebra$/i.exec(n), L = { cervical: "C", thoracic: "T", lumbar: "L" };
+  if (v) return `${L[v[2].toLowerCase()]}${ORD.indexOf(v[1].toLowerCase())} vertebra`; if (n === "Atlas") return "C1 vertebra"; if (n === "Axis") return "C2 vertebra"; if (n === "Intervertebral disk of axis") return "C2–C3 disc";
+  if (d) { const g = L[d[2].toLowerCase()], k = ORD.indexOf(d[1].toLowerCase()), nx = g === "C" && k === 7 ? "T1" : g === "T" && k === 12 ? "L1" : g === "L" && k === 5 ? "S1" : `${g}${k + 1}`; return `${g}${k}–${nx} disc`; }
+  const art = /((anterior|middle|posterior) cerebral|internal carotid|common carotid|vertebral|basilar|femoral|popliteal|(anterior|posterior) tibial|dorsalis pedis|(common|external|internal) iliac|coronary) artery|aorta/i.exec(n);
+  if (art) return art[0][0].toUpperCase() + art[0].slice(1).toLowerCase();
+  if (/valve|leaflet|cusp/i.test(n)) return "Heart valves";
+  const m = n.replace(/\b(left|right)\s*/gi, "").replace(/^(long|short|lateral|medial) head of /i, "").replace(/^(insular part|anterolateral central branch|\w+ part) of /i, "").replace(/\s+muscle$/, "").trim();
+  return m[0].toUpperCase() + m.slice(1);
+}
+const hxFind = (test, side) => (NV?.parts || []).filter(p => p.kind === "hx" && test(p.n.toLowerCase()) && (!side || new RegExp(`\\b${side === "L" ? "left" : "right"}\\b`).test(p.n.toLowerCase()))).map(p => p.id);
+// Named muscles for strength-test groups on one side; empty when the detail pack hasn't loaded.
+const hxMuscles = (groups, s) => [...new Set(groups.flatMap(g => (MMT_MUSC[g] || []).flatMap(m => hxFind(n => n.includes(m.replace("#", s === "L" ? "left" : "right")) || (n.includes(m.replace("# ", "")) && !m.includes("#")), m.includes("#") ? null : s))))];
+// The disc a nerve root usually leaves by (the one above its own vertebra) and the two bones either side of it.
+function hxSpine(r) {
+  const g = r[0], n = +r.slice(1), name = { C: "cervical", T: "thoracic", L: "lumbar" };
+  if (g === "S") return n === 1 ? hxFind(x => x === "intervertebral disk of fifth lumbar vertebra" || x === "fifth lumbar vertebra" || x === "sacrum") : [];
+  const up = g === "C" ? n - 1 : n - 1, ug = g === "L" && n === 1 ? "T" : g === "C" && n === 8 ? "C" : g, uk = g === "L" && n === 1 ? 12 : g === "C" && n === 8 ? 7 : up;
+  if (uk < 2) return []; const disc = uk === 2 && ug === "C" ? "intervertebral disk of axis" : `intervertebral disk of ${ORD[uk]} ${name[ug]} vertebra`;
+  const bone = k => k === 2 && ug === "C" ? "axis" : `${ORD[k]} ${name[ug]} vertebra`, below = g === "C" && n === 8 ? "first thoracic vertebra" : g === "L" && n === 1 ? "first lumbar vertebra" : `${ORD[n]} ${name[g]} vertebra`;
+  return hxFind(x => x === disc || x === bone(uk) || x === below);
+}
+// The brain artery most likely involved in a stroke: the one the diagnosis names, otherwise the middle cerebral artery.
+function hxStrokeArtery(dx, hemi) {
+  const w = /\baca\b|anterior cerebral/i.test(dx) ? "anterior cerebral" : /\bpca\b|posterior cerebral/i.test(dx) ? "posterior cerebral" : /basilar|vertebral|brainstem|cerebell/i.test(dx) ? "basilar" : "middle cerebral";
+  return hxFind(n => n.includes(w + " artery") || (w === "basilar" && /vertebral artery/.test(n)), w === "basilar" ? null : hemi);
+}
 // Light up parts; the labels follow the lit parts.
 function nvSetHot(ids, view) {
   if (!NV) return; const T = THREE; NV.hot = new Set(ids.filter(i => NV.byId[i])); const hp = [...NV.hot].map(i => NV.byId[i]);
@@ -4670,11 +4715,12 @@ function nvHotFor(N) {
   const c = N.cond, s = N.side, o = s === "R" ? "L" : "R", lvl = N.lvl;
   const w = c?.where || ({ brain: "brain", oneSide: "brain", legsBoth: "cord", root: "root" }[N.pattern]);
   if (!w) return { ids: [], view: "body", block: null };
-  if (w === "brain") return c?.id === "bell" ? { ids: ["cranialNerves"], view: "head", block: .08 } : { ids: [`bMotor${o}`, `bSensory${o}`], view: "head", block: .03, cap: `${o === "L" ? "Left" : "Right"} brain: movement and feeling` };
+  if (w === "brain") return c?.id === "bell" ? { ids: ["cranialNerves"], view: "head", block: .08 } : { ids: [`bMotor${o}`, `bSensory${o}`, ...(c?.id === "stroke" ? hxStrokeArtery(N.dx, o) : [])], view: "head", block: .03, cap: `${o === "L" ? "Left" : "Right"} brain: movement and feeling` };
   if (w === "basal") return { ids: ["basalR", "basalL"], view: "head", block: null, slow: true };
   if (w === "patchy") return { ids: ["bFrontalR", "bParietalL", "cord"], view: "body", block: null, slow: true };
   if (w === "cord") return { ids: ["cord", "cauda"], view: lvl && /^C/.test(lvl) ? "neck" : "trunk", block: .32 };
-  if (w === "root") return { ids: [`r${lvl}${s}`, `d${lvl}`, ...(ROOTS[lvl]?.[2] || []).map(m => `${m}_${s.toLowerCase()}`)], view: nvRootView(lvl, s), block: .5 };
+  if (w === "root") { const mine = N.weak[s].filter(g => MMT_ROOT[g] === lvl), named = hxMuscles(mine.length ? mine : Object.keys(MMT_ROOT).filter(g => MMT_ROOT[g] === lvl), s);
+    return { ids: [`r${lvl}${s}`, `d${lvl}`, ...hxSpine(lvl), ...(named.length ? named : (ROOTS[lvl]?.[2] || []).map(m => `${m}_${s.toLowerCase()}`))], view: nvRootView(lvl, s), block: .5 }; }
   if (w === "plexus") return { ids: ["C5", "C6", "C7", "C8", "T1"].map(r => `p${r}${s}`), view: "neck", block: .55 };
   if (w === "distal") return { ids: [`tibial${s}`, `peroneal${s}`, `tibial${o}`, `peroneal${o}`], view: "body", block: .9 };
   if (w === "allNerves") return { ids: ["median", "ulnar", "radial", "sciatic", "tibial", "peroneal", "femoral"].flatMap(n => [n + "R", n + "L"]), view: "body", block: .75, slow: true };
@@ -4701,9 +4747,12 @@ function nvStep(t) {
   if (st === 5) { NV.story = 0; NV.toured = true; nvCap(""); }
   nvSync();
 }
+// A root's muscles: named ones from the detail pack where it has them, else the muscle groups.
+function nvRootMuscles(r) { const gs = Object.keys(MMT_ROOT).filter(g => MMT_ROOT[g] === r), named = [...hxMuscles(gs, "R"), ...hxMuscles(gs, "L")];
+  return named.length ? named : (ROOTS[r]?.[2] || []).flatMap(m => m === "diaphragm" ? [m] : [`${m}_r`, `${m}_l`]); }
 function nvRoot(r, quiet) {
   if (!NV) return; NV.sel = r; const s = NV.N.side; NV.mode = "derm";
-  nvSetHot(r ? [`d${r}`, `r${r}R`, `r${r}L`, ...(/^T([2-9]|1[0-2])$/.test(r) ? [`ic${r.slice(1)}${s}`] : []), ...(ROOTS[r]?.[2] || []).flatMap(m => m === "diaphragm" ? [m] : [`${m}_r`, `${m}_l`])] : [], r ? nvRootView(r, s) : "body");
+  nvSetHot(r ? [`d${r}`, `r${r}R`, `r${r}L`, ...(/^T([2-9]|1[0-2])$/.test(r) ? [`ic${r.slice(1)}${s}`] : []), ...nvRootMuscles(r), ...hxSpine(r)] : [], r ? nvRootView(r, s) : "body");
   NV.az = r && /^S[12]$|^S3$/.test(r) ? 180 : r && /^C[23]$/.test(r) ? -40 : 0;
   const info = NV.host.closest(".cin")?.querySelector(".nvinfo"); if (info) info.innerHTML = r ? nvRootInfo(r, NV.N) : "";
   NV.host.closest(".cin")?.querySelectorAll("[data-act=nvRoot]").forEach(b => b.setAttribute("aria-pressed", b.dataset.r === r)); if (!quiet) hz("tap");
@@ -4992,11 +5041,14 @@ function cvFlow(k, col, opt = {}) { if (!NV?.cvPaths) return; NV.pulses.push({ c
 const CV_AIR = 0x9fe8ff, CV_RED = 0xff5a4a, CV_BLUE = 0x6f8fff;
 function cvBreathe(block) { const b = block ? .55 : null; cvFlow("airL", CV_AIR, { block: b, dur: 2.2 }); cvFlow("airR", CV_AIR, { block: b, dur: 2.2, t0: .1 }); }
 function cvPump(slow) { cvFlow("lungIn", CV_RED, { dur: 1.6 }); cvFlow("lungInR", CV_RED, { dur: 1.6, t0: .1 }); setTimeout(() => NV && cvFlow("out", CV_RED, { dur: 2.6, slow }), 900); setTimeout(() => NV && (cvFlow("back", CV_BLUE, { dur: 1.6 }), cvFlow("backL", CV_BLUE, { dur: 2 })), 1500); }
+// The condition's parts, with the detail pack's named arteries and valves where they add to it.
+const cvHotIds = c => { const x = (c.where === "legs" ? hxFind(n => /femoral artery$|popliteal artery|tibial artery$|dorsalis pedis|iliac artery/.test(n)) : c.id === "valve" ? hxFind(n => /valve|leaflet|cusp/.test(n)) : c.id === "htn" ? hxFind(n => /aorta$|carotid/.test(n)) : []);
+  return c.id === "valve" && x.length ? ["aorta", ...x] : [...c.hot, ...x]; };
 function cvProblem() {
-  const C = NV.N, c = C.cond; if (!c) return; NV.focus = true; nvSetHot(c.hot, c.where === "legs" ? "legs" : "chest");
+  const C = NV.N, c = C.cond; if (!c) return; NV.focus = true; nvSetHot(cvHotIds(c), c.where === "legs" ? "legs" : "chest");
   if (c.where === "airway") cvBreathe(true); else if (c.where === "sacs") { cvBreathe(); setTimeout(() => NV && cvFlow("lungIn", CV_RED, { dur: 2.4, slow: true }), 900); }
   else if (c.where === "legs") cvFlow("legs", CV_RED, { dur: 3, block: .7 }); else cvPump(true);
-  nvCap(`${c.name}: ${CWHERE[c.where].toLowerCase()}`); hz("tap");
+  nvCap(`${c.name}: ${c.id === "valve" ? "the heart valves" : CWHERE[c.where].toLowerCase()}`); hz("tap");
 }
 function cvStep(t) {
   const C = NV.N, stops = [0, 3, 7, 11, C.cond ? 15 : 11, C.cond ? 20.5 : 15], st = stops.findLastIndex(x => t >= x); if (st === NV.stage) return; NV.stage = st;

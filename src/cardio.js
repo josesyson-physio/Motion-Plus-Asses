@@ -97,11 +97,14 @@ function cvFlow(k, col, opt = {}) { if (!NV?.cvPaths) return; NV.pulses.push({ c
 const CV_AIR = 0x9fe8ff, CV_RED = 0xff5a4a, CV_BLUE = 0x6f8fff;
 function cvBreathe(block) { const b = block ? .55 : null; cvFlow("airL", CV_AIR, { block: b, dur: 2.2 }); cvFlow("airR", CV_AIR, { block: b, dur: 2.2, t0: .1 }); }
 function cvPump(slow) { cvFlow("lungIn", CV_RED, { dur: 1.6 }); cvFlow("lungInR", CV_RED, { dur: 1.6, t0: .1 }); setTimeout(() => NV && cvFlow("out", CV_RED, { dur: 2.6, slow }), 900); setTimeout(() => NV && (cvFlow("back", CV_BLUE, { dur: 1.6 }), cvFlow("backL", CV_BLUE, { dur: 2 })), 1500); }
+// The condition's parts, with the detail pack's named arteries and valves where they add to it.
+const cvHotIds = c => { const x = (c.where === "legs" ? hxFind(n => /femoral artery$|popliteal artery|tibial artery$|dorsalis pedis|iliac artery/.test(n)) : c.id === "valve" ? hxFind(n => /valve|leaflet|cusp/.test(n)) : c.id === "htn" ? hxFind(n => /aorta$|carotid/.test(n)) : []);
+  return c.id === "valve" && x.length ? ["aorta", ...x] : [...c.hot, ...x]; };
 function cvProblem() {
-  const C = NV.N, c = C.cond; if (!c) return; NV.focus = true; nvSetHot(c.hot, c.where === "legs" ? "legs" : "chest");
+  const C = NV.N, c = C.cond; if (!c) return; NV.focus = true; nvSetHot(cvHotIds(c), c.where === "legs" ? "legs" : "chest");
   if (c.where === "airway") cvBreathe(true); else if (c.where === "sacs") { cvBreathe(); setTimeout(() => NV && cvFlow("lungIn", CV_RED, { dur: 2.4, slow: true }), 900); }
   else if (c.where === "legs") cvFlow("legs", CV_RED, { dur: 3, block: .7 }); else cvPump(true);
-  nvCap(`${c.name}: ${CWHERE[c.where].toLowerCase()}`); hz("tap");
+  nvCap(`${c.name}: ${c.id === "valve" ? "the heart valves" : CWHERE[c.where].toLowerCase()}`); hz("tap");
 }
 function cvStep(t) {
   const C = NV.N, stops = [0, 3, 7, 11, C.cond ? 15 : 11, C.cond ? 20.5 : 15], st = stops.findLastIndex(x => t >= x); if (st === NV.stage) return; NV.stage = st;
