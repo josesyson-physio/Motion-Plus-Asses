@@ -33,9 +33,30 @@ if (first === "goniometer" || first === "posture" || first === "gait") await p.e
   if (await p.$(".gpage.single [data-act=pick]")) { await p.click(".gpage.single [data-act=pick] >> nth=1"); await p.waitForTimeout(600); if ((await p.evaluate(() => draft.g)) !== 1) fail("choosing an answer moves to the next page"); else console.log("ok auto-advance"); }
   await p.click(".gdots button >> nth=-1"); await p.click("#bar button:has-text('Save')"); await at("sess", "saving returns to the session"); }
 await p.evaluate(() => go("summary")); await at("summary", "session summary"); await noHScroll("summary");
-await p.click("#bar button:has-text('Explain')"); await at("explain", "explain to patient"); await noHScroll("explain");
+await p.click("#bar button:has-text('Present')"); await at("consult", "present from the summary"); await p.click(".ctop [data-act=cExit]"); await at("summary", "consultation room returns to the summary");
+await p.evaluate(() => ACT.explain({ pid: db.session.pid })); await at("explain", "explain to patient"); await noHScroll("explain");
 await p.click("#bar button:has-text('Done')"); await p.click("#bar button:has-text('Finish')"); await at("patient", "finish session");
 if (await p.evaluate(() => !!db.session)) fail("finished session is cleared");
+// Consultation room: slides, the lever demo, editing the plan, and leaving cleanly
+await p.evaluate(() => go("patient", db.patients[0].id)); await p.click(".consultbtn"); await at("consult", "consultation room opens");
+const slides = await p.evaluate(() => [...document.querySelectorAll(".cslide")].map(s => s.dataset.id));
+// The first sample patient had a stroke, so the deck shows the brain and nerve slides in place of a joint.
+if (!["cover", "brain", "ncause", "plan", "pain", "check", "next"].every(id => slides.includes(id))) fail("consultation slides: " + slides.join(","));
+await p.evaluate(i => consultTo(i), slides.indexOf("gait")); await p.waitForTimeout(800);
+if (!(await p.$(".s-gait .gtA line"))) fail("walking figure draws"); else console.log("ok walking figure");
+await p.evaluate(() => { const p0 = db.patients[0]; p0.dx = "Right knee osteoarthritis"; save(); render(); }); await p.waitForTimeout(300);
+const kslides = await p.evaluate(() => [...document.querySelectorAll(".cslide")].map(s => s.dataset.id));
+await p.evaluate(i => consultTo(i), kslides.indexOf("lever")); await p.waitForTimeout(800);
+if (!(await p.$(".s-lever .leversvg"))) fail("lever diagram draws for a joint"); else console.log("ok lever");
+// A heart patient gets the heart, oxygen, effort and breathing slides, built from their vital signs.
+await p.evaluate(() => { const p0 = db.patients[0]; p0.dx = "Heart failure"; db.assessments.push({ id: uid(), pid: p0.id, tid: "vitals", date: today(), values: { hr: "84", sys: "118", dia: "72", spo2: "96" }, notes: "", created: Date.now() }); save(); render(); }); await p.waitForTimeout(300);
+const hslides = await p.evaluate(() => [...document.querySelectorAll(".cslide")].map(s => s.dataset.id));
+if (!["heart", "ccause", "effort", "breath"].every(id => hslides.includes(id)) || hslides.includes("lever")) fail("heart slides: " + hslides.join(","));
+else if (!(await p.$eval(".s-ccause .o2svg", e => e.textContent.includes("84 beats")))) fail("oxygen loop shows the patient's heart rate"); else console.log("ok heart slides");
+await p.evaluate(() => { const p0 = db.patients[0]; p0.dx = "Right knee osteoarthritis"; save(); render(); }); await p.waitForTimeout(300);
+await p.click(".ctop [data-act=cEdit]"); await at("cplan", "plan editor"); await p.fill("#cpi0", "Ice 10 minutes"); await p.click("[data-act=cpSave]"); await at("consult", "plan saved");
+if ((await p.evaluate(() => db.patients[0].rehab?.phases[0].items[0])) !== "Ice 10 minutes") fail("rehab plan saved"); else console.log("ok rehab plan");
+await p.click(".ctop [data-act=cExit]"); await at("patient", "leave consultation room"); if (await p.evaluate(() => document.body.classList.contains("consult"))) fail("consult styling removed");
 // Goals: write your own, edit it, delete and undo
 await p.evaluate(() => go("patient", db.patients[0].id)); const g0 = await p.evaluate(() => (db.patients[0].goals || []).length);
 await p.click("[data-act=goalNew]"); await at("goal", "goal editor"); await p.fill("#gtext", "Walk to the shops"); await p.click("[data-act=goalSave]"); await at("patient", "goal added");

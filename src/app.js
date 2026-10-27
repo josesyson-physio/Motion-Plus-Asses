@@ -139,7 +139,7 @@ async function previewPdf(filename, blob) {
 
 /* ---------- Chrome ---------- */
 let view = {};
-function go(name, ...args) { if (name !== "tool") { document.body.classList.remove("toolmode"); toolCtx = null; } if (name !== "gonio") gzStop(); if (name !== "explain") document.body.classList.remove("lightpage"); closeSheet(true); tmStop();
+function go(name, ...args) { if (name !== "tool") { document.body.classList.remove("toolmode"); toolCtx = null; } if (name !== "gonio") gzStop(); if (name !== "explain") document.body.classList.remove("lightpage"); if (name !== "consult") consultLeave(); closeSheet(true); tmStop();
   const was = navKey(); if (was) navScroll[was] = scrollY; const dir = navDir(name);
   view = { name, args }; render(); window.scrollTo(0, dir === "back" ? navScroll[navKey()] || 0 : 0); animateNav(dir); const h = $("#app h1")?.textContent.trim(); document.title = h && h !== "Home" ? `${h} · MotionPlus Pro` : "MotionPlus Pro"; }
 function render() { (VIEWS[view.name] || VIEWS.patients)(...(view.args || [])); }
@@ -216,6 +216,7 @@ VIEWS.patient = id => {
     <div class="psub">${esc(p.age)} yrs · ${esc(p.sex)} · ${esc(p.dx)}${p.ref ? ` · Referred by ${esc(p.ref)}` : ""}${p.branch ? ` · ${esc(p.branch)}` : ""}</div>
     ${p.notes ? `<p class="note">${esc(p.notes)}</p>` : ""}
     ${p.consent?.media ? `<p class="note">Photo and video consent recorded ${fmt(p.consent.media)}.</p>` : ""}
+    <button class="consultbtn" data-act="consult" data-pid="${id}" ${as.length ? "" : "disabled"}><span class="grow"><b>Consultation room</b><small>Walk the patient through results, their joint in 3D and the plan</small></span><span class="chev" aria-hidden="true">›</span></button>
     <div class="actions">
       <button data-act="aiProgress" data-id="${id}" ${as.length ? "" : "disabled"}>✦ AI progress report</button>
       <button data-act="pdfPatient" data-id="${id}" ${as.length ? "" : "disabled"}>PDF summary</button>
@@ -400,6 +401,10 @@ addEventListener("message", e => {
 /*SESSION*/
 /*REASON*/
 /*PILOT*/
+/*CONSULT*/
+/*ANAT*/
+/*NEURO*/
+/*CARDIO*/
 
 /* ---------- Assessment form ---------- */
 let draft = null;
@@ -725,7 +730,7 @@ function fromAI(j) {
     bandsText: (Array.isArray(j.bands) ? j.bands : []).filter(b => b && b.label != null).map(b => `${b.min}-${b.max} = ${b.label}`).join("\n") };
 }
 let upFiles = [], tplStatus = null;
-const LIBS = { pdf: ["https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js", "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"], docx: ["https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"], jspdf: ["https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"] };
+const LIBS = { pdf: ["https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js", "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"], docx: ["https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"], jspdf: ["https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"], three: ["https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"] };
 function loadScript(src) { return new Promise((res, rej) => { const ex = document.querySelector(`script[src="${src}"]`); if (ex?.dataset.ok) return res(); const s = ex || document.createElement("script"); s.addEventListener("load", () => { s.dataset.ok = 1; res(); }); s.addEventListener("error", () => rej(new Error("load"))); if (!ex) { s.src = src; document.head.appendChild(s); } }); }
 async function need(k) { for (const src of LIBS[k]) await loadScript(src); }
 const kindOf = f => /^image\//.test(f.type) || /\.(jpe?g|png|webp|gif|heic|heif)$/i.test(f.name) ? "image" : /pdf$/.test(f.type) || /\.pdf$/i.test(f.name) ? "pdf" : /\.docx$/i.test(f.name) ? "docx" : /^text\//.test(f.type) || /\.txt$/i.test(f.name) ? "text" : /\.doc$/i.test(f.name) ? "doc" : "other";
@@ -991,6 +996,13 @@ async function makePdf({ pid, aids, report, title }) {
     if (a.notes) { y += 1.5; text("Notes: " + a.notes, { size: 9, style: "italic", color: MUTED }); }
     y += 5;
   }
+  // Rehab plan from the consultation room, only once the therapist has saved one.
+  if (p.rehab && JOINTS[p.rehab.joint]) { const R = p.rehab, J = JOINTS[R.joint], mech = R.mech.map(id => J.mech.find(m => m.id === id)).filter(Boolean);
+    ensure(20); y += 2; text(`Rehab plan: ${J.name}`, { size: 12.5, style: "bold" }); y += 1; rule(); y += 4;
+    if (mech.length) { text("Possible mechanism (clinical judgement, not a diagnosis)", { size: 9, style: "bold", color: MUTED }); for (const m of mech) text(`${m.h}: ${m.flow.join(" -> ")}.`, { size: 9.5 }); y += 2; }
+    R.phases.forEach((ph, i) => { ensure(14); text(`${i + 1}. ${ph.h}  (${ph.wk})${i === (R.now || 0) ? "  - current stage" : ""}`, { size: 10, style: "bold", color: i === (R.now || 0) ? INK : MUTED });
+      for (const it of ph.items) { ensure(5); doc.setFillColor(...GOLD); doc.circle(M + 2.5, y + 1.9, 0.7, "F"); text(it, { size: 9.5, x: M + 6, w: CW - 6 }); } y += 2; });
+  }
   // Footer
   const n = doc.getNumberOfPages();
   // Clinic contact line above the footer rule, only when at least one contact field is filled; shrinks, then shortens, to fit one line.
@@ -1060,6 +1072,7 @@ function cleanPatient(p, needId = true) {
   if (needId) o.id = p.id; if (p.ex === true) o.ex = true;
   if (p.consent && okDate(p.consent.media)) o.consent = { media: p.consent.media };
   if (Array.isArray(p.goals)) o.goals = p.goals.filter(g => g && txt(g.text).trim() && okDate(g.by) && okDate(g.from) && (!g.tid || (okId(g.tid) && isFinite(g.base) && isFinite(g.target)))).slice(0, 30).map(g => ({ id: okId(g.id) ? g.id : uid(), tid: g.tid ? g.tid : "", ...(okId(g.f) ? { f: g.f } : {}), ...(g.s === "L" || g.s === "R" ? { s: g.s } : {}), ...(g.tid ? { base: +g.base, target: +g.target } : {}), hb: !!g.hb, note: txt(g.note).slice(0, 200), unit: txt(g.unit).slice(0, 12), by: g.by, from: g.from, text: txt(g.text).slice(0, 160), ...(okDate(g.met) ? { met: g.met } : {}), created: numOr(g.created) ?? Date.now() }));
+  const r = p.rehab; if (r && typeof r === "object" && JOINTS[r.joint] && Array.isArray(r.phases)) o.rehab = { joint: r.joint, mech: (Array.isArray(r.mech) ? r.mech : []).filter(m => JOINTS[r.joint].mech.some(x => x.id === m)), now: Math.max(0, Math.min(3, Math.round(+r.now) || 0)), phases: r.phases.slice(0, 4).map(ph => ({ h: txt(ph?.h).slice(0, 60), wk: txt(ph?.wk).slice(0, 30), items: (Array.isArray(ph?.items) ? ph.items : []).map(x => txt(x).slice(0, 160)).filter(Boolean).slice(0, 8) })), ...(okDate(r.updated) ? { updated: r.updated } : {}) };
   return o;
 }
 function cleanAssessment(a) {
@@ -1163,6 +1176,10 @@ const ACT = {
   ...SESS_ACT,
   ...REASON_ACT,
   ...PILOT_ACT,
+  ...CONSULT_ACT,
+  ...ANAT_ACT,
+  ...NEURO_ACT,
+  ...CARDIO_ACT,
   toastAct: () => { const fn = toast.fn; $("#toast").hidden = true; toast.fn = null; fn?.(); },
   about: () => go("about"),
   lockNow: () => lockNow(),

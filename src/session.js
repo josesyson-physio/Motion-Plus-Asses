@@ -198,7 +198,7 @@ VIEWS.summary = () => {
   const rows = s.plan.filter(t => s.done[t] && A(s.done[t])).map(t => { const a = A(s.done[t]), tp = getTpl(a); return { t, a, tp, r: runScore(tp, a.values, p), c: compare(tp, a, p) }; });
   const better = rows.filter(x => x.c?.better && x.c.d !== 0).length, worse = rows.filter(x => x.c?.better === false && x.c.d !== 0).length, stars = rows.filter(x => x.c?.better && x.c.meaningful);
   const head = !rows.length ? "Nothing saved yet" : better && !worse ? "Good progress" : worse && !better ? "Results to review" : "Session complete";
-  chrome(null, `<button data-act="explain" data-pid="${p.id}">Explain</button><button data-act="sessPdf">PDF</button><button class="primary wide" data-act="sessDone">Finish</button>`);
+  chrome(null, `<button data-act="consult" data-pid="${p.id}">Present</button><button data-act="sessPdf">PDF</button><button class="primary wide" data-act="sessDone">Finish</button>`);
   $("#app").innerHTML = `
   <div class="sumhead"><div class="wglow" aria-hidden="true"></div><div class="psub">Session · ${esc(p.code)} · ${fmt(s.date)}</div><h1>${head}</h1><p class="note">${rows.length} test${rows.length === 1 ? "" : "s"} saved to the patient's record.</p></div>
   <div class="stack">
