@@ -2231,6 +2231,53 @@ function seed() {
     templates: [], reports: [],
   };
 }
+// Four demo patients (orthopaedic, neurological, cardiac and sports) with two visits each, to show the whole app.
+// They are made-up records, flagged as examples so "Remove example patients" clears them.
+function demoPatients() {
+  const P = (code, age, sex, dx, ref, notes) => ({ id: uid(), code, age, sex, dx, ref, branch: db.settings.branch || "Main branch", notes, ex: true, created: Date.now() });
+  const o = P("DEMO-ORTHO", 63, "F", "Right knee osteoarthritis (medial compartment)", "GP", "Pain on stairs and after long walks. Morning stiffness under 30 minutes."),
+        n = P("DEMO-NEURO", 71, "M", "Parkinson's disease (Hoehn and Yahr stage 2.5) with falls", "Neurologist", "Freezing in doorways. Two falls in the last 3 months."),
+        c = P("DEMO-CARDIO", 69, "F", "Heart failure with reduced ejection fraction (LVEF 35%), after a hospital admission", "Cardiologist", "Breathless on one flight of stairs. Ankle swelling in the evening."),
+        sp = P("DEMO-SPORT", 23, "M", "Left lateral ankle sprain (grade 2, inversion) playing football, 3 weeks ago", "Sports physician", "Wants to return to football training within 6 weeks.");
+  const d0 = daysAgo(35), d1 = daysAgo(2), by = new Date(Date.now() + 42 * 864e5).toISOString().slice(0, 10), A = [], G = (p, tid, base, target, unit, hb, text, f, side) => ({ id: uid(), tid, ...(f ? { f, s: side } : {}), base, target, unit, hb, text, note: "", by, from: d0, created: Date.now() });
+  const add = (p, tid, date, values, notes = "") => A.push({ id: uid(), pid: p.id, tid, date, values, notes, created: Date.now() });
+  const mmt = (o2) => Object.fromEntries(Object.entries(o2).map(([k, v]) => ["f" + k, v])), rom = o2 => Object.fromEntries(Object.entries(o2).map(([k, v]) => ["f" + k, v]));
+  // Orthopaedic: knee osteoarthritis
+  add(o, "pain", d0, { now: 6, worst: 8, best: 2, loc: "Inner right knee", pat: ["Intermittent", "Worse at end of day"], qual: ["Aching"] }, "Pain on stairs, eases with rest.");
+  add(o, "lefs", d0, vals([2, 1, 2, 3, 2, 1, 2, 3, 1, 2, 2, 1, 1, 2, 3, 0, 0, 0, 0, 3], 1));
+  add(o, "rom", d0, rom({ 19: { L: "135", R: "105" }, 20: { L: "0", R: "-8" } })); add(o, "mmt", d0, mmt({ 10: { L: "4+", R: "4-" }, 12: { L: "5", R: "4-" } }));
+  add(o, "sts5", d0, { time: "16.8", arms: "No" }); add(o, "tug", d0, { time: "11.9", aid: "None", obs: [] });
+  add(o, "pain", d1, { now: 3, worst: 5, best: 1, loc: "Inner right knee", pat: ["Intermittent"], qual: ["Aching"] }, "Managing stairs one at a time without the rail.");
+  add(o, "lefs", d1, vals([3, 2, 3, 4, 3, 2, 3, 3, 2, 3, 3, 2, 2, 3, 4, 1, 0, 0, 1, 4], 1));
+  add(o, "rom", d1, rom({ 19: { L: "135", R: "120" }, 20: { L: "0", R: "-4" } })); add(o, "mmt", d1, mmt({ 10: { L: "4+", R: "4" }, 12: { L: "5", R: "4" } }));
+  add(o, "sts5", d1, { time: "13.2", arms: "No" }); add(o, "tug", d1, { time: "9.8", aid: "None", obs: [] });
+  o.goals = [G(o, "pain", 6, 2, "/10", false, "Climb the stairs at home without knee pain"), G(o, "sts5", 16.8, 12, "s", false, "Stand up from low chairs easily")];
+  // Neurological: Parkinson's with falls
+  add(n, "tug", d0, { time: "15.6", aid: "None", obs: ["Shuffling gait", "Reduced step length", "Loss of balance on turning"] }); add(n, "mwt10", d0, { time: "8.2", dist: 6, pace: "Comfortable", aid: "None" });
+  add(n, "berg", d0, vals([4, 4, 4, 3, 4, 3, 3, 3, 3, 3, 2, 2, 2, 1]), "Hesitates when turning."); add(n, "sts5", d0, { time: "17.5", arms: "No" });
+  add(n, "mmt", d0, mmt({ 9: { L: "4", R: "4" }, 11: { L: "4-", R: "4-" } }));
+  add(n, "posture", d0, { score: "54", rating: "Fair", findings: "Stooped standing posture with the head forward.", focus: "Upper back extension, hip extension", measures: "Forward head: 28° (Moderate)\nThoracic kyphosis: 56° (Moderate)\nKnee sagittal: 12° (Mild)", session: "" });
+  add(n, "tug", d1, { time: "13.4", aid: "None", obs: ["Reduced step length"] }); add(n, "mwt10", d1, { time: "7.1", dist: 6, pace: "Comfortable", aid: "None" });
+  add(n, "berg", d1, vals([4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 2, 2])); add(n, "sts5", d1, { time: "15.0", arms: "No" });
+  n.goals = [G(n, "tug", 15.6, 12, "s", false, "Turn in the kitchen without freezing"), G(n, "berg", 41, 48, "/56", true, "No falls over the next 3 months")];
+  // Cardiac: heart failure
+  add(c, "vitals", d0, { hr: "88", sys: "108", dia: "68", spo2: "95", rr: "20", temp: "36.6" });
+  add(c, "mwt6", d0, { dist: "240", ht: "160", wt: "70", aid: "None", rests: "2", hr0: "88", sp0: "95", d0: 2, hr1: "112", sp1: "93", d1: 6 }, "Two standing rests, mild ankle swelling.");
+  add(c, "sts5", d0, { time: "18.2", arms: "Yes" });
+  add(c, "vitals", d1, { hr: "80", sys: "112", dia: "70", spo2: "96", rr: "18", temp: "36.7" });
+  add(c, "mwt6", d1, { dist: "300", ht: "160", wt: "69", aid: "None", rests: "1", hr0: "80", sp0: "96", d0: 1, hr1: "106", sp1: "95", d1: 5 });
+  add(c, "sts5", d1, { time: "15.4", arms: "No" });
+  c.goals = [G(c, "mwt6", 240, 350, "m", true, "Walk to the local shops and back"), G(c, "sts5", 18.2, 13, "s", false, "Climb a flight of stairs without stopping")];
+  // Sports: ankle sprain
+  add(sp, "pain", d0, { now: 5, worst: 7, best: 1, loc: "Outer left ankle", pat: ["Intermittent"], qual: ["Sharp", "Aching"] }, "Swelling over the outer ankle; pain on cutting.");
+  add(sp, "rom", d0, rom({ 21: { L: "8", R: "20" }, 22: { L: "35", R: "50" } })); add(sp, "mmt", d0, mmt({ 14: { L: "4", R: "5" }, 15: { L: "4-", R: "5" } }));
+  add(sp, "sls", d0, { eo: { L: "12", R: "45" }, ec: { L: "3", R: "15" } }); add(sp, "lefs", d0, vals([3, 0, 3, 4, 3, 2, 3, 3, 2, 4, 3, 2, 2, 3, 4, 0, 0, 0, 0, 4], 1));
+  add(sp, "pain", d1, { now: 2, worst: 3, best: 0, loc: "Outer left ankle", pat: ["Intermittent"], qual: ["Aching"] }, "Jogging in straight lines without pain.");
+  add(sp, "rom", d1, rom({ 21: { L: "15", R: "20" }, 22: { L: "45", R: "50" } })); add(sp, "mmt", d1, mmt({ 14: { L: "5", R: "5" }, 15: { L: "4+", R: "5" } }));
+  add(sp, "sls", d1, { eo: { L: "28", R: "45" }, ec: { L: "8", R: "15" } }); add(sp, "lefs", d1, vals([4, 2, 4, 4, 4, 3, 4, 4, 3, 4, 4, 3, 4, 4, 4, 2, 1, 1, 1, 4], 1));
+  sp.goals = [G(sp, "sls", 12, 30, "s", true, "Balance on the left leg like the right", "eo", "L"), G(sp, "pain", 5, 0, "/10", false, "Back to full football training")];
+  return { patients: [o, n, c, sp], assessments: A };
+}
 /* PIN lock: when a PIN is set, records are stored only encrypted (AES-GCM, key derived from the PIN) under LOCK, and the
    decrypted copy lives in memory until the app locks. Without a PIN, records are stored as plain JSON under STORE. */
 const LOCK = STORE + "-lock", TRIES = STORE + "-tries";
@@ -5614,6 +5661,7 @@ VIEWS.settings = () => {
 
     <h2 class="sec">Data on this device</h2>
     <p class="note">${db.patients.length} patients, ${db.assessments.length} assessments, ${db.reports.length} reports, ${db.templates.length} custom templates.</p>
+    <button data-act="addDemo">Add demo patients (orthopaedic, neurological, cardiac, sports)</button>
     ${ex ? `<button data-act="clearEx">Remove ${ex} example patients</button>` : ""}
     <button class="link-danger" data-act="wipe">Delete all data on this device</button>
 
@@ -5989,6 +6037,8 @@ const ACT = {
   rmLogo: () => { db.settings.logo = null; save(); render(); },
   backup: () => doBackup(),
   restore: () => doRestore(),
+  addDemo: () => { const have = new Set(db.patients.map(p => p.code)), d = demoPatients(), keep = d.patients.filter(p => !have.has(p.code)), ids = new Set(keep.map(p => p.id));
+    if (!keep.length) return toast("The demo patients are already here"); db.patients.push(...keep); db.assessments.push(...d.assessments.filter(a => ids.has(a.pid))); save(); toast(`Added ${keep.length} demo patients`); render(); },
   clearEx: (d, b) => { if (!armed("cx", b, "Tap again to remove examples")) return; const ids = new Set(db.patients.filter(p => p.ex).map(p => p.id));
     db.patients = db.patients.filter(p => !ids.has(p.id)); db.assessments = db.assessments.filter(a => !ids.has(a.pid)); db.reports = db.reports.filter(r => !ids.has(r.pid)); save(); toast("Examples removed"); render(); },
   wipe: (d, b) => { if (!armed("wipe", b, "Tap again to erase everything on this device")) return; pinKey = null; localStorage.removeItem(LOCK); db = { ...seed(), patients: [], assessments: [] }; db.settings.next = 1; save(); toast("All data deleted"); home(); },
