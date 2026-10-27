@@ -86,3 +86,11 @@ To rebuild after editing `src/`, run `python3 build.py`.
 - **Pilot mode** (Settings, Pilot and feedback): Today shows the pilot day and a "Tell us what to fix" button, and after the first session each day the app asks for a one-tap 1 to 5 rating.
 - **Feedback:** choose Something broke, Confusing, Idea or I like this, write a note and optionally rate the day. Each note records the screen, phone type, screen size and app version, never patient details. Notes stay on the phone until the tester taps Send, which opens the share sheet (or the pilot lead's email, or copies the text). "Save all as a file" keeps a copy.
 - **Errors:** while the pilot runs, unexpected app errors are noted (message and screen only, up to 20) so they go out with the feedback.
+
+## Consultation room
+
+- **Present before printing:** "Consultation room" on a patient (or "Present" on a session summary) opens a full-screen, swipeable presentation for the patient: results as rings, progress charts, a body map of the assessed area, a 3D joint model, the lever and pulley view, how the injury may have happened, contributing factors, goals, the rehab plan, and next steps (PDF, send summary).
+- **3D joints:** knee, hip, ankle, shoulder, elbow, lower back and neck. Each model moves through its range with the working muscles shortening and lengthening, and shows the pivot, the muscle's pull and the load with their lever arms. Drag to turn, pinch or scroll to zoom, tap to pause. It uses three.js from cdnjs, cached for offline use after the first open.
+- **Lever and pulley:** a 2D diagram names the lever class (first, second or third) for the joint, animates it, lets you slide the load further away and switch the pulley (for example the kneecap) on or off, and shows how hard the muscle has to pull.
+- **Possible mechanism of injury:** picked from the diagnosis wording and shown as a four-step flow chart, always worded as a possibility, never a diagnosis.
+- **Rehab plan:** four phases with week ranges and exercises, prefilled for the joint. "Edit plan" lets you change the joint, mechanism, current stage, phase names, weeks and exercises. A saved plan prints in the PDF.
