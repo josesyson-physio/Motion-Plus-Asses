@@ -304,28 +304,43 @@ function chartSVG(s, t) {
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t.name)} over time">${grid}<path d="${area}" fill="var(--accent)" opacity=".1"/><path class="cline" d="${line}" pathLength="1" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>${dots}<text x="${last[0] - 9}" y="${last[1] - 9}" text-anchor="end" class="ax strong">${nice(last[2].val)}</text></svg>`;
 }
 
+// Built-in assessments a clinic doesn't use can be taken off its list. They are hidden, not deleted, so past results still open.
+const hiddenTpl = () => new Set(db.settings.hiddenTpl || []);
+const shownTpl = () => { const h = hiddenTpl(); return allTpl().filter(t => !h.has(t.id)); };
+let libEdit = false;
 VIEWS.library = pid => {
   const p = pid && P(pid);
   chrome(pid ? null : "library");
-  const tpls = allTpl();
+  const tpls = shownTpl(), nh = allTpl().length - tpls.length, mine = db.templates.length;
+  const edit = `<button class="ghost" data-act="libEdit">${libEdit ? "Done" : "Manage"}</button>`;
   $("#app").innerHTML = `
-  ${pid ? `<header>${back("patient", `data-id="${pid}"`)}<h1>Choose assessment</h1></header>` : topHead("Assessments")}
+  ${pid ? `<header>${back("patient", `data-id="${pid}"`)}<h1>Choose assessment</h1>${edit}</header>` : topHead("Assessments", edit)}
   <div class="stack">
     ${p ? `<div class="psub">For ${esc(p.code)}</div>` : ""}
-    <input id="libq" type="search" placeholder="Search ${tpls.length} assessments" value="${esc(libQ)}" aria-label="Search assessments">
-    <div class="chips" role="group" aria-label="Filter by discipline">${["All", ...DISCS, "Custom"].map(d => `<button class="fchip" data-act="disc" data-d="${d}" aria-pressed="${libDisc === d}">${d === "All" ? "All" : esc(DISC_NAME[d] || d)}</button>`).join("")}</div>
-    <button class="maker" data-act="builder" data-pid="${pid || ""}"><b>+ Create a template</b><span>Build your own form, or make one from a photo of a paper form</span></button>
+    <div class="makers">
+      <button class="maker" data-act="builder" data-pid="${pid || ""}"><b>+ Create your own</b><span>Build a form item by item</span></button>
+      <button class="maker" data-act="builder" data-pid="${pid || ""}" data-up="1"><b>${IC.up} Upload a form</b><span>Photo, PDF or Word of your paper form</span></button>
+    </div>
+    ${libEdit ? `<p class="note">Switch off the assessments your clinic doesn't use. They leave the library and session plans, and past results still open. Your own assessments can be edited or deleted here too.</p>` : `<p class="note">${tpls.length} assessments in your list${mine ? ` · ${mine} of your own` : ""}${nh ? ` · ${nh} switched off` : ""}</p>`}
+    <input id="libq" type="search" placeholder="Search ${libEdit ? allTpl().length : tpls.length} assessments" value="${esc(libQ)}" aria-label="Search assessments">
+    <div class="chips" role="group" aria-label="Filter by discipline">${["All", ...DISCS, "Custom"].map(d => `<button class="fchip" data-act="disc" data-d="${d}" aria-pressed="${libDisc === d}">${d === "All" ? "All" : d === "Custom" ? "My own" : esc(DISC_NAME[d] || d)}</button>`).join("")}</div>
     <div id="tlist"></div>
   </div>`;
   listTemplates(pid);
 };
 function listTemplates(pid) {
-  const ql = libQ.toLowerCase();
-  const list = allTpl().filter(t => (libDisc === "All" || (libDisc === "Custom" ? t.custom : t.disc.includes(libDisc))) && (t.name + t.short + t.cat + t.desc).toLowerCase().includes(ql)).sort((a, b) => (b.tool ? 1 : 0) - (a.tool ? 1 : 0));
-  $("#tlist").innerHTML = list.map(t => `<div class="tool"><button class="tool-main" data-act="startForm" data-tid="${t.id}" data-pid="${pid || ""}">
-      <span class="tname">${esc(t.name)}${t.tool ? ' <span class="pro-chip">PRO</span>' : ""}</span><span class="psub">${esc(t.desc)}</span>
-      <span class="tags">${(t.custom ? ["Custom"] : []).concat(t.disc).map(d => `<span class="tag">${esc(d)}</span>`).join("")}<span class="tag soft">${esc(t.cat)}</span></span></button>
-      ${t.custom ? `<button class="ghost" data-act="builder" data-tid="${t.id}" data-pid="${pid || ""}" aria-label="Edit ${esc(t.name)}">Edit</button>` : ""}</div>`).join("") || `<div class="empty">No assessments match. Try another word, or create your own template.</div>`;
+  const ql = libQ.toLowerCase(), h = hiddenTpl();
+  const list = (libEdit ? allTpl() : shownTpl()).filter(t => (libDisc === "All" || (libDisc === "Custom" ? t.custom : t.disc.includes(libDisc))) && (t.name + t.short + t.cat + t.desc).toLowerCase().includes(ql)).sort((a, b) => (b.custom ? 1 : 0) - (a.custom ? 1 : 0) || (b.tool ? 1 : 0) - (a.tool ? 1 : 0));
+  const tags = t => `<span class="tags">${(t.custom ? ["My own"] : []).concat(t.disc).map(d => `<span class="tag">${esc(d)}</span>`).join("")}<span class="tag soft">${esc(t.cat)}</span></span>`;
+  $("#tlist").innerHTML = list.map(t => libEdit
+    ? `<div class="tool ${h.has(t.id) ? "off" : ""}"><div class="tool-main"><span class="tname">${esc(t.name)}${t.tool ? ' <span class="pro-chip">PRO</span>' : ""}</span>${tags(t)}</div>
+      ${t.custom ? `<button class="ghost" data-act="builder" data-tid="${t.id}" data-pid="${pid || ""}" aria-label="Edit or delete ${esc(t.name)}">Edit</button>`
+        : t.tool ? `<span class="psub tkeep">Always on</span>`
+        : `<button class="switch" role="switch" aria-checked="${!h.has(t.id)}" data-act="tplHide" data-tid="${t.id}" aria-label="Use ${esc(t.name)}"><i></i></button>`}</div>`
+    : `<div class="tool"><button class="tool-main" data-act="startForm" data-tid="${t.id}" data-pid="${pid || ""}">
+      <span class="tname">${esc(t.name)}${t.tool ? ' <span class="pro-chip">PRO</span>' : ""}</span><span class="psub">${esc(t.desc)}</span>${tags(t)}</button>
+      ${t.custom ? `<button class="ghost" data-act="builder" data-tid="${t.id}" data-pid="${pid || ""}" aria-label="Edit ${esc(t.name)}">Edit</button>` : ""}</div>`).join("")
+    || `<div class="empty">No assessments match. Try another word, or create your own.</div>`;
 }
 
 VIEWS.pickPatient = tid => {
@@ -1140,6 +1155,7 @@ function cleanSettings(s) {
   const o = {}; for (const k of ["clinic", "branch", "therapist", "prefix", "phone", "email", "address"]) if (s[k] != null) o[k] = txt(s[k]);
   if ("logo" in s) { o.logo = typeof s.logo === "string" && /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+=*$/.test(s.logo) ? s.logo : null; const ar = numOr(s.logoAR); o.logoAR = ar > 0 ? ar : 1; }
   o.next = Math.max(1, Math.floor(numOr(s.next) || 1));
+  if (Array.isArray(s.hiddenTpl)) o.hiddenTpl = s.hiddenTpl.filter(id => typeof id === "string" && TPLMAP[id] && !TPLMAP[id].tool);
   return o;
 }
 // Cleans a list, counting what had to be left out.
@@ -1251,7 +1267,10 @@ const ACT = {
   delPatient: d => { const snap = { p: db.patients.slice(), a: db.assessments.slice(), r: db.reports.slice(), dr: db.draft };
     db.assessments = db.assessments.filter(a => a.pid !== d.id); db.reports = db.reports.filter(r => r.pid !== d.id); db.patients = db.patients.filter(p => p.id !== d.id); if (db.draft?.pid === d.id) db.draft = null; save();
     navNext = "back"; go("patients"); undoable("Patient deleted", () => { db.patients = snap.p; db.assessments = snap.a; db.reports = snap.r; db.draft = snap.dr; }); },
-  library: d => go("library", d.pid || null),
+  library: d => { libEdit = false; go("library", d.pid || null); },
+  libEdit: () => { libEdit = !libEdit; render(); },
+  tplHide: (d, b) => { const h = hiddenTpl(), on = h.has(d.tid); on ? h.delete(d.tid) : h.add(d.tid); db.settings.hiddenTpl = [...h]; save();
+    b.setAttribute("aria-checked", on); b.closest(".tool").classList.toggle("off", !on); toast(on ? "Back in your list" : "Switched off. Turn it back on here any time."); },
   disc: d => { libDisc = d.d; document.querySelectorAll("[data-act=disc]").forEach(b => b.setAttribute("aria-pressed", b.dataset.d === libDisc)); listTemplates(view.args?.[0]); },
   startForm: d => d.pid ? startForm(d.pid, d.tid) : db.patients.length ? go("pickPatient", d.tid) : go("editPatient", null, d.tid),
   pick: (d, b) => { const t = getTpl(draft), f = t.fields.find(x => x.id === d.f), v = f.t === "scale" ? +d.v : d.v;
@@ -1282,7 +1301,7 @@ const ACT = {
   pdfA: d => { const a = A(d.id), rep = db.reports.find(x => x.kind === "single" && x.aids[0] === d.id); makePdf({ pid: a.pid, aids: [d.id], report: rep?.text, title: "Assessment Report" }); },
   pdfPatient: d => makePdf({ pid: d.id, aids: db.assessments.filter(a => a.pid === d.id).map(a => a.id), title: "Assessment Summary" }),
   transfer: d => { transferPid = d.id; go("settings"); setTimeout(() => $("#bpw")?.scrollIntoView({ block: "center" }), 50); },
-  builder: d => openBuilder(d.tid, d.pid),
+  builder: d => { openBuilder(d.tid, d.pid); if (d.up) $("#tplfile")?.click(); },
   addItem: d => { syncBuilder(); tdraft.items.push({ type: d.type, label: "", opts: d.type === "score" ? "0 = Unable\n1 = Partial\n2 = Full" : d.type === "choice" ? "Option A\nOption B" : "", unit: "" }); render(); setTimeout(() => document.querySelectorAll("#titems .icard")[tdraft.items.length - 1]?.querySelector("input")?.focus(), 30); },
   delItem: d => { syncBuilder(); tdraft.items.splice(+d.i, 1); render(); },
   moveItem: d => { syncBuilder(); const i = +d.i, j = i + +d.d; [tdraft.items[i], tdraft.items[j]] = [tdraft.items[j], tdraft.items[i]]; render(); },

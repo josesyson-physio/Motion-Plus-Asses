@@ -149,7 +149,7 @@ const planShort = tid => tid === GONIO ? "Joint angles" : allTpl().find(x => x.i
 const planMins = tid => MINS[tid] || Math.max(1, Math.round((allTpl().find(x => x.id === tid)?.fields.length || 4) * 0.25));
 const isProTid = tid => tid === GONIO || !!TPLMAP[tid]?.tool;
 function suggest(p) {
-  const dx = `${p.dx} ${p.notes}`, rule = DX_RULES.find(r => r[0].test(dx)), ids = new Set(allTpl().map(t => t.id).concat(GONIO));
+  const dx = `${p.dx} ${p.notes}`, rule = DX_RULES.find(r => r[0].test(dx)), ids = new Set(shownTpl().map(t => t.id).concat(GONIO));
   const prev = [...new Set(db.assessments.filter(a => a.pid === p.id && a.date >= daysAgo(90)).sort(byDate).reverse().map(a => isGonio(a) ? GONIO : a.tid))];
   let list = [...new Set([...(rule ? rule[2] : ["pain"]), ...prev])].filter(t => ids.has(t));
   if (list.includes(GONIO)) list = list.filter(t => t !== "rom"); // the Goniometer saves into the ROM record
@@ -279,7 +279,7 @@ const SESS_ACT = {
   },
   tmReset: d => { tmStop(); $("#tmbtn").textContent = "Start"; $("#tmring").classList.remove("run", "over"); $("#tmring").classList.add("idle"); $("#tmring").style.setProperty("--p", "0"); $("#tmval").textContent = +d.down ? tmFmt(+d.down, true) : "0.0"; },
   planToggle: (d, b) => { const on = planDraft.on; on.has(d.t) ? on.delete(d.t) : on.add(d.t); hz("tick"); render(); },
-  planAdd: () => { const have = new Set(planDraft.list); openSheet("Add a test", `<div class="sopts">${[GONIO, ...allTpl().map(t => t.id)].filter(t => !have.has(t)).map(t => `<button class="sopt" data-act="planPick" data-t="${t}">${esc(planName(t))}</button>`).join("")}</div>`); },
+  planAdd: () => { const have = new Set(planDraft.list); openSheet("Add a test", `<div class="sopts">${[GONIO, ...shownTpl().map(t => t.id)].filter(t => !have.has(t)).map(t => `<button class="sopt" data-act="planPick" data-t="${t}">${esc(planName(t))}</button>`).join("")}</div>`); },
   planPick: d => { planDraft.list.push(d.t); planDraft.on.add(d.t); render(); },
   planStart: () => { const pid = planDraft.pid, plan = planDraft.list.filter(t => planDraft.on.has(t)); planDraft = null;
     db.session = { id: uid(), pid, date: today(), plan, done: {}, skip: [], created: Date.now() }; save(); hz("tap"); go("sess"); },
