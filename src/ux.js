@@ -56,7 +56,7 @@ function plusSheet() {
     ${sitem(IC.clip, "Single test", "Choose from the test library", 'data-act="library" data-pid=""')}
     ${sitem(IC.user, "New patient", "Add a patient by code", 'data-act="newPatient"')}
     <div class="sgrid">${Object.values(T).map(k => `<button class="stool" data-act="startForm" data-tid="${k.id}">${k.icon}<b>${k.name.split(" ")[0]}</b>${pro}</button>`).join("")}</div>
-    ${sitem(IC.cam, "Form from a photo", "Turn a paper form into a template", 'data-act="builder" data-pid=""')}
+    ${sitem(IC.cam, "Upload your own form", "Photo, PDF or Word becomes an assessment", 'data-act="builder" data-pid="" data-up="1"')}
     <label class="sitem">${`<span class="sic">${IC.up}</span>`}<span class="grow"><b>Upload an old report</b><small>A MotionPlus PDF, to compare</small></span><span class="chev" aria-hidden="true">›</span><input type="file" class="oldrep" accept="application/pdf,.pdf" aria-label="Upload an old MotionPlus PDF report"></label>
     ${sitem(IC.msg, "Send feedback", "Something broke, confusing, or an idea", 'data-act="feedback"')}`);
 }
@@ -227,6 +227,14 @@ VIEWS.today = () => {
       <span class="label gold">Ready when you are</span><b class="ctitle">Start a session</b>
       <div class="actions"><button class="primary" data-act="newSession">Start session</button><button data-act="tab" data-tab="patients">Patients</button></div>
     </section>`}
+    <section class="alib">
+      <div class="crow"><span class="label gold">Your assessments</span><button class="ghost sm" data-act="libManage">Manage</button></div>
+      <button class="alib-main" data-act="library" data-pid=""><span class="sic">${IC.clip}</span><span class="grow"><b>Assessment library</b><small>${shownTpl().length} in your list${db.templates.length ? ` · ${db.templates.length} of your own` : ""}</small></span><span class="chev" aria-hidden="true">›</span></button>
+      <div class="alib-row">
+        <button data-act="builder" data-pid=""><b>+ Create your own</b><small>Item by item</small></button>
+        <button data-act="builder" data-pid="" data-up="1">${IC.up}<b>Upload a form</b><small>Photo, PDF or Word</small></button>
+      </div>
+    </section>
     <div class="stats">
       <div class="stat">${cnum(wk)}<span>Tests this week</span></div>
       <div class="stat">${cnum(due.length, due.length ? "warnnum" : "")}<span>Re-tests due</span></div>
@@ -243,6 +251,7 @@ VIEWS.today = () => {
 
 const UX_ACT = {
   fab: () => { hz("tap"); plusSheet(); },
+  libManage: () => { libEdit = true; go("library", null); },
   reload: () => { if (draft && view.name === "form") { db.draft = draft; save(); } encQueue.then(() => location.reload()); },
   setMode: d => { db.settings.mode = d.v; save(); applyPrefs(); if (view.name === "settings") return render(); document.querySelectorAll("[data-act=setMode]").forEach(b => b.setAttribute("aria-checked", b.dataset.v === d.v)); },
   welcome: d => { navNext = +d.step < (view.args?.[0] || 0) ? "back" : "fwd"; go("welcome", +d.step); },

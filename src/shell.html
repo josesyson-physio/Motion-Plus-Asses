@@ -125,6 +125,19 @@ textarea{resize:vertical;line-height:1.45}
 .fchip[aria-pressed="true"],.chips button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
 .maker{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;border:1.5px dashed var(--accent-line);background:var(--accent-soft);color:var(--ink);padding:14px 16px;border-radius:16px}
 .maker b{font:800 16px var(--display);font-stretch:90%;color:var(--accent)}
+.makers{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.maker b svg{width:17px;height:17px;vertical-align:-3px}
+.tool.off .tool-main{opacity:.45}
+.tool .switch{margin:14px 2px 0 10px}
+.tkeep{padding:16px 2px 0 10px;white-space:nowrap}
+.alib{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.alib .crow{display:flex;justify-content:space-between;align-items:center}
+.alib-main{display:flex;align-items:center;gap:12px;text-align:left;padding:12px;border-radius:14px}
+.alib-main b{display:block;font-size:16px}.alib-main small{color:var(--muted);font-size:13px}
+.alib-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.alib-row button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;border:1.5px dashed var(--accent-line);background:var(--accent-soft);padding:12px 14px;border-radius:14px}
+.alib-row b{color:var(--accent);font-size:15px}.alib-row small{color:var(--muted);font-size:12.5px}
+.alib-row svg{width:18px;height:18px;color:var(--accent)}
 .maker span{font-size:13px;color:var(--muted);font-weight:400}
 .tool{display:flex;align-items:flex-start;border-bottom:1px solid var(--line)}
 .tool-main{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;border:none;background:none;border-radius:0;padding:14px 2px}
