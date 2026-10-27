@@ -402,6 +402,7 @@ addEventListener("message", e => {
 /*REASON*/
 /*PILOT*/
 /*CONSULT*/
+/*ANAT*/
 
 /* ---------- Assessment form ---------- */
 let draft = null;
@@ -1174,6 +1175,7 @@ const ACT = {
   ...REASON_ACT,
   ...PILOT_ACT,
   ...CONSULT_ACT,
+  ...ANAT_ACT,
   toastAct: () => { const fn = toast.fn; $("#toast").hidden = true; toast.fn = null; fn?.(); },
   about: () => go("about"),
   lockNow: () => lockNow(),

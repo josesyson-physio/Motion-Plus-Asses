@@ -40,7 +40,7 @@ if (await p.evaluate(() => !!db.session)) fail("finished session is cleared");
 // Consultation room: slides, the lever demo, editing the plan, and leaving cleanly
 await p.evaluate(() => go("patient", db.patients[0].id)); await p.click(".consultbtn"); await at("consult", "consultation room opens");
 const slides = await p.evaluate(() => [...document.querySelectorAll(".cslide")].map(s => s.dataset.id));
-if (!["cover", "body", "model", "lever", "why", "plan", "next"].every(id => slides.includes(id))) fail("consultation slides: " + slides.join(","));
+if (!["cover", "anat", "lever", "why", "plan", "pain", "check", "next"].every(id => slides.includes(id))) fail("consultation slides: " + slides.join(","));
 await p.evaluate(i => consultTo(i), slides.indexOf("lever")); await p.waitForTimeout(800);
 if (!(await p.$(".s-lever .leversvg"))) fail("lever diagram draws"); else console.log("ok lever");
 await p.click(".ctop [data-act=cEdit]"); await at("cplan", "plan editor"); await p.fill("#cpi0", "Ice 10 minutes"); await p.click("[data-act=cpSave]"); await at("consult", "plan saved");
