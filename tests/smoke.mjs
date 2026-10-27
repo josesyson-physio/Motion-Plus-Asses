@@ -40,9 +40,14 @@ if (await p.evaluate(() => !!db.session)) fail("finished session is cleared");
 // Consultation room: slides, the lever demo, editing the plan, and leaving cleanly
 await p.evaluate(() => go("patient", db.patients[0].id)); await p.click(".consultbtn"); await at("consult", "consultation room opens");
 const slides = await p.evaluate(() => [...document.querySelectorAll(".cslide")].map(s => s.dataset.id));
-if (!["cover", "anat", "lever", "why", "plan", "pain", "check", "next"].every(id => slides.includes(id))) fail("consultation slides: " + slides.join(","));
-await p.evaluate(i => consultTo(i), slides.indexOf("lever")); await p.waitForTimeout(800);
-if (!(await p.$(".s-lever .leversvg"))) fail("lever diagram draws"); else console.log("ok lever");
+// The first sample patient had a stroke, so the deck shows the brain and nerve slides in place of a joint.
+if (!["cover", "brain", "ncause", "plan", "pain", "check", "next"].every(id => slides.includes(id))) fail("consultation slides: " + slides.join(","));
+await p.evaluate(i => consultTo(i), slides.indexOf("gait")); await p.waitForTimeout(800);
+if (!(await p.$(".s-gait .gtA line"))) fail("walking figure draws"); else console.log("ok walking figure");
+await p.evaluate(() => { const p0 = db.patients[0]; p0.dx = "Right knee osteoarthritis"; save(); render(); }); await p.waitForTimeout(300);
+const kslides = await p.evaluate(() => [...document.querySelectorAll(".cslide")].map(s => s.dataset.id));
+await p.evaluate(i => consultTo(i), kslides.indexOf("lever")); await p.waitForTimeout(800);
+if (!(await p.$(".s-lever .leversvg"))) fail("lever diagram draws for a joint"); else console.log("ok lever");
 await p.click(".ctop [data-act=cEdit]"); await at("cplan", "plan editor"); await p.fill("#cpi0", "Ice 10 minutes"); await p.click("[data-act=cpSave]"); await at("consult", "plan saved");
 if ((await p.evaluate(() => db.patients[0].rehab?.phases[0].items[0])) !== "Ice 10 minutes") fail("rehab plan saved"); else console.log("ok rehab plan");
 await p.click(".ctop [data-act=cExit]"); await at("patient", "leave consultation room"); if (await p.evaluate(() => document.body.classList.contains("consult"))) fail("consult styling removed");

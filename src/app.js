@@ -403,6 +403,7 @@ addEventListener("message", e => {
 /*PILOT*/
 /*CONSULT*/
 /*ANAT*/
+/*NEURO*/
 
 /* ---------- Assessment form ---------- */
 let draft = null;
@@ -1176,6 +1177,7 @@ const ACT = {
   ...PILOT_ACT,
   ...CONSULT_ACT,
   ...ANAT_ACT,
+  ...NEURO_ACT,
   toastAct: () => { const fn = toast.fn; $("#toast").hidden = true; toast.fn = null; fn?.(); },
   about: () => go("about"),
   lockNow: () => lockNow(),

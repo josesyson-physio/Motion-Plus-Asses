@@ -66,8 +66,8 @@ async function anatLoad(key) {
   if (ANAT_CACHE[key]) return ANAT_CACHE[key];
   const buf = await (await fetch(`assets/anatomy/${ANAT[key].file}.bin`)).arrayBuffer(), dv = new DataView(buf);
   if (new TextDecoder().decode(new Uint8Array(buf, 0, 4)) !== "MPA1") throw new Error("Bad anatomy pack");
-  const n = dv.getUint32(4, true), head = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 8, n))), base = 8 + n;
-  const parts = head.parts.map(p => { const at = base + p.off, q = new Int16Array(buf, at, p.v * 3), pos = new Float32Array(p.v * 3); for (let i = 0; i < pos.length; i++) pos[i] = q[i] * .01;
+  const n = dv.getUint32(4, true), head = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 8, n))), base = 8 + n, qs = head.q || .01;
+  const parts = head.parts.map(p => { const at = base + p.off, q = new Int16Array(buf, at, p.v * 3), pos = new Float32Array(p.v * 3); for (let i = 0; i < pos.length; i++) pos[i] = q[i] * qs;
     const ia = at + p.v * 6, idx = p.v < 65536 ? new Uint16Array(buf, ia, p.i) : new Uint32Array(buf, ia, p.i); return { ...p, pos, idx }; });
   return (ANAT_CACHE[key] = { land: head.land, lines: head.lines || {}, blobs: head.blobs || {}, parts });
 }

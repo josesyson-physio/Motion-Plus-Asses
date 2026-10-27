@@ -108,6 +108,7 @@ const JOINTS = {
 const JOINT_DX = [[/\b(knee|acl|pcl|mcl|menisc\w*|patell\w*|tkr|tka)\b/i, "knee"], [/\b(ankle|achilles|foot|plantar|heel)\b/i, "ankle"], [/\b(hip|thr|femo\w*|glute\w*|trochant\w*)\b/i, "hip"],
   [/\b(shoulder|rotator|frozen|humer\w*|impinge\w*|cuff)\b/i, "shoulder"], [/\b(elbow|epicondyl\w*|tennis|golfer)\b/i, "elbow"], [/\b(neck|cervical|whiplash)\b/i, "neck"], [/\b(back|lumbar|disc|sciatica|spine|spinal|lbp)\b/i, "lumbar"]];
 const PHASES = [["Settle pain and protect", "Weeks 0–2"], ["Restore movement", "Weeks 2–6"], ["Build strength and control", "Weeks 6–12"], ["Back to what matters", "Week 12 on"]];
+const jointHit = p => !!(JOINTS[p.rehab?.joint] || JOINT_DX.some(r => r[0].test(p.dx || "")));
 function jointFor(p) {
   if (JOINTS[p.rehab?.joint]) return p.rehab.joint;
   const s = `${p.dx} ${p.notes}`, hit = JOINT_DX.find(r => r[0].test(s)); if (hit) return hit[1];
@@ -118,7 +119,8 @@ const sideOf = p => /\bleft\b|\blt\b/i.test(p.dx) && !/\bright\b/i.test(p.dx) ? 
 function rehabOf(p, jk) {
   const r = p.rehab, k = jk || jointFor(p), J = JOINTS[k];
   if (r && r.joint === k && Array.isArray(r.phases)) return r;
-  const s = `${p.dx} ${p.notes}`;
+  const s = `${p.dx} ${p.notes}`, nc = !jointHit(p) && NCONDS.find(c => c.kw.test(s));
+  if (nc) return { joint: k, mech: [], phases: PHASES.map(([h, wk], i) => ({ h: NREHAB[nrehabKey(nc)][i][0] || h, wk, items: NREHAB[nrehabKey(nc)][i].slice(1) })), now: 0 };
   return { joint: k, mech: J.mech.filter(m => m.kw.test(s)).map(m => m.id), phases: PHASES.map(([h, wk], i) => ({ h, wk, items: J.rehab[i].slice() })), now: 0 };
 }
 
@@ -202,6 +204,10 @@ function consultSlides(p) {
   if (items.length) S.push({ id: "results", html: `${head("What we measured", "Today's results")}<div class="cres">${items.map(x => `<div class="cresc ${x.band}">${ring(x.frac, x.val || "✓")}<div><b>${esc(x.name)}</b><span class="pill ${x.ch[1]}">${esc(x.ch[0])}</span><small>${esc(x.word)}</small></div></div>`).join("")}</div>${take("Fuller rings mean closer to normal. We measure again at each visit, so you can see your exercises working.")}`,
     say: `Today's results. ${items.map(x => `${x.name}: ${x.word.toLowerCase()}, ${x.ch[0].toLowerCase()}.`).join(" ")} Fuller rings mean closer to normal.` });
   if (charts.length) S.push({ id: "progress", html: `${head("Over time", "Your progress")}<div class="ccharts">${charts.join("")}</div>`, say: "These charts show how your results have changed from visit to visit." });
+  const flowHTML = f => `<div class="cflow">${f.map((s, i) => `<div class="cnode n${i}" style="--i:${i}">${icon(FLOW_IC[i], "cnic")}<small>${["What happened", "What it does", "What it affects", "What you feel"][i]}</small><b>${esc(s)}</b></div>`).join(`<span class="carrow" aria-hidden="true"></span>`)}</div>`, flow = m => flowHTML(m.flow);
+  // A patient seen for a nerve or brain condition with no joint named gets the nervous-system slides instead of the joint ones.
+  const N = neuroOf(p), showJoint = !N.cond || jointHit(p);
+  if (showJoint) {
   const layerIcon = { muscle: "M4 18c4-1 6-5 8-12 2 7 4 11 8 12", lig: "M5 12h14M5 8l14 8M5 16l14-8", cart: "M4 15a8 8 0 0 1 16 0", bone: "M7 5a2 2 0 1 0-1 3l11 9a2 2 0 1 0 2 1 2 2 0 1 0-1-3L7 6", nerve: "M4 12c3-6 5 6 8 0s5 6 8 0", fascia: "M4 7h16M4 12h16M4 17h16" };
   S.push({ id: "anat", html: `<div class="an" data-k="${key}"><div class="anstage"><div class="anlabels"></div><span class="ancap" aria-live="polite"></span><p class="c3msg">Loading the anatomy…</p></div>
     <div class="anctl"><button class="anbtn" data-act="anStory" aria-label="Play the guided tour"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>
@@ -218,10 +224,11 @@ function consultSlides(p) {
     <dl class="lvkey"><div><dt class="k-f">Pivot</dt><dd>${esc(L.F)}</dd></div><div><dt class="k-e">Effort</dt><dd>${esc(L.E)}</dd></div><div><dt class="k-l">Load</dt><dd>${esc(L.L)}</dd></div></dl>
     ${L.pulley ? `<p class="cmuted">${esc(L.pulley.note)}</p>` : ""}</div>${take("A stronger muscle handles the same load more easily. That is why strength work is part of your plan.")}`,
     say: `${L.story} ${LC[1]} ${L.pulley ? L.pulley.note : ""} A stronger muscle handles the same load more easily, which is why strength work is part of your plan.` });
-  const flow = m => `<div class="cflow">${m.flow.map((s, i) => `<div class="cnode n${i}" style="--i:${i}">${icon(FLOW_IC[i], "cnic")}<small>${["What happened", "What it does", "What it affects", "What you feel"][i]}</small><b>${esc(s)}</b></div>`).join(`<span class="carrow" aria-hidden="true"></span>`)}</div>`;
   S.push({ id: "why", html: mech.length ? `${head("How it may have started", mech.length === 1 ? mech[0].h : "Possible ways this started", "Possible, not a diagnosis")}${mech.slice(0, 2).map(m => `${mech.length > 1 ? `<h3 class="cfh">${esc(m.h)}</h3>` : ""}${flow(m)}`).join("")}${take("Knowing how it may have started helps you avoid setting it off again.")}`
     : `${head("How it may have started", `Common ways the ${J.name.toLowerCase()} gets sore`, "Your therapist will talk you through which of these fits.")}<div class="cmechs">${J.mech.map(m => `<div class="cmech"><b>${esc(m.h)}</b><small>${esc(m.flow[0])} → ${esc(m.flow[3].toLowerCase())}</small></div>`).join("")}</div>`,
     say: mech.length ? `How it may have started. This is a possibility, not a diagnosis. ${mech.slice(0, 2).map(m => m.flow.join(". ")).join(". Or: ")}. Knowing this helps you avoid setting it off again.` : `Here are common ways the ${J.name.toLowerCase()} gets sore. Your physiotherapist will tell you which fits.` });
+  }
+  S.push(...neuroSlides(p, N, { head, take, flowHTML }));
   if (why.length) S.push({ id: "factors", html: `${head("Putting it together", "What today's tests suggest", "Possibilities to work on, not a diagnosis.")}<div class="cfacts">${why.slice(0, 3).map(w => `<div class="cfact"><div class="cev">${w.why.slice(0, 3).map(e => `<span>${esc(e)}</span>`).join("")}</div><span class="carrow" aria-hidden="true"></span><b>${esc(w.h)}</b></div>`).join("")}</div>`, say: `Putting it together, today's tests suggest: ${why.slice(0, 3).map(w => w.h).join(". ")}.` });
   if (goals.length) S.push({ id: "goals", html: `${head("Where we're heading", "Your goals")}<div class="cgoals">${goals.slice(0, 4).map(g => { const pr = goalProgress(p.id, g); return `<div class="cgoal"><b>${esc(g.text)}</b>${g.tid ? `<div class="lbar"><i style="--w:${Math.round(100 * Math.max(.04, pr.pct))}%"></i></div>` : ""}<small>By ${fmt(g.by)}</small></div>`; }).join("")}</div>`, say: `Your goals: ${goals.slice(0, 4).map(g => g.text).join(". ")}.` });
   S.push({ id: "plan", html: `${head("The plan", "Your road back")}<div class="cpt" style="--now:${now}"><span class="cptrail" aria-hidden="true"><i></i></span>${plan.phases.map((ph, i) => `<button class="cpstep ${i === now ? "cp-now" : i < now ? "cp-done" : ""}" style="--i:${i}" data-act="cPhase" data-i="${i}" aria-pressed="${i === now}"><span class="cpic">${icon(PHASE_IC[i])}${i === now ? `<em>You are here</em>` : ""}</span><b>${esc(ph.h)}</b><small>${esc(ph.wk)}</small></button>`).join("")}</div>
@@ -236,6 +243,8 @@ function consultSlides(p) {
   const rot = (a, n) => a.slice(n % a.length).concat(a.slice(0, n % a.length)), qs = [];
   if (hot.length && ANAT[key]) { const others = Object.entries(ANAT[key].parts).filter(([id, v]) => !hot.includes(id) && v[1] !== "fascia").map(([, v]) => v[0]), pick = [others[1], others[Math.floor(others.length / 2)]].filter(Boolean);
     qs.push({ q: "Which part are we focusing on?", o: rot([{ h: esc(hotNames[0]), ok: 1 }, ...pick.map(h => ({ h: esc(h) }))], 1) }); }
+  else if (N.neuro) { const H = nvHotFor(N), nm = [...new Set(H.ids.map(NV_NAME))][0];
+    if (nm) { const others = ["Balance", "Seeing", "Spinal cord", "Sciatic nerve", "Median nerve", "Hearing and memory", "Movement"].filter(x => x !== nm).slice(0, 2); qs.push({ q: "Where is the signal affected?", o: rot([{ h: esc(nm), ok: 1 }, ...others.map(h => ({ h: esc(h) }))], 2) }); } }
   qs.push({ q: "Exercising with pain of 4 out of 10 that settles by the next morning is…", o: [{ h: `<i class="pdot g"></i>Safe, keep going` }, { h: `<i class="pdot a"></i>Fine, keep an eye on it`, ok: 1 }, { h: `<i class="pdot r"></i>Stop the exercises` }] });
   qs.push({ q: "Which stage are you in now?", o: plan.phases.map((ph, i) => ({ h: `${icon(PHASE_IC[i])}${esc(ph.h)}`, ok: i === now ? 1 : 0 })) });
   S.push({ id: "check", html: `${head("Quick check", "Got it?")}<div class="cq">${qs.map((q, i) => `<div class="cqi" style="--i:${i}"><p>${esc(q.q)}</p><div class="cqo">${q.o.map(o => `<button data-act="cAns" data-ok="${o.ok ? 1 : 0}">${o.h}</button>`).join("")}</div></div>`).join("")}<p class="cqscore" aria-live="polite"></p></div>`,
@@ -244,7 +253,7 @@ function consultSlides(p) {
   return S;
 }
 function consultLeave() {
-  anatStop(); speechSynthesis?.cancel(); if (LV) { cancelAnimationFrame(LV.raf); LV = null; } document.body.classList.remove("consult");
+  anatStop(); nvStop(); if (GT) { cancelAnimationFrame(GT.raf); GT = null; } speechSynthesis?.cancel(); if (LV) { cancelAnimationFrame(LV.raf); LV = null; } document.body.classList.remove("consult");
   if (CS.fs && document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); CS.fs = false;
 }
 VIEWS.consult = pid => {
@@ -256,16 +265,20 @@ VIEWS.consult = pid => {
     <div class="ctrack" id="ctrack" tabindex="0" aria-roledescription="slides">${slides.map((s, i) => `<section class="cslide s-${s.id}" aria-label="Slide ${i + 1} of ${slides.length}" data-id="${s.id}"><div class="cin">${s.html}</div></section>`).join("")}</div>
     <div class="cfoot"><button class="cnav" data-act="cNav" data-v="-1" aria-label="Previous slide">‹</button><div class="cdots">${slides.map((s, i) => `<button data-act="cDot" data-i="${i}" aria-label="Slide ${i + 1}"></button>`).join("")}</div><button class="cnav" data-act="cNav" data-v="1" aria-label="Next slide">›</button></div>
   </div>`;
-  const tr = $("#ctrack"), lever = tr.querySelector(".s-lever"), anat = tr.querySelector(".an"), p0 = P(pid), plan = rehabOf(p0, key), side = JOINTS[key].side ? sideOf(p0) : "", J = JOINTS[key], pain = tr.querySelector(".pg");
+  const tr = $("#ctrack"), N = neuroOf(P(pid)), lever = tr.querySelector(".s-lever"), anat = tr.querySelector(".an"), p0 = P(pid), plan = rehabOf(p0, key), side = JOINTS[key].side ? sideOf(p0) : "", J = JOINTS[key], pain = tr.querySelector(".pg");
   const sync = () => { const i = Math.round(tr.scrollLeft / Math.max(1, tr.clientWidth)); if (i === CS.shown) return; CS.shown = i; CS.i = i;
     tr.querySelectorAll(".cslide").forEach((s, j) => s.classList.toggle("on", j === i)); $$(".cdots button").forEach((b, j) => b.setAttribute("aria-current", j === i ? "step" : "false"));
     const id = slides[i].id; CS.say = slides[i].say; if (CS.voice) consultSpeak(CS.say);
     if (id === "anat") { if (!AN || AN.host !== anat || AN.key !== key) anatStart(anat, key, { side, name: J.name, problem: [...new Set((plan.mech || []).flatMap(m => ANAT[key]?.problem[m] || []))], story: !CS.voice }); else { AN.visible = true; if (!AN.toured && !AN.story && !CS.voice) anatStory(); } } else if (AN) { AN.visible = false; anatStory(false); }
+    const nvs = slides[i].nv, host = tr.children[i].querySelector(".nv");
+    if (nvs) { if (!NV || NV.host !== host) nvStart(host, { ...nvs, N, hot: [], story: nvs.story && !CS.voice }); else { NV.visible = true; if (nvs.story && !NV.toured && !NV.story && !CS.voice) nvStory(); } } else if (NV) { NV.visible = false; nvStory(false); }
+    if (id === "gait") { const g = tr.querySelector(".gt"); if (!GT || GT.host !== g) gtStart(g); else GT.visible = true; } else if (GT) GT.visible = false;
     if (id === "lever") { if (!LV || LV.host !== lever) leverStart(lever, key); else LV.visible = true; } else if (LV) LV.visible = false; };
   CS.shown = -1; tr.addEventListener("scroll", () => { clearTimeout(sync.t); sync.t = setTimeout(sync, 60); }, { passive: true });
   const painSet = v => { const z = painZone(v); pain.dataset.z = z[1]; pain.querySelector(".pgneedle").style.transform = `rotate(${v * 18}deg)`; pain.querySelector(".pgv").textContent = v; pain.querySelector(".pgsay").textContent = z[2]; };
   pain.querySelector("input").addEventListener("input", e => { const v = +e.target.value, z = painZone(v); if (z[1] !== pain.dataset.z) hz(z[1] === "r" ? "warn" : "tick"); painSet(v); }); painSet(3);
-  lever.querySelector(".lvload").addEventListener("input", e => { if (LV) LV.s = +e.target.value; });
+  tr.querySelectorAll(".pxw").forEach(x => pxShow(x, { n: x.dataset.n, r: x.dataset.r.split(" ")[0] }));
+  lever?.querySelector(".lvload").addEventListener("input", e => { if (LV) LV.s = +e.target.value; });
   requestAnimationFrame(() => { tr.scrollLeft = CS.i * tr.clientWidth; sync(); });
 };
 // Read a slide aloud with the device's own voice (nothing leaves the device).
@@ -299,7 +312,7 @@ const CONSULT_ACT = {
   cExit: () => { const pid = CS.pid; navNext = "back"; db.session?.pid === pid ? go("summary") : go("patient", pid); },
   cNav: d => consultTo(CS.i + +d.v),
   cDot: d => consultTo(+d.i),
-  cJoint: d => { CS.joint = d.k; anatStop(); render(); },
+  cJoint: d => { CS.joint = d.k; anatStop(); nvStop(); render(); },
   cVoice: (d, b) => { CS.voice = !CS.voice; b.setAttribute("aria-pressed", CS.voice); if (CS.voice) { anatStory(false); consultSpeak(CS.say); } else speechSynthesis.cancel(); hz("tap"); },
   cPhase: (d, b) => { const host = b.closest(".cin"); host.querySelectorAll(".cpstep").forEach(x => x.setAttribute("aria-pressed", x === b)); host.querySelectorAll(".cpitems").forEach(x => x.hidden = x.dataset.i !== d.i); hz("tap"); },
   cAns: (d, b) => { const q = b.closest(".cqi"); if (q.classList.contains("done")) return; q.classList.add("done"); b.classList.add(d.ok === "1" ? "ok" : "no"); q.querySelector('[data-ok="1"]').classList.add("ok");
