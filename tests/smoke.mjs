@@ -48,6 +48,12 @@ await p.evaluate(() => { const p0 = db.patients[0]; p0.dx = "Right knee osteoart
 const kslides = await p.evaluate(() => [...document.querySelectorAll(".cslide")].map(s => s.dataset.id));
 await p.evaluate(i => consultTo(i), kslides.indexOf("lever")); await p.waitForTimeout(800);
 if (!(await p.$(".s-lever .leversvg"))) fail("lever diagram draws for a joint"); else console.log("ok lever");
+// A heart patient gets the heart, oxygen, effort and breathing slides, built from their vital signs.
+await p.evaluate(() => { const p0 = db.patients[0]; p0.dx = "Heart failure"; db.assessments.push({ id: uid(), pid: p0.id, tid: "vitals", date: today(), values: { hr: "84", sys: "118", dia: "72", spo2: "96" }, notes: "", created: Date.now() }); save(); render(); }); await p.waitForTimeout(300);
+const hslides = await p.evaluate(() => [...document.querySelectorAll(".cslide")].map(s => s.dataset.id));
+if (!["heart", "ccause", "effort", "breath"].every(id => hslides.includes(id)) || hslides.includes("lever")) fail("heart slides: " + hslides.join(","));
+else if (!(await p.$eval(".s-ccause .o2svg", e => e.textContent.includes("84 beats")))) fail("oxygen loop shows the patient's heart rate"); else console.log("ok heart slides");
+await p.evaluate(() => { const p0 = db.patients[0]; p0.dx = "Right knee osteoarthritis"; save(); render(); }); await p.waitForTimeout(300);
 await p.click(".ctop [data-act=cEdit]"); await at("cplan", "plan editor"); await p.fill("#cpi0", "Ice 10 minutes"); await p.click("[data-act=cpSave]"); await at("consult", "plan saved");
 if ((await p.evaluate(() => db.patients[0].rehab?.phases[0].items[0])) !== "Ice 10 minutes") fail("rehab plan saved"); else console.log("ok rehab plan");
 await p.click(".ctop [data-act=cExit]"); await at("patient", "leave consultation room"); if (await p.evaluate(() => document.body.classList.contains("consult"))) fail("consult styling removed");

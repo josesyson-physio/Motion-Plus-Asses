@@ -1181,6 +1181,44 @@ body.consult .app{max-width:none;padding:0;animation:none!important;transform:no
 .gtnum div{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:10px 12px;overflow:hidden}
 .gtnum small{display:block;font:600 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}.gtnum b{font:800 22px var(--display)}.gtnum span{display:block;font-size:12.5px;color:var(--muted)}
 .gtnum i{position:absolute;left:0;bottom:0;height:4px;width:var(--w);background:linear-gradient(90deg,#ff8a78,#f2c94c)}
+/* Heart and lungs: the oxygen loop, the effort scale and the breathing guide */
+.o2{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:8px 10px;margin-bottom:12px}
+.o2svg{display:block;width:100%;max-height:260px}
+.o2loop{fill:none;stroke:#26303d;stroke-width:26;stroke-linejoin:round}.o2lane{fill:none;stroke-width:3;stroke-dasharray:2 10;stroke-linecap:round}.o2lane.r{stroke:#ff6b5b88}.o2lane.b{stroke:#6f8fff88}
+.o2d{fill:#ff6b5b}.o2air{fill:#9fe8ff}
+.o2c{fill:#1a2230cc;stroke:#3a4656;stroke-width:2}.o2i{fill:none;stroke:var(--ink);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.o2t{font:700 17px var(--body);fill:var(--ink);text-anchor:middle}.o2v{font:600 13px var(--mono);fill:var(--muted);text-anchor:middle}
+.o2n.hot .o2c{stroke:#ff6b5b;fill:#2a1513}.o2n.hot .o2i{stroke:#ff8a78}.o2ring{fill:none;stroke:#ff6b5b;stroke-width:3;opacity:.6;transform-box:fill-box;transform-origin:center}
+@media (prefers-reduced-motion:no-preference){.o2ring{animation:o2ring 1.8s ease-out infinite}}
+@media (max-width:600px){.o2t{font-size:27px}.o2v{font-size:20px}.o2{padding:6px 4px}}
+@keyframes o2ring{0%{transform:scale(.8);opacity:.8}100%{transform:scale(1.25);opacity:0}}
+.efnum{margin-bottom:14px}
+.ef{display:grid;gap:10px;margin-bottom:14px}
+.efbar{position:relative;display:grid;grid-template-columns:repeat(11,1fr);gap:4px;padding-top:26px}
+.efbar i{height:46px;border-radius:10px;display:grid;place-items:center;font-style:normal;transition:transform .2s,box-shadow .2s;opacity:.55}
+.efbar i b{font:800 16px var(--display);color:#0b0f14}
+.efbar i.z-g0{background:#7fb9a4}.efbar i.z-g{background:var(--good)}.efbar i.z-a{background:var(--warn)}.efbar i.z-r{background:var(--bad)}
+.efbar i.on{opacity:1;transform:translateY(-4px);box-shadow:0 8px 20px -6px #000}
+.efme{position:absolute;top:0;left:calc((var(--x) + .5) / 11 * 100%);transform:translateX(-50%);font:600 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--accent);white-space:nowrap}
+.efme::after{content:"";position:absolute;left:50%;top:16px;border:5px solid transparent;border-top-color:var(--accent);transform:translateX(-50%)}
+.ef input{width:100%;accent-color:var(--accent)}
+.efsay{margin:0;font-size:16px;min-height:1.4em}.efsay b{color:var(--accent);margin-right:4px}
+.ef[data-z=a] .efsay b{color:var(--warn)}.ef[data-z=r] .efsay b{color:var(--bad)}
+.efstop{display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--bad-soft);border:1px solid #5a1f1b;border-radius:18px;padding:12px 14px}
+.efstop b{display:flex;align-items:center;gap:6px;width:100%;color:var(--bad);font-size:15px}.efstop span{font-size:13.5px;padding:4px 10px;border-radius:999px;background:#0b0f1499;border:1px solid #5a1f1b}
+.br{display:grid;gap:16px;justify-items:center;margin-bottom:12px}
+.brc{position:relative;width:min(300px,70vw);aspect-ratio:1;display:grid;place-items:center}
+.brring{position:absolute;inset:0;border-radius:50%;border:2px dashed #3a4656}
+.brdot{position:absolute;inset:18%;border-radius:50%;background:radial-gradient(circle at 40% 35%,#9fe8ff55,#2b5f7a33 60%,transparent 72%);border:2px solid #9fe8ff88;transform:scale(.62)}
+.brin,.brout{position:absolute;text-align:center;font:700 17px var(--body);max-width:72%;line-height:1.25}.brin small,.brout small{display:block;font:600 13px var(--mono);color:var(--accent);margin-top:4px;letter-spacing:.1em}
+.brout{opacity:0}
+@media (prefers-reduced-motion:no-preference){.cslide.on .brdot{animation:brdot 6s ease-in-out infinite}.cslide.on .brin{animation:brin 6s infinite}.cslide.on .brout{animation:brout 6s infinite}}
+@keyframes brdot{0%{transform:scale(.62)}33%{transform:scale(1)}100%{transform:scale(.62)}}
+@keyframes brin{0%,30%{opacity:1}34%,97%{opacity:0}100%{opacity:1}}
+@keyframes brout{0%,31%{opacity:0}36%,95%{opacity:1}99%{opacity:0}}
+.brwhen{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;max-width:520px}
+.brwhen div{display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:10px 6px;text-align:center}.brwhen .cic{color:var(--accent)}.brwhen b{font-size:14px}
+@media (min-width:760px),(orientation:landscape) and (min-width:600px){.br{grid-template-columns:auto 1fr;align-items:center;justify-items:start}.brwhen{grid-template-columns:1fr;max-width:260px}}
 @media (min-width:760px),(orientation:landscape) and (min-width:600px){.s-gait .gt,.s-posture .pt{grid-template-columns:1.5fr 1fr;align-items:start}.s-plexus .pxw{grid-template-columns:1.6fr 1fr;align-items:center}}
 .lv{display:flex;flex-direction:column;gap:12px}
 .lvbox{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:6px}

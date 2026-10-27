@@ -2,9 +2,9 @@
    neuroOf(p) reads the diagnosis and the saved tests (strength, sensation, tone, walking and posture) and works out
    what to show: the likely area of the nervous system, the side, the nerve roots, the walking pattern and the posture,
    each with the test results it came from. Everything is worded as a possibility, never a diagnosis.
-   The 3D body is one pack (assets/anatomy/body-1.bin): skin split into dermatomes, the brain split into areas,
+   The 3D body is one pack (assets/anatomy/body-2.bin): skin split into dermatomes, the brain split into areas,
    bones, muscle groups, heart and lungs, and the spinal cord, roots and main nerves drawn as tubes. */
-ANAT.body = { file: "body-1" };
+ANAT.body = { file: "body-2" };
 const NEURO_CREDIT = "3D anatomy: BodyParts3D, © The Database Center for Life Science (CC BY 4.0), via open-anatomy-3d";
 
 // What each nerve root supplies, in plain words, and the muscle groups (pack ids, without the side) it powers.
@@ -216,7 +216,7 @@ async function nvStart(host, o) {
   for (const q of data.parts) {
     const geo = new T.BufferGeometry(); geo.setAttribute("position", new T.BufferAttribute(q.pos, 3)); geo.setIndex(new T.BufferAttribute(q.idx, 1)); geo.computeVertexNormals();
     const area = q.kind === "brain" ? (q.id.match(/^b(\w+?)[RL]$/)?.[1] || q.id) : null;
-    const col = q.kind === "skin" ? (isDerm ? rootCol(q.id.slice(1)) : new T.Color(0xe9c3a8)) : q.kind === "brain" ? AREA_COL[area] : q.kind === "muscle" ? 0x9a2a20 : q.kind === "organ" ? (q.id === "heart" ? 0xb8333a : 0xd99a9a) : q.kind === "nerve" ? 0xf2c94c : 0xe6d8bd;
+    const col = q.kind === "skin" ? (isDerm ? rootCol(q.id.slice(1)) : new T.Color(0xe9c3a8)) : q.kind === "brain" ? AREA_COL[area] : q.kind === "muscle" ? 0x9a2a20 : q.kind === "organ" ? (CV_COL[q.id] ?? 0xd99a9a) : q.kind === "nerve" ? 0xf2c94c : 0xe6d8bd;
     const p = add(q.id, q.kind, geo, col); p.area = area; if (q.kind === "skin") p.root = q.id.slice(1);
   }
   const tube = (pts, r) => new T.TubeGeometry(new T.CatmullRomCurve3(pts.map(a => new T.Vector3(...a))), Math.max(16, pts.length * 10), r, 8, false);
@@ -236,8 +236,9 @@ async function nvStart(host, o) {
     const all = [...brain, ...cord, ...rootP, ...nerve]; if (kind === "sensory") { all.reverse(); all[all.length - 1] = cx.clone().add(new T.Vector3(0, -8, -18)); }
     return new T.CatmullRomCurve3(all.filter((v, i, a) => !i || v.distanceTo(a[i - 1]) > 2));
   };
-  NV.pulseMesh = col => { const g = new T.Group(); for (let i = 0; i < 6; i++) { const s = new T.Mesh(new T.SphereGeometry(1, 16, 10), new T.MeshBasicMaterial({ color: col, transparent: true, opacity: 1 - i * .15, depthWrite: false, depthTest: false, blending: T.AdditiveBlending })); g.add(s); } scene.add(g); return g; };
+  NV.pulseMesh = (col, plain) => { const g = new T.Group(); for (let i = 0; i < 6; i++) { const s = new T.Mesh(new T.SphereGeometry(1, 16, 10), new T.MeshBasicMaterial({ color: col, transparent: true, opacity: 1 - i * .15, depthWrite: false, depthTest: false, blending: plain ? T.NormalBlending : T.AdditiveBlending })); g.add(s); } scene.add(g); return g; };
   NV.halo = new T.Mesh(new T.SphereGeometry(1, 32, 20), new T.MeshBasicMaterial({ color: 0xff6a55, transparent: true, opacity: .2, depthWrite: false, blending: T.AdditiveBlending })); scene.add(NV.halo); NV.halo.visible = false;
+  if (o.mode === "cardio") { cvSetup(data); const [at, h] = NV_VIEWS.chest; NV.at.set(...at); NV.atTo.set(...at); NV.h = NV.hTo = h; }
   nvSetHot(o.hot || []); if (o.root) nvRoot(o.root, true); if (o.story) nvStory(); nvSync();
   const resize = () => { const w = stage.clientWidth, h = stage.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); };
   NV.ro = new ResizeObserver(resize); NV.ro.observe(stage); resize();
@@ -255,12 +256,13 @@ async function nvStart(host, o) {
   const frame = t => {
     if (!NV || NV.renderer !== renderer) return; if (!host.isConnected) return nvStop(); NV.raf = requestAnimationFrame(frame); if (!NV.visible) return;
     const s = (t - NV.t0) / 1000, dt = Math.min(.25, (t - (NV.tl || t)) / 1000), k = 1 - Math.exp(-dt * 5); NV.tl = t;
-    if (NV.story) nvStep(s - NV.story); if (NV.spin) NV.az += 8 * dt;
+    const cv = NV.mode === "cardio"; if (NV.story) (cv ? cvStep : nvStep)(s - NV.story); if (cv) cvAnimate(s); if (NV.spin) NV.az += 8 * dt;
     NV.at.lerp(NV.atTo, k * .8); NV.h = smooth(NV.h, NV.hTo, k * .8);
     const pulse = .5 + .5 * Math.sin(s * 3.4), sel = NV.sel, derm = NV.mode === "derm", headView = NV.h < 420;
     for (const p of NV.parts) {
-      const m = p.m.material, hot = NV.hot.has(p.id); let want;
-      if (p.kind === "skin") want = derm ? (sel ? (p.root === sel ? .97 : .42) : .93) : headView ? .05 : .12;
+      const m = p.m.material, hot = NV.hot.has(p.id); let want = cv ? cvWant(p, hot) : null;
+      if (want != null) { /* the chest view chose already */ }
+      else if (p.kind === "skin") want = derm ? (sel ? (p.root === sel ? .97 : .42) : .93) : headView ? .05 : .12;
       else if (p.kind === "bone") want = derm ? 0 : headView ? .1 : .2;
       else if (p.kind === "muscle") want = hot ? .95 : 0;
       else if (p.kind === "organ") want = NV.organs ? .55 : 0;
@@ -275,7 +277,7 @@ async function nvStart(host, o) {
     }
     if (NV.hotC && !derm) { NV.halo.visible = true; NV.halo.position.copy(NV.hotC); NV.halo.scale.setScalar(NV.hotR * (1 + .5 * pulse)); NV.halo.material.opacity = .05 + .12 * (1 - pulse); } else NV.halo.visible = false;
     // Travelling signals.
-    for (const q of NV.pulses) { q.t += dt / q.dur * (q.slow ? .5 + .25 * Math.sin(s * 9) : 1); const stop = q.block != null ? q.block : 1, u = Math.min(stop, q.t), size = NV.h / 55;
+    for (const q of NV.pulses) { q.t += dt / q.dur * (q.slow ? .5 + .25 * Math.sin(s * 9) : 1); const stop = q.block != null ? q.block : 1, u = Math.min(stop, q.t), size = NV.h / (q.small ? 90 : 55);
       q.g.children.forEach((b, i) => { const uu = Math.max(0, u - i * .012); b.position.copy(q.curve.getPointAt(uu)); b.scale.setScalar(size * (1 - i * .12) * (q.block != null && q.t > stop ? (i ? 0 : 1 + 1.2 * Math.min(1, (q.t - stop) * 3)) : 1)); b.material.color.set(q.block != null && q.t > stop ? 0xff4a3a : q.col); b.material.opacity = (1 - i * .15) * (q.t > stop + .35 ? Math.max(0, 1 - (q.t - stop - .35) * 3) : 1); });
       if (q.t > stop + .7) { q.loop ? (q.t = 0) : (scene.remove(q.g), q.done = true); } }
     NV.pulses = NV.pulses.filter(q => !q.done);
@@ -294,7 +296,7 @@ const NV_NAME = id => { const a = BRAIN_AREAS.find(b => id === b[0] || id.starts
   if (id === "thalamus") return "Relay centre"; if (id === "cord") return "Spinal cord"; if (id === "cauda") return "Nerve roots"; if (id === "cranialNerves") return "Face and head nerves";
   const m = /^(r|p|q)([CTLS]\d+)[RL]$/.exec(id); if (m) return `${m[2]} root`; const n = /^(median|ulnar|radial|musculo|axillary|femoral|saphenous|sciatic|tibial|peroneal)[RL]$/.exec(id);
   if (n) return { musculo: "Musculocutaneous", axillary: "Axillary", median: "Median", ulnar: "Ulnar", radial: "Radial", femoral: "Femoral", saphenous: "Saphenous", sciatic: "Sciatic", tibial: "Tibial", peroneal: "Peroneal" }[n[1]] + " nerve";
-  if (/^ic\d+/.test(id)) return `T${id.match(/\d+/)[0]} nerve`; if (id.startsWith("d")) return `${id.slice(1)} skin area`; const mu = { deltoid: "Deltoid", upper_arm_muscles: "Upper arm muscles", forearm_muscles: "Forearm muscles", hand_muscles: "Hand muscles", rotator_cuff: "Rotator cuff", iliopsoas: "Hip flexor (iliopsoas)",
+  if (CV_NAME[id]) return CV_NAME[id]; if (/^ic\d+/.test(id)) return `T${id.match(/\d+/)[0]} nerve`; if (id.startsWith("d")) return `${id.slice(1)} skin area`; const mu = { deltoid: "Deltoid", upper_arm_muscles: "Upper arm muscles", forearm_muscles: "Forearm muscles", hand_muscles: "Hand muscles", rotator_cuff: "Rotator cuff", iliopsoas: "Hip flexor (iliopsoas)",
     quadriceps: "Quadriceps", hamstrings: "Hamstrings", gluteal: "Buttock muscles", adductors: "Inner thigh muscles", shin_muscles: "Shin muscles", calf: "Calf", foot_muscles: "Foot muscles", diaphragm: "Diaphragm" };
   return mu[id.replace(/_[lr]$/, "")] || id.replace(/_[lr]$/, "").replace(/_/g, " "); };
 // Light up parts; the labels follow the lit parts.
